@@ -15,7 +15,7 @@ function ResumeForm() {
     const files = event?.target.files;
     if (files && files?.length === 1) {
       const file = files[0];
-      uploadResume(file, "uid", "description");
+      uploadResume(file, "uid", "jobid", "description");
     }
   }
 

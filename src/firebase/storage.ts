@@ -1,7 +1,7 @@
 import { getStorage, ref, uploadBytes } from "firebase/storage"
 import { createResume } from "./database";
 
-export const uploadResume = (file: File, uid: string, description: string) => {
+export const uploadResume = (file: File, uid: string, jobId: string, description: string) => {
 	const storage = getStorage()
 	const resumeRef = ref(storage, `resume/${uid}/${file.name}`);
 
@@ -14,6 +14,6 @@ export const uploadResume = (file: File, uid: string, description: string) => {
 	createResume({
 		description: description,
 		url: resumeRef.toString(),
-		uid: uid
-	})
+		jobId: jobId
+	}, uid)
 }
