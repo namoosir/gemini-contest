@@ -1,5 +1,5 @@
 import { getStorage, ref, uploadBytes } from "firebase/storage"
-import { createResume } from "./database";
+import { addResume } from "./database";
 
 export const uploadResume = (file: File, uid: string, jobId: string, description: string) => {
 	const storage = getStorage()
@@ -11,9 +11,11 @@ export const uploadResume = (file: File, uid: string, jobId: string, description
 	}).catch(err => console.error(`Some error happened while uploading resume: ${err}`))
 
 	// This line creates a document in firestore
-	createResume({
+	addResume({
 		description: description,
 		url: resumeRef.toString(),
-		jobId: jobId
-	}, uid)
+		jobId: jobId,
+		uid: uid,
+		filename: file.name
+	})
 }

@@ -1,34 +1,44 @@
 import { uploadResume } from "@/firebase/storage";
-import { FormEvent } from "react";
+import { useState } from "react";
 
 function ResumeForm() {
-  type changeEvent = React.ChangeEvent<HTMLInputElement> | undefined;
-  type formEvent = FormEvent<HTMLFormElement>
+  type changeEvent = React.ChangeEvent<HTMLInputElement> | undefined
+  type submitEvent = React.FormEvent<HTMLFormElement>
 
-  function handleSubmit(event: formEvent) {
-    console.log(event);
+  const [files, setFiles] = useState<Array<File>>()
+
+  function submitHandler(event: submitEvent) {
     event.preventDefault();
+    if (files) {
+      for (const file of files) {
+        uploadResume(file, "uid", "jobid", "description")
+      }
+    }
   }
 
-  function handleChange(event: changeEvent) {
+  function changeHandler(event: changeEvent) {
     event?.preventDefault();
     const files = event?.target.files;
-    if (files && files?.length === 1) {
-      const file = files[0];
-      uploadResume(file, "uid", "jobid", "description");
-    }
+    if (files) {
+      let fileList: Array<File> = []
+      for (const file of files) {
+        fileList.push(file)
+      }
+      setFiles(fileList)
+    } else 
+    setFiles([])
   }
 
   return (
     <>
-      <form onSubmit={e => handleSubmit(e)}>
+      <form onSubmit={e => submitHandler(e)}>
         <label htmlFor="file">Choose your resume to upload </label>
         <input
           type="file"
           accept=".pdf"
-          onChange={e => handleChange(e)}
+          onChange={e => changeHandler(e)}
         />
-        <button type="submit">Upload</button>
+        <button type="submit">Submit</button>
       </form>
     </>
   )
