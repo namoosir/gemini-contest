@@ -1,4 +1,6 @@
-import { uploadResume } from "@/firebase/storage";
+import { useFirebaseContext } from "@/context/FirebaseContext";
+import { addResume } from "@/services/firebase/resumeService";
+import { uploadResume } from "@/services/firebase/resumeService";
 import { useState } from "react";
 
 function ResumeForm() {
@@ -6,12 +8,21 @@ function ResumeForm() {
   type submitEvent = React.FormEvent<HTMLFormElement>
 
   const [files, setFiles] = useState<Array<File>>()
+  const storage = useFirebaseContext().storage
+  const db = useFirebaseContext().db
 
   function submitHandler(event: submitEvent) {
     event.preventDefault();
     if (files) {
-      for (const file of files) {
-        uploadResume(file, "uid", "jobid", "description")
+      for (const file of files) {        
+        const ref = uploadResume(storage, file, "uid")
+        addResume(db, {
+          description: "description",
+          url: ref,
+          jobId: "jobId",
+          uid: "uid",
+          filename: file.name
+        })
       }
     }
   }
@@ -20,7 +31,7 @@ function ResumeForm() {
     event?.preventDefault();
     const files = event?.target.files;
     if (files) {
-      let fileList: Array<File> = []
+      const fileList: Array<File> = []
       for (const file of files) {
         fileList.push(file)
       }

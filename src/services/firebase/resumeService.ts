@@ -1,4 +1,4 @@
-import { getFirestore, Timestamp, getDocs, addDoc, collection, query, where } from "firebase/firestore";
+import { Timestamp, getDocs, addDoc, collection, query, where, Firestore } from "firebase/firestore";
 
 interface resume {
   description: string | null,
@@ -8,9 +8,8 @@ interface resume {
   filename: string
 }
 
-export const addResume = async (data: resume) => {  
+export const addResume = async (db: Firestore, data: resume) => {  
   try {
-    const db = getFirestore();
     await addDoc(collection(db, "resumes"), {
       ...data, 
       "dateCreated": Timestamp.fromDate(new Date())
@@ -21,9 +20,8 @@ export const addResume = async (data: resume) => {
   }
 }
 
-export const getUserResume = async (uid: string, filename: string) => {
+export const getUserResume = async (db: Firestore, uid: string, filename: string) => {
   try {
-    const db = getFirestore();
     const q = query(collection(db, "resumes"), 
       where("uid", "==", uid),
       where("filename", "==", filename))
@@ -36,9 +34,8 @@ export const getUserResume = async (uid: string, filename: string) => {
   }
 }
 
-export const getUserResumes = async(uid: string) => {
+export const getUserResumes = async(db: Firestore, uid: string) => {
   try {
-    const db = getFirestore();
     const q = query(collection(db, "resumes"), where("uid", "==", uid))
     const docSnap = await getDocs(q);
     docSnap.forEach(doc => console.log(doc.id, " => ", doc.data()))
@@ -47,4 +44,18 @@ export const getUserResumes = async(uid: string) => {
     console.error(`Something went wrong while trying to fetch user(${uid}) resumes: ${error}`)
     throw new Error(`${error}`)
   }
+}
+
+
+import { FirebaseStorage, ref, uploadBytes } from "firebase/storage"
+
+export const uploadResume = (storage: FirebaseStorage, file: File, uid: string) => {
+	const resumeRef = ref(storage, `resume/${uid}/${file.name}`);
+
+	// This uploads it to firebase Storage
+	uploadBytes(resumeRef, file).then(() => {
+		console.log('Successfully uploaded file!')
+	}).catch(err => console.error(`Some error happened while uploading resume: ${err}`))
+
+	return resumeRef.toString();
 }
