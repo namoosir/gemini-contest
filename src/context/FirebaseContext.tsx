@@ -1,12 +1,14 @@
 import { ReactNode, createContext, useContext } from "react"
-import { analytics, db} from "@/FirebaseConfig"
+import { analytics, db, storage} from "@/FirebaseConfig"
 import { Firestore } from "firebase/firestore"
 import { Analytics } from "firebase/analytics"
+import { FirebaseStorage } from "firebase/storage"
 
 // A struct for the context
 interface FirebaseContextType {
     db: Firestore
     analytics: Analytics
+    storage: FirebaseStorage
     // Add auth here
 }
 
@@ -16,7 +18,7 @@ export const FirebaseContext = createContext<FirebaseContextType | undefined>(un
 // This is a provider that wraps around the main app and allows us to access the firebase context
 export const FirebaseProvider = ({children}:{children:ReactNode}) => {
     return (
-        <FirebaseContext.Provider value={{db, analytics}}>{children}</FirebaseContext.Provider>
+        <FirebaseContext.Provider value={{db, analytics, storage}}>{children}</FirebaseContext.Provider>
     )
 }
 
