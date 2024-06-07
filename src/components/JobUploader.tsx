@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { JobDParserBot } from '@/services/gemeni/JobDParserBot';
+import { WebPage } from '@/services/utils/url';
 
 const JobUploader: React.FC = () => {
   const [url, setUrl] = useState<string>('');
@@ -7,10 +8,13 @@ const JobUploader: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const bot: JobDParserBot = new JobDParserBot();
-
     try {
-      const generatedText = await bot.parseJobDescriptionUrl(url)
-      console.log(generatedText)
+      const webpage = await WebPage.init(url);
+      console.log(webpage.htmlpage())
+
+      // const generatedText = await bot.parseJobDescriptionUrl(url)
+      
+
     } catch (error) {
       console.error("Error:", error);
     }
