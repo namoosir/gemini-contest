@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react"
+import { getAudioBuffer, playAudio } from "@/services/voice/getAudioBuffer"
 
 function TestVoice() {
   type submitEvent = React.FormEvent<HTMLFormElement>
   const [userText, setUserText] = useState<string>("")
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null)
-  const model = "aura-asteria-en"
-  const url = "https://api.deepgram.com/v1/speak?model=" + model
-  const apiKey = import.meta.env.VITE_APP_VOICE_API_KEY
-  const chars = [".", " ", "!", "?"] // Helps with semantics
 
   useEffect(() => {
     const context = new window.AudioContext()
@@ -20,64 +17,35 @@ function TestVoice() {
     }
   }, [])
 
-  const fetchAndPlayAudio = async (text: string) => {
-    const textToSend: string = text.concat(".")
-    const body = JSON.stringify({ text: textToSend })
-    const headers = {
-      Authorization: `Token ${apiKey}`,
-      "Content-Type": "application/json",
-    }
-    const options = {
-      method: "POST",
-      headers: headers,
-      body: body,
-    }
-
-    try {
-      const response = await fetch(url, options)
-      if (!response.ok) {
-        throw new Error(`Failed to make request: ${response.statusText}`)
-      }
-      const blob = await response.blob()
-      const arrayBuffer = await blob.arrayBuffer()
-
-      if (audioContext) {
-        audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-          const source = audioContext.createBufferSource()
-          source.buffer = buffer
-          source.connect(audioContext.destination)
-          source.start(0)
-        }, (error) => {
-          console.error('Error decoding audio data:', error)
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching audio data:', error)
-    }
-  }
-
-  const handleSubmit = (event: submitEvent) => {
+  const handleSubmit = async (event: submitEvent) => {
     event.preventDefault()
 
     if (userText !== "") {
-      const text: string = userText
-      if (!chars.includes(text[text.length - 1])) {
-        setUserText(prevText => prevText + ".")
+      if (audioContext) {
+        try {
+          const arrayBuffer = await getAudioBuffer({
+            text: userText,
+            model: "aura-asteria-en"
+          })
+          playAudio(arrayBuffer, audioContext)
+        } catch (error) {
+          console.error(`Something went wrong with TTS ${error}`)
+        }
       }
-      fetchAndPlayAudio(userText)
     }
   }
 
   return (
     <>
       <form onSubmit={handleSubmit}>
-        <label htmlFor="voice">Enter text:</label>
+        <label htmlFor="voice">Enter text for TTS: </label>
         <input
           type="text"
-          placeholder="Enter text"
+          placeholder=""
           onChange={e => setUserText(e.target.value)}
+          className="text-black"
         />
-        <button type="submit">Submit</button>
+        <button type="submit"> Submit</button>
       </form>
     </>
   )

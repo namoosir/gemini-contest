@@ -8,10 +8,10 @@ interface resume {
   filename: string
 }
 
-export const addResume = async (db: Firestore, data: resume) => {  
+export const addResume = async (db: Firestore, data: resume) => {
   try {
     await addDoc(collection(db, "resumes"), {
-      ...data, 
+      ...data,
       "dateCreated": Timestamp.fromDate(new Date())
     })
   } catch (error) {
@@ -22,7 +22,7 @@ export const addResume = async (db: Firestore, data: resume) => {
 
 export const getUserResume = async (db: Firestore, uid: string, filename: string) => {
   try {
-    const q = query(collection(db, "resumes"), 
+    const q = query(collection(db, "resumes"),
       where("uid", "==", uid),
       where("filename", "==", filename))
     const docSnap = await getDocs(q);
@@ -34,7 +34,7 @@ export const getUserResume = async (db: Firestore, uid: string, filename: string
   }
 }
 
-export const getUserResumes = async(db: Firestore, uid: string) => {
+export const getUserResumes = async (db: Firestore, uid: string) => {
   try {
     const q = query(collection(db, "resumes"), where("uid", "==", uid))
     const docSnap = await getDocs(q);
@@ -50,12 +50,12 @@ export const getUserResumes = async(db: Firestore, uid: string) => {
 import { FirebaseStorage, ref, uploadBytes } from "firebase/storage"
 
 export const uploadResume = (storage: FirebaseStorage, file: File, uid: string) => {
-	const resumeRef = ref(storage, `resume/${uid}/${file.name}`);
+  const resumeRef = ref(storage, `resume/${uid}/${file.name}`);
 
-	// This uploads it to firebase Storage
-	uploadBytes(resumeRef, file).then(() => {
-		console.log('Successfully uploaded file!')
-	}).catch(err => console.error(`Some error happened while uploading resume: ${err}`))
+  // This uploads it to firebase Storage
+  uploadBytes(resumeRef, file).then(() => {
+    console.log('Successfully uploaded file!')
+  }).catch(err => console.error(`Some error happened while uploading resume: ${err}`))
 
-	return resumeRef.toString();
+  return resumeRef.toString();
 }

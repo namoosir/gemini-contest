@@ -14,7 +14,7 @@ function ResumeForm() {
   function submitHandler(event: submitEvent) {
     event.preventDefault()
     if (files) {
-      for (const file of files) {        
+      for (const file of files) {
         const ref = uploadResume(storage, file, "uid")
         addResume(db, {
           description: "description",
@@ -36,8 +36,8 @@ function ResumeForm() {
         fileList.push(file)
       }
       setFiles(fileList)
-    } else 
-    setFiles([])
+    } else
+      setFiles([])
   }
 
   return (
