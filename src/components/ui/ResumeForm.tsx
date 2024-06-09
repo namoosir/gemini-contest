@@ -12,7 +12,7 @@ function ResumeForm() {
   const db = useFirebaseContext().db
 
   function submitHandler(event: submitEvent) {
-    event.preventDefault();
+    event.preventDefault()
     if (files) {
       for (const file of files) {        
         const ref = uploadResume(storage, file, "uid")
