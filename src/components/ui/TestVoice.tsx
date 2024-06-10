@@ -1,38 +1,24 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { getAudioBuffer, playAudio } from "@/services/voice/getAudioBuffer"
 
 function TestVoice() {
   type submitEvent = React.FormEvent<HTMLFormElement>
   const [userText, setUserText] = useState<string>("")
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null)
-
-  useEffect(() => {
-    const context = new window.AudioContext()
-    setAudioContext(context)
-
-    return () => {
-      if (context) {
-        context.close()
-      }
-    }
-  }, [])
+  const audioContext = new window.AudioContext()
 
   const handleSubmit = async (event: submitEvent) => {
     event.preventDefault()
-
-    if (userText !== "") {
-      if (audioContext) {
-        try {
-          const arrayBuffer = await getAudioBuffer({
-            text: userText,
-            model: "aura-asteria-en"
-          })
-          playAudio(arrayBuffer, audioContext)
-        } catch (error) {
-          console.error(`Something went wrong with TTS ${error}`)
-        }
+    if (userText !== "" && audioContext) {
+      try {
+        const arrayBuffer = await getAudioBuffer({
+          text: userText,
+          model: "aura-asteria-en"
+        })
+        playAudio(arrayBuffer, audioContext)
+      } catch (error) {
+        console.error(`Something went wrong with TTS ${error}`)
       }
-    }
+    }    
   }
 
   return (
