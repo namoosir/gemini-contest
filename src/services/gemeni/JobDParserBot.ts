@@ -1,6 +1,7 @@
 import { prompt } from './base';
 
 // Will provide an interview based on the inital job description
+// TODO Add feature to record user @altaafj
 const userResponses = [
     "Im qualified",
     "Im super qualified",

@@ -3,7 +3,7 @@ interface data {
   model: string | null
 }
 
-export const getAudioBuffer = async (data: data) => {
+export const getTTSAudioBuffer = async (data: data) => {
   const chars = [".", " ", "!", "?"] // Helps with semantics
   let textToSend: string = data.text
   if (!(data.text[data.text.length - 1] in chars))

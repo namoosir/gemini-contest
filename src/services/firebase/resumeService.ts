@@ -1,4 +1,5 @@
 import { Timestamp, getDocs, addDoc, collection, query, where, Firestore } from "firebase/firestore";
+import { FirebaseStorage, ref, uploadBytes } from "firebase/storage"
 
 interface resume {
   description: string | null,
@@ -46,16 +47,10 @@ export const getUserResumes = async (db: Firestore, uid: string) => {
   }
 }
 
-
-import { FirebaseStorage, ref, uploadBytes } from "firebase/storage"
-
 export const uploadResume = (storage: FirebaseStorage, file: File, uid: string) => {
   const resumeRef = ref(storage, `resume/${uid}/${file.name}`);
-
-  // This uploads it to firebase Storage
   uploadBytes(resumeRef, file).then(() => {
     console.log('Successfully uploaded file!')
   }).catch(err => console.error(`Some error happened while uploading resume: ${err}`))
-
   return resumeRef.toString();
 }
