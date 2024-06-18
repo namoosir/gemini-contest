@@ -20,7 +20,7 @@ function App() {
       const token = credential ? credential.accessToken : null;
       const user = result.user;
       console.log(user.displayName);
-      window.location.href = "/home";
+      window.location.href = "/voice"; //CHANGE BACK TO HOME
     } catch (error) {
       const authError = error as any;
 
