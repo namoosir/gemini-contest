@@ -5,9 +5,11 @@ import signingooglelogo from "../src/assets/continueGoogleNoBg.png";
 import logo from "../src/assets/CompanyTestLogo.png";
 import { useFirebaseContext } from "./context/FirebaseContext";
 import { Card } from "./components/ui/card";
+import { useNavigate, BrowserRouter as Router } from "react-router-dom";
 
 function App() {
   // const history = useHistory();
+  const navigate = useNavigate();
   const { auth } = useFirebaseContext();
   // const { updateUser } = useAuth();
 
@@ -20,7 +22,7 @@ function App() {
       const token = credential ? credential.accessToken : null;
       const user = result.user;
       console.log(user.displayName);
-      window.location.href = "/voice"; //CHANGE BACK TO HOME
+      navigate("/voice"); //CHANGE BACK TO HOME
     } catch (error) {
       const authError = error as any;
 

@@ -4,8 +4,9 @@ import { User, signOut } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import { useFirebaseContext } from "./context/FirebaseContext";
 import signoutlogo from "../src/assets/signoutlogopic.png";
-import useSpeechRecognition from "./hooks/useSpeechRecognitionHook";
+import useSpeechRecognition from "./hooks/useSpeechRecognition";
 import { Card } from "./components/ui/card";
+import Siriwave from "react-siriwave";
 
 function Voice() {
   const { auth } = useFirebaseContext();
@@ -50,42 +51,32 @@ function Voice() {
         {user && (
           <>
             <div className="flex items-center justify-center min-h-screen bg-black">
-              {/* <Card className="p-8 rounded shadow-lg bg-cardbackground">
-                <h1> Voice-To-Text</h1>
-                <button
-                  className="mic-button"
-                  onClick={handleGoogleSignIn}
-                  title="Sign In With Google"
-                >
-                  <img className="w-80" src={signingooglelogo} alt="" />
-                </button>
-              </Card> */}
+              <Siriwave theme="ios9" speed={0.04} pixelDepth={0.5} />
               {hasRecognitionSupport ? (
                 <>
                   <div>
-                    <button
-                      onClick={isListening ? stopListening : startListening}
-                    >
-                      {isListening ? "Stop Listening" : "Start Listening"}
-                    </button>
-                  </div>
+                    <Card className="p-8 rounded shadow-lg bg-cardbackground">
+                      <h1 className="">Voice-To-Text</h1>
+                      <button
+                        className="bg-primary p-4 rounded"
+                        onClick={isListening ? stopListening : startListening}
+                      >
+                        {isListening ? "Stop Listening" : "Start Listening"}
+                      </button>
 
-                  {isListening ? (
-                    <div>Your browser is currently listening</div>
-                  ) : null}
-                  <div>{text}</div>
+                      {isListening ? (
+                        <div>Your browser is currently listening</div>
+                      ) : null}
+
+                      <form className="bg-secondary p-4 rounded">
+                        <label form="fname">{text}</label>
+                      </form>
+                    </Card>
+                  </div>
                 </>
               ) : (
                 <h1>No Speech Reco Support</h1>
               )}
-
-              {/* <button
-                className="signoutbutton"
-                onClick={handleSignOut}
-                title="Sign Out"
-              >
-                <img className="w-10" src={signoutlogo} alt="" />
-              </button> */}
             </div>
           </>
         )}
