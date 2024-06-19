@@ -10,17 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@deepgram/sdk": "^3.3.4",
     "@types/dom-speech-recognition": "^0.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cross-fetch": "^4.0.0",
+    "dotenv": "^16.4.5",
     "firebase": "^10.12.2",
     "lucide-react": "^0.381.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
     "react-siriwave": "^3.1.0",
+    "siriwave": "^2.4.0",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "@types/node": "^20.12.13",

@@ -1,17 +1,22 @@
 import "./App.css";
 import { app } from "./FirebaseConfig";
 import { User, signOut } from "firebase/auth";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useFirebaseContext } from "./context/FirebaseContext";
-import signoutlogo from "../src/assets/signoutlogopic.png";
-import useSpeechRecognition from "./hooks/useSpeechRecognition";
+import signoutlogo from "../src/assets/signoutlogopic2.png";
 import { Card } from "./components/ui/card";
-import Siriwave from "react-siriwave";
+import SiriWave from "react-siriwave";
 
 function Voice() {
   const { auth } = useFirebaseContext();
-
   const [user, setUser] = useState<User | undefined>(undefined);
+  const [transcript, setTranscript] = useState<string>("");
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const [amplitude, setAmplitude] = useState<number>(0);
 
   useEffect(() => {
     const signin = auth.onAuthStateChanged((user) => {
@@ -33,17 +38,111 @@ function Voice() {
     }
   };
 
-  const {
-    text,
-    startListening,
-    stopListening,
-    isListening,
-    hasRecognitionSupport,
-  } = useSpeechRecognition();
+  const startRecording = async () => {
+    try {
+      setTranscript("");
 
-  useEffect(() => {
-    console.log("Firebase app:", app);
-  }, []);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
+      });
+      mediaRecorderRef.current = mediaRecorder;
+
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const analyser = audioContext.createAnalyser();
+      analyserRef.current = analyser;
+
+      const microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+      analyser.fftSize = 256;
+
+      const socket = new WebSocket(
+        "wss://api.deepgram.com/v1/listen?punctuate=true",
+        ["token", import.meta.env.VITE_DEEPGRAM_API_KEY || ""]
+      );
+      socketRef.current = socket;
+
+      socket.onopen = () => {
+        mediaRecorder.addEventListener("dataavailable", (event) => {
+          if (event.data && event.data.size > 0) {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.send(event.data);
+            }
+          }
+        });
+
+        mediaRecorder.start(250);
+      };
+
+      socket.onmessage = (message) => {
+        const received = JSON.parse(message.data);
+        const transcriptText = received.channel.alternatives[0].transcript;
+
+        setTranscript(
+          (prevTranscript) => prevTranscript + " " + transcriptText
+        );
+      };
+
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      socket.onclose = () => {
+        console.log("WebSocket closed.");
+      };
+
+      setIsRecording(true);
+
+      updateAmplitude();
+    } catch (error) {
+      console.error("Error accessing media devices.", error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+    if (socketRef.current) {
+      if (socketRef.current.readyState === WebSocket.OPEN) {
+        socketRef.current.close();
+      }
+      socketRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    setIsRecording(false);
+    setAmplitude(0);
+  };
+
+  const updateAmplitude = () => {
+    const analyser = analyserRef.current;
+
+    if (!analyser) {
+      return;
+    } else {
+      analyser.fftSize = 2048;
+    }
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyser.getByteTimeDomainData(dataArray);
+
+    let sum = 0;
+    for (let i = 0; i < bufferLength; i++) {
+      sum += Math.abs(dataArray[i] - 125);
+    }
+    const average = sum / bufferLength;
+
+    const amplifiedAmplitude = average * 5;
+
+    setAmplitude(amplifiedAmplitude);
+    requestAnimationFrame(updateAmplitude);
+  };
 
   return (
     <>
@@ -51,32 +150,58 @@ function Voice() {
         {user && (
           <>
             <div className="flex items-center justify-center min-h-screen bg-black">
-              <Siriwave theme="ios9" speed={0.04} pixelDepth={0.5} />
-              {hasRecognitionSupport ? (
-                <>
+              <div>
+                <Card className="p-8 rounded shadow-lg bg-cardbackground flex flex-col items-center max-w-4xl">
+                  <h1 className="my-8 text-4xl font-bold">Voice-To-Text</h1>
+                  <button
+                    className="bg-primary p-4 rounded my-2"
+                    onClick={isRecording ? stopRecording : startRecording}
+                  >
+                    {isRecording ? "Stop Recording" : "Start Recording"}
+                  </button>
                   <div>
-                    <Card className="p-8 rounded shadow-lg bg-cardbackground">
-                      <h1 className="">Voice-To-Text</h1>
-                      <button
-                        className="bg-primary p-4 rounded"
-                        onClick={isListening ? stopListening : startListening}
-                      >
-                        {isListening ? "Stop Listening" : "Start Listening"}
-                      </button>
-
-                      {isListening ? (
-                        <div>Your browser is currently listening</div>
-                      ) : null}
-
-                      <form className="bg-secondary p-4 rounded">
-                        <label form="fname">{text}</label>
-                      </form>
-                    </Card>
+                    {isRecording ? (
+                      <div className="ml-1">
+                        <SiriWave
+                          amplitude={amplitude}
+                          theme="ios9"
+                          speed={0.02}
+                          pixelDepth={0.1}
+                          max-width={5}
+                        />
+                      </div>
+                    ) : (
+                      <div className="ml-1">
+                        <SiriWave
+                          amplitude={0}
+                          theme="ios9"
+                          speed={0.02}
+                          pixelDepth={0.5}
+                          max-width={5}
+                        />
+                      </div>
+                    )}
                   </div>
-                </>
-              ) : (
-                <h1>No Speech Reco Support</h1>
-              )}
+
+                  <div className="my-2 w-full flex items-center justify-center">
+                    <form className="bg-secondary p-4 rounded my-2 w-full max-w-md max-h-36 overflow-y-auto">
+                      <label htmlFor="transcript">{transcript}</label>
+                    </form>
+                  </div>
+                  <button
+                    className="bg-primary p-4 rounded my-2 flex items-center"
+                    onClick={handleSignOut}
+                    title="Sign Out"
+                  >
+                    Sign Out
+                    <img
+                      className="w-8 ml-1"
+                      src={signoutlogo}
+                      alt="Sign Out"
+                    />
+                  </button>
+                </Card>
+              </div>
             </div>
           </>
         )}

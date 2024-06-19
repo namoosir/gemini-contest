@@ -3,7 +3,7 @@ import { app } from "./FirebaseConfig";
 import { User, signOut } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import { useFirebaseContext } from "./context/FirebaseContext";
-import signoutlogo from "../src/assets/signoutlogopic.png";
+import signoutlogo from "../src/assets/signoutlogopic2.png";
 
 function Home() {
   const { auth } = useFirebaseContext();
@@ -43,7 +43,7 @@ function Home() {
               onClick={handleSignOut}
               title="Sign Out"
             >
-              <img className="w-10" src={signoutlogo} alt="" />
+              <img className="w-7" src={signoutlogo} alt="" />
             </button>
           </>
         )}
