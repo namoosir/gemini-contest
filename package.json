@@ -14,6 +14,8 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "firebase": "^10.12.2",
+    "firebase-admin": "^12.1.1",
+    "firebase-functions": "^5.0.1",
     "lucide-react": "^0.381.0",
     "node-fetch": "^3.3.2",
     "react": "^18.2.0",
