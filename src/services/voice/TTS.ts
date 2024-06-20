@@ -1,16 +1,11 @@
-interface data {
-  text: string,
-  model: string | null
-}
-
-export const getTTSAudioBuffer = async (data: data) => {
+export const getTTSAudioBuffer = async (text: string, model: string | null) => {
   const chars = [".", " ", "!", "?"] // Helps with semantics
-  let textToSend: string = data.text
-  if (!(data.text[data.text.length - 1] in chars))
-    textToSend = data.text.concat(".")
+  let textToSend: string = text
+  if (!(text[text.length - 1] in chars))
+    textToSend = text.concat(".")
 
   const body = JSON.stringify({ text: textToSend })
-  const url = data.model ? `https://api.deepgram.com/v1/speak?model=${data.model}` : "https://api.deepgram.com/v1/speak"
+  const url = model ? `https://api.deepgram.com/v1/speak?model=${model}` : "https://api.deepgram.com/v1/speak"
   const headers = {
     Authorization: `Token ${import.meta.env.VITE_APP_VOICE_API_KEY}`,
     "Content-Type": "application/json",
@@ -52,3 +47,41 @@ export const playAudio = (arrayBuffer: ArrayBuffer, audioCtx: AudioContext) => {
   })
 
 }
+
+
+export const fetchAudioBuffer = async (sentence: string) => {
+  try {
+    const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/getTTS', {
+      method: "POST",
+      body: JSON.stringify({ "text": sentence, "model": "" })
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    alert('Something went wrong while trying to fetch, maybe turn on cloud function or fix backend')
+    throw new Error(`${error}`)
+  }
+};
+
+
+
+export const getTestMessage = async () => {
+  const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/getTestMessage', {
+    method: "POST",
+    body: JSON.stringify({ "text": "hello test message hello from client.", "model": "" })
+  });
+
+  const data = await response.json();
+  return data;
+}
+
+
+export const fetchAudioBufferV2 = async (sentence: string) => {
+  const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/getAudioBuffer', {
+    method: "POST",
+    body: JSON.stringify({ "text": sentence, "model": "" })
+  });
+
+  const data = await response.json();
+  return data;
+};

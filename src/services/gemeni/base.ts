@@ -15,10 +15,7 @@ async function prompt(msg: string, audioCtx: AudioContext): Promise<string> {
     const result = await chat.sendMessage(msg);
     const response = await result.response;
     const text = response.text();
-    const arrayBuffer = await getTTSAudioBuffer({
-      text: text,
-      model: "aura-asteria-en"
-    })
+    const arrayBuffer = await getTTSAudioBuffer(text, "aura-asteria-en")
     await playAudio(arrayBuffer, audioCtx)
     return text;
   } catch (error) {

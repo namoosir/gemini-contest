@@ -10,8 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.12.0",
     "@deepgram/sdk": "^3.3.4",
+    "@google/generative-ai": "^0.12.0",
+    "@radix-ui/react-slot": "^1.1.0",
     "@types/dom-speech-recognition": "^0.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

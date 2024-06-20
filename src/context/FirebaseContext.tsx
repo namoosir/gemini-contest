@@ -11,7 +11,7 @@ interface FirebaseContextType {
   analytics: Analytics;
   auth: Auth;
   provider: GoogleAuthProvider;
-  storage: FirebaseStorage
+  storage: FirebaseStorage;
 }
 
 // Initialize the firebase context
