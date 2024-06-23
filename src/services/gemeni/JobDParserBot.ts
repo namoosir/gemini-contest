@@ -2,14 +2,14 @@ import { prompt } from './base';
 
 // Will provide an interview based on the inital job description
 // TODO Add feature to record user @altaafj
-const userResponses = [
-    "Im qualified",
-    "Im super qualified",
-    "Im mega qualified",
-]
+// const userResponses = [
+//     "Im qualified",
+//     "Im super qualified",
+//     "Im mega qualified",
+// ]
 class InterviewBot {
-    async initInterviewForJobD(jobDescritpion: string, audioCtx: AudioContext) {
-        let res = await prompt(`
+    async initInterviewForJobD(jobDescritpion: string) {
+        await prompt(`
             I want you to provide me 3 interview questions based on the job description i'm about to provide.
             I will prompt you 4 more times in the future.
             The first time will be the the job description. You will return me the first interview question.
@@ -26,19 +26,10 @@ class InterviewBot {
                 questions around C. Regardless of wether the user actually knows any the skill.
             - My response can be extremley random. Regardless of my response, you will give me the next question until the last.
                 You should only comment on my responses after the interview is over. When you return me an evaulation.
-            `, audioCtx
+            `
         )
-        console.log(res)
 
-        res = await prompt("Here is the job description \n" + jobDescritpion, audioCtx);
-        console.log(res)
-
-        res = await prompt("This is my response to the first question \n" + userResponses[0], audioCtx);
-        console.log(res)
-        res = await prompt("This is my response to the second question \n" + userResponses[1], audioCtx);
-        console.log(res)
-        res = await prompt("This is my response to the last question \n" + userResponses[2], audioCtx);
-        console.log(res)
+        return await prompt(`Here is the job description: ${jobDescritpion}`)  
 
 
     }
