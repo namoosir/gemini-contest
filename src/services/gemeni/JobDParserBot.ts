@@ -26,6 +26,8 @@ class InterviewBot {
                 questions around C. Regardless of wether the user actually knows any the skill.
             - My response can be extremley random. Regardless of my response, you will give me the next question until the last.
                 You should only comment on my responses after the interview is over. When you return me an evaulation.
+
+            Your responses should be conversational and should not be in markdown format.
             `
         )
 
