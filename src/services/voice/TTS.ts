@@ -51,7 +51,7 @@ export const playAudio = (arrayBuffer: ArrayBuffer, audioCtx: AudioContext) => {
 
 export const fetchAudioBuffer = async (sentence: string) => {
   try {
-    const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/getTTS', {
+    const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/api-getTTS', {
       method: "POST",
       body: JSON.stringify({ "text": sentence, "model": "" })
     });
