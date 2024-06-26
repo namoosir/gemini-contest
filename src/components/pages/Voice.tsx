@@ -1,10 +1,10 @@
-import "./App.css";
-import { app } from "./FirebaseConfig";
+import { app } from "../../FirebaseConfig";
 import { User, signOut } from "firebase/auth";
 import React, { useEffect, useState, useRef } from "react";
-import { useFirebaseContext } from "./context/FirebaseContext";
-import signoutlogo from "../src/assets/signoutlogopic2.png";
-import { Card } from "./components/ui/card";
+import { useFirebaseContext } from "../../context/FirebaseContext";
+import Icon from '@mdi/react'
+import { mdiLogout } from '@mdi/js'
+import { Card } from "../ui/card";
 import SiriWave from "react-siriwave";
 
 function Voice() {
@@ -194,10 +194,9 @@ function Voice() {
                     title="Sign Out"
                   >
                     Sign Out
-                    <img
+                    <Icon
                       className="w-8 ml-1"
-                      src={signoutlogo}
-                      alt="Sign Out"
+                      path={mdiLogout}
                     />
                   </button>
                 </Card>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { InterviewBot } from '@/services/gemeni/JobDParserBot';
+import { InterviewBot } from '@/services/gemini/JobDParserBot';
 
 const Interviewer: React.FC = () => {
   const [jobDescription, setJobDescription] = useState<string>('');

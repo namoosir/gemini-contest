@@ -1,5 +1,5 @@
-import { prompt } from "@/services/gemeni/base"
-import { InterviewBot } from "@/services/gemeni/JobDParserBot"
+import { prompt } from "@/services/gemini/base"
+import { InterviewBot } from "@/services/gemini/JobDParserBot"
 import { fetchAudioBuffer } from "@/services/voice/TTS"
 import { useRef, useState } from "react"
 

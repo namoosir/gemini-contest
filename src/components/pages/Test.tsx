@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fetchAudioBuffer } from "../services/voice/TTS";
+import { fetchAudioBuffer } from "../../services/voice/TTS";
 import { Button } from "@/components/ui/button"
 
 const Test = () => {
