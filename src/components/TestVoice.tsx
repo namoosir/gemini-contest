@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { getAudioBuffer, playAudio } from "@/services/voice/getAudioBuffer"
+import { getTTSAudioBuffer, playAudio } from "@/services/voice/TTS"
 
 function TestVoice() {
   type submitEvent = React.FormEvent<HTMLFormElement>
@@ -10,10 +10,7 @@ function TestVoice() {
     event.preventDefault()
     if (userText !== "" && audioContext) {
       try {
-        const arrayBuffer = await getAudioBuffer({
-          text: userText,
-          model: "aura-asteria-en"
-        })
+        const arrayBuffer = await getTTSAudioBuffer(userText, "aura-asteria-en")
         playAudio(arrayBuffer, audioContext)
       } catch (error) {
         console.error(`Something went wrong with TTS ${error}`)
