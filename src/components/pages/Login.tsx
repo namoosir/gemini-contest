@@ -1,7 +1,7 @@
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Logo from '@/components/icons/Logo'
 import Google from "../icons/Google"
-import { useFirebaseContext } from "../../context/FirebaseContext";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";

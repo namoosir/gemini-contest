@@ -1,7 +1,7 @@
 import { app } from "../../FirebaseConfig";
 import { User, signOut } from "firebase/auth";
 import React, { useEffect, useState, useRef } from "react";
-import { useFirebaseContext } from "../../context/FirebaseContext";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 import Icon from '@mdi/react'
 import { mdiLogout } from '@mdi/js'
 import { Card } from "../ui/card";

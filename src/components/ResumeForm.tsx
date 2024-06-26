@@ -1,4 +1,4 @@
-import { useFirebaseContext } from "@/context/FirebaseContext";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 import { addResume } from "@/services/firebase/resumeService";
 import { uploadResume } from "@/services/firebase/resumeService";
 import { useState } from "react";
@@ -8,8 +8,7 @@ function ResumeForm() {
   type submitEvent = React.FormEvent<HTMLFormElement>
 
   const [files, setFiles] = useState<Array<File>>()
-  const storage = useFirebaseContext().storage
-  const db = useFirebaseContext().db
+  const { storage, db } = useFirebaseContext()
 
   function submitHandler(event: submitEvent) {
     event.preventDefault();

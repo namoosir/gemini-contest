@@ -2,7 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100;
+  src: url('@/assets/fonts/Inter-Thin.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 200;
+  src: url('@/assets/fonts/Inter-ExtraLight.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 300;
+  src: url('@/assets/fonts/Inter-Light.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 400;
+  src: url('@/assets/fonts/Inter-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 500;
+  src: url('@/assets/fonts/Inter-Medium.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 600;
+  src: url('@/assets/fonts/Inter-SemiBold.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  src: url('@/assets/fonts/Inter-Bold.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 800;
+  src: url('@/assets/fonts/Inter-ExtraBold.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 900;
+  src: url('@/assets/fonts/Inter-Black.ttf');
+}
+
 @layer base {
+  html {
+    font-family: Inter;
+  }
+
   :root {
     --background: 20 14.3% 4.1%;
     --foreground: 0 0% 95%;

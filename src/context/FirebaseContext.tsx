@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext } from "react";
+import { ReactNode, createContext } from "react";
 import { analytics, db, auth, provider, storage } from "@/FirebaseConfig";
 import { Firestore } from "firebase/firestore";
 import { Analytics } from "firebase/analytics";
@@ -28,13 +28,3 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// This is a react hook that is used to get the context for the app
-export const useFirebaseContext = () => {
-  const context = useContext(FirebaseContext);
-  if (!context) {
-    throw new Error(
-      "useFirebaseContext must be used within a FirebaseProvider"
-    );
-  }
-  return context;
-};
