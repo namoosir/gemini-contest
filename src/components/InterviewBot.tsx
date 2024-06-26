@@ -3,12 +3,11 @@ import { InterviewBot } from '@/services/gemini/JobDParserBot';
 
 const Interviewer: React.FC = () => {
   const [jobDescription, setJobDescription] = useState<string>('');
-  const audioCtx = new window.AudioContext()
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const bot: InterviewBot = new InterviewBot();
-    await bot.initInterviewForJobD(jobDescription, audioCtx)
+    await bot.initInterviewForJobD(jobDescription)
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {

@@ -3,8 +3,16 @@ import { InterviewBot } from "@/services/gemini/JobDParserBot"
 import { fetchAudioBuffer } from "@/services/voice/TTS"
 import { useRef, useState } from "react"
 
+interface MessageData {
+  channel?: {
+      alternatives?: {
+          transcript?: string;
+      }[];
+  };
+}
+
 function Chat() {
-  const [chat, setChat] = useState<Array<string>>([])
+  const [chat, setChat] = useState<string[]>([])
   const [jobDescription, setJobDescription] = useState<string>("")
   const [showMic, setShowMic] = useState<boolean>(false)
   const [isRecording, setIsRecording] = useState<boolean>(false)
@@ -21,7 +29,7 @@ function Chat() {
      alert("Provide job desc")
      return
     }
-    handleReponse(await gemini.initInterviewForJobD(jobDescription))
+    await handleReponse(await gemini.initInterviewForJobD(jobDescription))
   }
 
   async function handleReponse(text: string) {
@@ -29,7 +37,7 @@ function Chat() {
     const audioCtx = new AudioContext()    
     setChat(history => [...history, "\n", "Gemini: "])
 
-    for (const chunk of data) {      
+    for (const chunk of data) {
       setChat(history => [...history, chunk.word])
       const typedArray = new Uint8Array(Object.values(chunk.buffer))
       const arrayBuffer = typedArray.buffer
@@ -85,10 +93,15 @@ function Chat() {
       }
 
       socket.onmessage = (message) => {
-        const received = JSON.parse(message.data)
-        const transcriptText = received.channel.alternatives[0].transcript
-        setChat(history => [...history, transcriptText])
-        setTranscript(history => history += transcriptText)
+        if (message?.data) {
+          const received = JSON.parse(message.data as string) as MessageData
+          const transcriptText = received?.channel?.alternatives?.[0].transcript
+
+          if (transcriptText) {
+            setChat(history => [...history, transcriptText]);
+            setTranscript(history => history += transcriptText);
+          }
+        }
       }
 
       socket.onerror = (error) => {
@@ -118,12 +131,12 @@ function Chat() {
       socketRef.current = null
     }
     if (audioContextRef.current) {
-      audioContextRef.current.close()
+      await audioContextRef.current.close()
       audioContextRef.current = null
     }
     setIsRecording(false)
     setShowMic(false)
-    handleReponse(await prompt(transcript))
+    await handleReponse(await prompt(transcript))
   }
 
   // TODO: Gotta clean up

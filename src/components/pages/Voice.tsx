@@ -1,6 +1,5 @@
-import { app } from "../../FirebaseConfig";
 import { User, signOut } from "firebase/auth";
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import Icon from '@mdi/react'
 import { mdiLogout } from '@mdi/js'
@@ -100,7 +99,7 @@ function Voice() {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
@@ -112,7 +111,7 @@ function Voice() {
       socketRef.current = null;
     }
     if (audioContextRef.current) {
-      audioContextRef.current.close();
+      await audioContextRef.current.close();
       audioContextRef.current = null;
     }
     setIsRecording(false);

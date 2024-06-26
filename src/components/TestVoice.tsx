@@ -11,9 +11,9 @@ function TestVoice() {
     if (userText !== "" && audioContext) {
       try {
         const arrayBuffer = await getTTSAudioBuffer(userText, "aura-asteria-en")
-        playAudio(arrayBuffer, audioContext)
+        await playAudio(arrayBuffer, audioContext)
       } catch (error) {
-        console.error(`Something went wrong with TTS ${error}`)
+        console.error("Something went wrong with TTS", error)
       }
     }    
   }

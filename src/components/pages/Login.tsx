@@ -17,6 +17,7 @@ function App() {
       const result = await signInWithPopup(auth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential ? credential.accessToken : null;
+      console.log(token)
       const user = result.user;
       
       console.log(user.displayName);

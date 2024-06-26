@@ -27,4 +27,3 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     </FirebaseContext.Provider>
   );
 };
-
