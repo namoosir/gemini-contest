@@ -26,6 +26,6 @@
       ]
     },
   },
-  "include": ["src"],
+  "include": ["src", "backend/backendvoice.js"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
