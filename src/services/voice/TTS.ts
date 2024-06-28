@@ -49,9 +49,9 @@ export const playAudio = (arrayBuffer: ArrayBuffer, audioCtx: AudioContext) => {
 }
 
 
-export const fetchAudioBuffer = async (sentence: string) => {
+export const fetchAudioBuffer = async (sentence: string): Promise<{word: string, buffer: Uint8Array}> => {
   try {
-    const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/api-getTTS', {
+    const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/api/audio/tts', {
       method: "POST",
       body: JSON.stringify({ "text": sentence, "model": "" })
     });

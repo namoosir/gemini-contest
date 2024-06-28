@@ -16,6 +16,7 @@
   "dependencies": {
     "@deepgram/sdk": "^3.3.4",
     "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.0.0"
   },
