@@ -6,7 +6,7 @@ function App(): JSX.Element {
     <FirebaseProvider>
       <AppRouter />
     </FirebaseProvider>
-  )
+  );
 }
 
-export default App
+export default App;
