@@ -152,7 +152,7 @@ function Chat() {
   // }
 
   return (
-    <>
+    <div className="mt-20">
       <form onSubmit={jobSubmitHandler}>
         <label>
           Provide the Job description to Start the interview process:
@@ -180,7 +180,7 @@ function Chat() {
       {/* <button className="bg-primary p-4 rounded my-2" onClick={cleanup}>
         Stop convo
       </button> */}
-    </>
+    </div>
   )
 }
 
