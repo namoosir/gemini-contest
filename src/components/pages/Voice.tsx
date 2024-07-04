@@ -1,8 +1,8 @@
 import { User, signOut } from "firebase/auth";
 import { useEffect, useState, useRef } from "react";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
-import Icon from '@mdi/react'
-import { mdiLogout } from '@mdi/js'
+import Icon from "@mdi/react";
+import { mdiLogout } from "@mdi/js";
 import { Card } from "../ui/card";
 import SiriWave from "react-siriwave";
 
@@ -193,10 +193,7 @@ function Voice() {
                     title="Sign Out"
                   >
                     Sign Out
-                    <Icon
-                      className="w-8 ml-1"
-                      path={mdiLogout}
-                    />
+                    <Icon className="w-8 ml-1" path={mdiLogout} />
                   </button>
                 </Card>
               </div>
