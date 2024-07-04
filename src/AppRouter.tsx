@@ -6,6 +6,7 @@ import Test from "./components/pages/Test.tsx";
 import Chat from "./components/pages/Chat.tsx";
 import Interviewer from "./components/InterviewBot.tsx";
 import Header from "./components/Header.tsx";
+import Interview from "./components/pages/Interview.tsx";
 
 const AppRouter = () => {
   return (
@@ -20,6 +21,7 @@ const AppRouter = () => {
             <Route path="/test" element={<Test />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/test2" element={<Interviewer />} />
+            <Route path="/interview" element={<Interview />} />
           </Routes>
         </div>
       </div>

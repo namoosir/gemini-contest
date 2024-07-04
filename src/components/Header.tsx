@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Icon from "@mdi/react";
-import { mdiHomeAnalytics, mdiAccountSupervisor, mdiBookshelf, mdiLogout } from "@mdi/js";
+import {
+  mdiHomeAnalytics,
+  mdiAccountSupervisor,
+  mdiBookshelf,
+  mdiLogout,
+} from "@mdi/js";
 import { useClickAway } from "@uidotdev/usehooks";
 import Hamburger from "hamburger-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -151,8 +156,6 @@ const Header = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
-          
         </div>
         <div
           // @ts-expect-error ref type is not matching
@@ -205,23 +208,23 @@ const Header = () => {
                   </Button>
                 ))}
                 <div className="flex justify-center items-center w-full">
-                <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    <Avatar className="h-8 w-8 text-xs">
-                      <AvatarImage src={user?.photoURL} />
-                      <AvatarFallback>{getInitials()}</AvatarFallback>
-                    </Avatar>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem
-                      className="flex justify-center"
-                      onClick={handleSignOut}
-                    >
-                      <Icon className="h-4 w-4 mr-2" path={mdiLogout} />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Avatar className="h-8 w-8 text-xs">
+                        <AvatarImage src={user?.photoURL} />
+                        <AvatarFallback>{getInitials()}</AvatarFallback>
+                      </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem
+                        className="flex justify-center"
+                        onClick={handleSignOut}
+                      >
+                        <Icon className="h-4 w-4 mr-2" path={mdiLogout} />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </motion.div>
             )}
