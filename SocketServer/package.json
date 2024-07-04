@@ -1,0 +1,18 @@
+{
+  "name": "socketserver",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Socket Server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ws": "^8.17.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

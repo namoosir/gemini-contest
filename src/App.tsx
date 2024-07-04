@@ -1,10 +1,15 @@
-import ResumeForm from "./components/ResumeForm"
+import AppRouter from "./AppRouter";
+import { FirebaseProvider } from "./context/FirebaseContext";
+import { AuthProvider } from "./context/AuthContext"
 
-function App() {
+function App(): JSX.Element {
   return (
-    <>
-      <ResumeForm />
-    </>
-  )
+    <FirebaseProvider>
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
+    </FirebaseProvider>
+  );
 }
-export default App
+
+export default App;
