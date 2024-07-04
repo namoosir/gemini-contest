@@ -6,6 +6,7 @@ import Test from "./components/pages/Test.tsx";
 import Chat from "./components/pages/Chat.tsx";
 import Interviewer from "./components/InterviewBot.tsx";
 import Header from "./components/Header.tsx";
+import Interview from "./components/pages/Interview.tsx";
 import useFirebaseContext from "./hooks/useFirebaseContext.ts";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 
