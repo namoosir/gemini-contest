@@ -10,15 +10,19 @@ import Header from "./components/Header.tsx";
 const AppRouter = () => {
   return (
     <Router>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/voice" element={<Voice />} />
-        <Route path="/test" element={<Test />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/test2" element={<Interviewer />} />
-      </Routes>
+      <div className="min-h-screen flex justify-center">
+        <Header />
+        <div className="min-h-full w-[1120px] lg:mt-[65px] mt-[72px]">
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/voice" element={<Voice />} />
+            <Route path="/test" element={<Test />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/test2" element={<Interviewer />} />
+          </Routes>
+        </div>
+      </div>
     </Router>
   );
 };
