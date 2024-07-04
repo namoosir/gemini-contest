@@ -1,14 +1,14 @@
 import { Navigate } from "react-router-dom";
-import React, { ReactNode } from "react";
-import { User } from "firebase/auth";
+import { ReactNode } from "react";
+import useAuthContext from "./hooks/useAuthContext";
 
 interface Props {
-  user?: User | null;
   children?: ReactNode;
-  // any props that come into the component
 }
 
-const ProtectedRoute = ({ user, children }: Props) => {
+const ProtectedRoute = ({ children }: Props) => {
+  const { user } = useAuthContext();
+
   if (!user) {
     return <Navigate to="/" replace />;
   }

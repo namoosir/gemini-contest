@@ -11,17 +11,16 @@ import { useClickAway } from "@uidotdev/usehooks";
 import Hamburger from "hamburger-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import useFirebaseContext from "@/hooks/useFirebaseContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "./ui/button";
 import Logo from "./icons/Logo";
-import { signOut, User } from "firebase/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import useAuthContext from "@/hooks/useAuthContext";
 
 type Page = "dashboard" | "interview" | "learning" | "";
 interface Menu {
@@ -33,9 +32,8 @@ interface Menu {
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { auth } = useFirebaseContext();
+  const { user, logout } = useAuthContext();
 
-  const [user, setUser] = useState<User | undefined>(undefined);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedPage, setSelectedPage] = useState<Page>(
     location.pathname.split("/")[1] as Page
@@ -44,18 +42,6 @@ const Header = () => {
   const mobileRef = useClickAway(() => {
     setIsOpen(false);
   });
-
-  useEffect(() => {
-    const signIn = auth.onAuthStateChanged((newUser) => {
-      if (newUser) {
-        setUser(newUser);
-        console.log(newUser);
-      } else {
-        setUser(undefined);
-      }
-    });
-    return () => signIn();
-  }, [auth]);
 
   const menu: Menu[] = [
     {
@@ -76,7 +62,6 @@ const Header = () => {
   ];
 
   useEffect(() => {
-    console.log(location.pathname.split("/")[1]);
     setSelectedPage(location.pathname.split("/")[1] as Page);
   }, [location]);
 
@@ -95,22 +80,13 @@ const Header = () => {
     return "!";
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   return (
     <header className="w-full fixed z-50 top-0 bg-background lg:backdrop-blur-md border-b border-border/40 lg:bg-background/40 flex justify-center">
-      <div className="flex p-3 flex-row justify-between items-center w-[1120px]">
+      <div className="hidden lg:flex p-3 flex-row justify-between items-center w-[1120px]">
         <div onClick={() => goToPage("")}>
           <Logo className="h-8 w-[340px] cursor-pointer" />
         </div>
-        <div className="hidden lg:flex gap-2 justify-center items-center">
+        <div className="flex gap-2 justify-center items-center">
           {menu.map((menuItem, index) => {
             return (
               <Button
@@ -139,17 +115,18 @@ const Header = () => {
               </Button>
             );
           })}
+
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar className="h-8 w-8 text-xs">
-                <AvatarImage src={user?.photoURL} />
+                {user?.photoURL && <AvatarImage src={user?.photoURL} />}
                 <AvatarFallback>{getInitials()}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem
                 className="flex justify-center"
-                onClick={handleSignOut}
+                onClick={logout}
               >
                 <Icon className="h-4 w-4 mr-2" path={mdiLogout} />
                 Logout
@@ -157,11 +134,13 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div
-          // @ts-expect-error ref type is not matching
-          ref={mobileRef}
-          className="lg:hidden"
-        >
+      </div>
+      <div
+        // @ts-expect-error ref type is not matching
+        ref={mobileRef}
+        className="lg:hidden p-3 flex flex-row justify-between items-center w-[1120px]"
+      >
+        <div>
           <Hamburger
             color="hsl(var(--foreground))"
             size={24}
@@ -207,28 +186,28 @@ const Header = () => {
                     </span>
                   </Button>
                 ))}
-                <div className="flex justify-center items-center w-full">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <Avatar className="h-8 w-8 text-xs">
-                        <AvatarImage src={user?.photoURL} />
-                        <AvatarFallback>{getInitials()}</AvatarFallback>
-                      </Avatar>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem
-                        className="flex justify-center"
-                        onClick={handleSignOut}
-                      >
-                        <Icon className="h-4 w-4 mr-2" path={mdiLogout} />
-                        Logout
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+        <div className="flex justify-center items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar className="h-8 w-8 text-xs">
+                {user?.photoURL && <AvatarImage src={user?.photoURL} />}
+                <AvatarFallback>{getInitials()}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                className="flex justify-center"
+                onClick={logout}
+              >
+                <Icon className="h-4 w-4 mr-2" path={mdiLogout} />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

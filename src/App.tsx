@@ -1,10 +1,13 @@
 import AppRouter from "./AppRouter";
 import { FirebaseProvider } from "./context/FirebaseContext";
+import { AuthProvider } from "./context/AuthContext"
 
 function App(): JSX.Element {
   return (
     <FirebaseProvider>
-      <AppRouter />
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
     </FirebaseProvider>
   );
 }
