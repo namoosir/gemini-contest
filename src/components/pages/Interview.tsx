@@ -1,5 +1,5 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { mdiArrowRight, mdiArrowLeft } from "@mdi/js";
 
 import {
   Card,
@@ -37,25 +37,34 @@ const Interview: React.FC = () => {
   };
 
   return (
-    <div>
-      <h1>Interview Page</h1>
+    <div className="h-full flex flex-col py-4">
+      <h3 className="text-2xl font-semibold leading-none tracking-tight">Interview</h3>
       <p>Welcome to the interview page!</p>
       <Card>
-        <CardFooter>
+        <CardHeader>
           <p>Page {currentPage + 1} of 3</p>
-        </CardFooter>
+        </CardHeader>
         {renderPage()}
         <CardFooter>
-          {currentPage > 0 && (
-            <Button variant="ghost" onClick={() => handlePreviousPage()}>
-              <span>Back</span>
-            </Button>
-          )}
-          {currentPage < 2 && (
-            <Button variant="ghost" onClick={() => handleNextPage()}>
-              <span>Next</span>
-            </Button>
-          )}
+          <div className="flex w-full justify-between items-center">
+            {currentPage > 0 && (
+              <Button
+                variant="secondary"
+                onClick={handlePreviousPage}
+              >
+                Previous
+              </Button>
+            )}
+            {currentPage < 2 && (
+              <Button
+                className="ml-auto"
+                variant="default"
+                onClick={handleNextPage}
+              >
+                Next
+              </Button>
+            )}
+          </div>
         </CardFooter>
       </Card>
     </div>
@@ -67,9 +76,11 @@ const JobDescriptionCard: React.FC = () => {
     <>
       <CardHeader>
         <CardTitle>Job Description</CardTitle>
+        <p>Paste your the job description you are trying to interview for.</p>
       </CardHeader>
-      <p>Paste your the job description you are trying to interview for.</p>
-      <CardContent><Textarea placeholder="Type your message here." /></CardContent>
+      <CardContent>
+        <Textarea placeholder="Type your message here." />
+      </CardContent>
     </>
   );
 };
