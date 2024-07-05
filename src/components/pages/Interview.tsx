@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { mdiArrowRight, mdiArrowLeft } from "@mdi/js";
+import { mdiArrowRight, mdiArrowLeft, mdiCheck } from "@mdi/js";
+import Icon from "@mdi/react";
 
 import {
   Card,
@@ -37,36 +38,52 @@ const Interview: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col py-4">
-      <h3 className="text-2xl font-semibold leading-none tracking-tight">Interview</h3>
-      <p>Welcome to the interview page!</p>
-      <Card>
-        <CardHeader>
-          <p>Page {currentPage + 1} of 3</p>
-        </CardHeader>
-        {renderPage()}
-        <CardFooter>
-          <div className="flex w-full justify-between items-center">
-            {currentPage > 0 && (
+    <div className="h-full flex flex-col py-12 items-center">
+      <div className="max-w-[700px]">
+        <h3 className="text-2xl font-semibold leading-none tracking-tight mb-4">
+          Interview
+        </h3>
+        <Card>
+          <CardHeader>
+            <p>Page {currentPage + 1} of 3</p>
+          </CardHeader>
+          {renderPage()}
+          <CardFooter>
+            <div className="flex w-full justify-between items-center">
               <Button
+                disabled={currentPage < 1}
                 variant="secondary"
                 onClick={handlePreviousPage}
               >
+                <Icon className='h4 w-4 mr-2' path={mdiArrowLeft} />
                 Previous
               </Button>
-            )}
-            {currentPage < 2 && (
-              <Button
-                className="ml-auto"
-                variant="default"
-                onClick={handleNextPage}
-              >
-                Next
-              </Button>
-            )}
-          </div>
-        </CardFooter>
-      </Card>
+
+              {currentPage < 2 && (
+                <Button
+                  className="ml-auto"
+                  variant="default"
+                  onClick={handleNextPage}
+                >
+                  Next
+                  <Icon className='h4 w-4 ml-2' path={mdiArrowRight} />
+                </Button>
+              )}
+
+              {currentPage === 2 &&
+                <Button
+                  className="ml-auto"
+                  variant="default"
+                  onClick={handleNextPage}
+                >
+                  Start
+                  <Icon className='h4 w-4 ml-2' path={mdiCheck} />
+                </Button>
+              }
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 };
@@ -76,10 +93,15 @@ const JobDescriptionCard: React.FC = () => {
     <>
       <CardHeader>
         <CardTitle>Job Description</CardTitle>
-        <p>Paste your the job description you are trying to interview for.</p>
+        <p className="text-base text-muted-foreground">
+          Please enter the job description you would like to simulate an interview for.
+        </p>
       </CardHeader>
       <CardContent>
-        <Textarea placeholder="Type your message here." />
+        <Textarea placeholder="Paste here..." />
+        <p className="text-sm text-muted-foreground">
+          This will be used to generate relevant questions for your interview.
+        </p>
       </CardContent>
     </>
   );
