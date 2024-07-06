@@ -257,7 +257,7 @@ export const FileUploaderContent = forwardRef<
 
   return (
     <div
-      className={cn("w-full px-1")}
+      className={cn("w-full")}
       ref={containerRef}
       aria-description="content file holder"
     >
@@ -307,7 +307,7 @@ export const FileUploaderItem = forwardRef<
         onClick={() => removeFileFromSet(index)}
       >
         <span className="sr-only">remove item {index}</span>
-        <RemoveIcon className="w-4 h-4 stroke-muted-foreground hover:stroke-destructive duration-200 ease-in-out" />
+        <RemoveIcon className="w-6 h-6 stroke-muted-foreground hover:stroke-destructive duration-200 ease-in-out" />
       </button>
     </div>
   );

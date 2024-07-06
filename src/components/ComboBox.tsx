@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/popover";
 
 interface Props {
-  width: number
   name: string
   items: {
     value: string;

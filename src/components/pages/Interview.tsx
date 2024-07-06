@@ -1,20 +1,25 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { mdiArrowRight, mdiArrowLeft, mdiCheck } from "@mdi/js";
 import Icon from "@mdi/react";
 import { DropzoneOptions } from "react-dropzone";
-import { Document, Page, pdfjs, Thumbnail } from 'react-pdf';
+import { Document, Page, pdfjs, Thumbnail } from "react-pdf";
 
+import {
+  getUserResumes,
+  getResumeObject,
+  Resume,
+} from "@/services/firebase/resumeService";
+import useAuthContext from "@/hooks/useAuthContext";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import ComboBox from "../ComboBox";
 import Steps from "../Steps";
 import {
   FileUploader,
@@ -22,10 +27,12 @@ import {
   FileUploaderItem,
   FileInput,
 } from "@/components/ui/file-uploader";
+import { cn } from "@/lib/utils";
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
 ).toString();
 
 type Page = 0 | 1 | 2;
@@ -39,6 +46,10 @@ const Interview: React.FC = () => {
 
   const handlePreviousPage = () => {
     setCurrentPage((prevPage: Page): Page => (prevPage - 1) as Page);
+  };
+
+  const handleFinish = () => {
+    // todo
   };
 
   const renderPage = () => {
@@ -56,7 +67,7 @@ const Interview: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col py-12 items-center">
-      <div className="max-w-[700px] min-w-[700px]">
+      <div className="w-[1120px]">
         <h3 className="text-2xl font-semibold leading-none tracking-tight mb-4">
           Interview
         </h3>
@@ -91,7 +102,7 @@ const Interview: React.FC = () => {
                 <Button
                   className="ml-auto"
                   variant="default"
-                  onClick={handleNextPage}
+                  onClick={handleFinish}
                 >
                   Start
                   <Icon className="h4 w-4 ml-2" path={mdiCheck} />
@@ -116,40 +127,71 @@ const JobDescriptionCard: React.FC = () => {
         </p>
       </CardHeader>
       <CardContent>
-        <Textarea placeholder="Paste here..." />
+        <Textarea className="h-60" placeholder="Paste here..." />
       </CardContent>
     </div>
   );
 };
 
 const ResumeCard: React.FC = () => {
-  const [files, setFiles] = useState<File[] | null>([]);
-  const [containerWidth, setContainerWidth] = useState<number>(0);  
-  const containerRef = useRef<HTMLElement | null>(null);
+  const { storage, db } = useFirebaseContext();
+  const { user } = useAuthContext();
 
-  const tempItems = [
-    { value: "react", label: "React" },
-    { value: "vue", label: "Vue" },
-    { value: "angular", label: "Angular" },
-  ];
-  const dropzone = {
+  const [files, setFiles] = useState<File[] | null>([]);
+  const [resume, setResume] = useState<Resume | null>(null);
+  const [resumeURL, setResumeURL] = useState<string | null>(null);
+  const [selectedResume, setSelectedResume] = useState<0 | 1 | null>(null);
+
+  const dropzone: DropzoneOptions = {
     accept: {
       "application/pdf": [".pdf"],
     },
     multiple: false,
     maxFiles: 1,
-    maxSize: 1 * 1024 * 1024 * 1024,
-  } satisfies DropzoneOptions;
+    maxSize: 1 * 1024 * 1024,
+  };
 
   useEffect(() => {
-    const updateContainerWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
+    const getResume = async () => {
+      if (!user) return;
+
+      const resumes = await getUserResumes(db, user?.uid);
+
+      if (!resumes || resumes.length === 0) return;
+
+      return setResume(resumes[0]);
     };
 
-    updateContainerWidth();
-  }, [containerRef.current]);
+    // TODO: find better way to do this
+    void(getResume());
+  }, [db, user]);
+
+  useEffect(() => {
+    const fetchPDF = async () => {
+      if (!resume) return;
+
+      const url = await getResumeObject(storage, resume.url); // Assuming gcsUrl is the direct HTTP link to the PDF file
+
+      setResumeURL(url);
+    };
+
+    void(fetchPDF());
+    console.log(resume);
+  }, [resume, storage]);
+
+  useEffect(() => {
+    if (files?.length === 0) {
+      setSelectedResume(1)
+    }
+  }, [files])
+
+  useEffect(() => {
+    if (resumeURL) {
+      setSelectedResume(1)
+    }
+  }, [resumeURL])
+
+  const fileURLs = useMemo(() => files?.map(file => URL.createObjectURL(file)), [files]);
 
   return (
     <div className="w-full">
@@ -159,53 +201,83 @@ const ResumeCard: React.FC = () => {
           Please select or upload a relevant resume.
         </p>
       </CardHeader>
-      
+
       <CardContent className="flex flex-row gap-4">
-        <div className="flex flex-col gap-2 w-1/2">
-          <ComboBox
-            width={325}
-            items={tempItems}
-            name={"Resume"}
-          />
-          <FileUploader
-            value={files}
-            onValueChange={setFiles}
-            dropzoneOptions={dropzone}
-          >
-            <FileInput>
-              <div className="flex items-center justify-center h-32 w-full border bg-background rounded-md">
-                <p className="text-gray-400">Drop resume here</p>
-              </div>
-            </FileInput>
-          </FileUploader>
-        </div>
-        <FileUploader
-          className="flex w-full flex-1"
-          value={files}
-          onValueChange={setFiles}
-          dropzoneOptions={dropzone}
+        <div
+          className={cn("flex flex-col gap-2 flex-1 rounded-md", selectedResume === 0 ? 'outline-none ring-offset-background ring-ring ring-offset-4 ring-4' : '')}
         >
-          <FileUploaderContent
-            // @ts-expect-error ref type is not matching
-            ref={containerRef}
-            className="flex items-center flex-row gap-2"
+          {files?.length === 0 && (
+            <FileUploader
+              value={files}
+              onValueChange={(e) => { 
+                if (e?.length !== 0) {
+                  setSelectedResume(0)
+                }
+                setFiles(e)
+              }}
+              dropzoneOptions={dropzone}
+            >
+              <FileInput>
+                <div className="flex items-center justify-center h-60 w-full bg-background rounded-md">
+                  <p className="text-muted-foreground">Drop resume here</p>
+                </div>
+              </FileInput>
+            </FileUploader>
+          )}
+
+          {files?.length !== 0 && (
+            <FileUploader
+              value={files}
+              onValueChange={(e) => { 
+                if (e?.length !== 0) {
+                  setSelectedResume(0)
+                }
+                setFiles(e)
+              }}
+              dropzoneOptions={dropzone}
+              onClick={() => setSelectedResume(0)}
+            >
+              <FileUploaderContent className="flex items-center flex-row gap-2 px-0">
+                {fileURLs?.map((file, i) => (
+                  <FileUploaderItem
+                    key={file}
+                    index={i}
+                    className={cn("h-60 p-0 rounded-md overflow-auto")}
+                  >
+                    <Document
+                      onItemClick={() => {return}}
+                      className="z-[0] size-full"
+                      file={file}
+                    >
+                      <Thumbnail
+                        width={512}
+                        pageNumber={1}
+                      />
+                    </Document>
+                  </FileUploaderItem>
+                ))}
+              </FileUploaderContent>
+            </FileUploader>
+          )}
+        </div>
+
+        {/* EXISTING RESUME */}
+          <div
+            className={cn("h-60 p-0 rounded-md overflow-auto flex-1", selectedResume === 1 ? 'outline-none ring-offset-background ring-ring ring-offset-4 ring-4' : '')}
           >
-            {files?.map((file, i) => (
-              <FileUploaderItem
-                key={i}
-                index={i}
-                className="size-full p-0 rounded-md overflow-hidden"
-                aria-roledescription={`file ${i + 1} containing ${
-                  file.name
-                }`}
+            {resume && (
+              <Document
+                className="z-[0] size-full"
+                file={resumeURL}
+                onItemClick={() => setSelectedResume(1)}
               >
-                  <Document className="z-[0] size-full" file={URL.createObjectURL(file)}>
-                    <Thumbnail width={containerWidth} pageNumber={1} />
-                  </Document>
-              </FileUploaderItem>
-            ))}
-          </FileUploaderContent>
-        </FileUploader>
+                <Thumbnail
+                  width={512}
+                  pageNumber={1}
+                />
+              </Document>
+            )}
+          </div>
       </CardContent>
     </div>
   );
