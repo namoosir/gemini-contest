@@ -106,9 +106,6 @@ const JobDescriptionCard: React.FC = () => {
       </CardHeader>
       <CardContent>
         <Textarea placeholder="Paste here..." />
-        <p className="text-sm text-muted-foreground">
-          This will be used to generate relevant questions for your interview.
-        </p>
       </CardContent>
     </div>
   );
@@ -125,10 +122,13 @@ const ResumeCard: React.FC = () => {
     <div className="w-full">
       <CardHeader>
         <CardTitle>Resume</CardTitle>
+        <p className="text-base text-muted-foreground">
+          Please select or upload a relevant resume.
+        </p>
       </CardHeader>
       <CardContent>
         <ComboBox items={tempItems} name={"Resume"} />
-        <div className="grid w-full max-w-sm items-center gap-1.5 ">
+        <div className="grid w-full max-w-[50%] items-center gap-1.5 ">
           <Label htmlFor="resume">Upload Resume</Label>
           <Input
             id="resume"

@@ -16,7 +16,7 @@ export default function Steps(props: Props) {
   const steps: Step[] = [
     { label: "Job", completed: props.currentStep >= 1 },
     { label: "Resume", completed: props.currentStep >= 2 },
-    { label: "Preferences", completed: props.currentStep >= 3 },
+    { label: "Options", completed: props.currentStep >= 3 },
   ];
 
   return (
