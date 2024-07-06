@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { mdiArrowRight, mdiArrowLeft, mdiCheck } from "@mdi/js";
 import Icon from "@mdi/react";
+import { DropzoneOptions } from "react-dropzone";
+import { Document, Page, pdfjs, Thumbnail } from 'react-pdf';
 
 import {
   Card,
@@ -13,9 +15,18 @@ import {
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import ComboBox from "../ComboBox";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import Steps from "../Steps";
+import {
+  FileUploader,
+  FileUploaderContent,
+  FileUploaderItem,
+  FileInput,
+} from "@/components/ui/file-uploader";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 type Page = 0 | 1 | 2;
 
@@ -112,11 +123,33 @@ const JobDescriptionCard: React.FC = () => {
 };
 
 const ResumeCard: React.FC = () => {
+  const [files, setFiles] = useState<File[] | null>([]);
+  const [containerWidth, setContainerWidth] = useState<number>(0);  
+  const containerRef = useRef<HTMLElement | null>(null);
+
   const tempItems = [
     { value: "react", label: "React" },
     { value: "vue", label: "Vue" },
     { value: "angular", label: "Angular" },
   ];
+  const dropzone = {
+    accept: {
+      "application/pdf": [".pdf"],
+    },
+    multiple: false,
+    maxFiles: 1,
+    maxSize: 1 * 1024 * 1024 * 1024,
+  } satisfies DropzoneOptions;
+
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    updateContainerWidth();
+  }, [containerRef.current]);
 
   return (
     <div className="w-full">
@@ -126,16 +159,53 @@ const ResumeCard: React.FC = () => {
           Please select or upload a relevant resume.
         </p>
       </CardHeader>
-      <CardContent>
-        <ComboBox items={tempItems} name={"Resume"} />
-        <div className="grid w-full max-w-[50%] items-center gap-1.5 ">
-          <Label htmlFor="resume">Upload Resume</Label>
-          <Input
-            id="resume"
-            type="file"
-            className="file:text-muted-foreground"
+      
+      <CardContent className="flex flex-row gap-4">
+        <div className="flex flex-col gap-2 w-1/2">
+          <ComboBox
+            width={325}
+            items={tempItems}
+            name={"Resume"}
           />
+          <FileUploader
+            value={files}
+            onValueChange={setFiles}
+            dropzoneOptions={dropzone}
+          >
+            <FileInput>
+              <div className="flex items-center justify-center h-32 w-full border bg-background rounded-md">
+                <p className="text-gray-400">Drop resume here</p>
+              </div>
+            </FileInput>
+          </FileUploader>
         </div>
+        <FileUploader
+          className="flex w-full flex-1"
+          value={files}
+          onValueChange={setFiles}
+          dropzoneOptions={dropzone}
+        >
+          <FileUploaderContent
+            // @ts-expect-error ref type is not matching
+            ref={containerRef}
+            className="flex items-center flex-row gap-2"
+          >
+            {files?.map((file, i) => (
+              <FileUploaderItem
+                key={i}
+                index={i}
+                className="size-full p-0 rounded-md overflow-hidden"
+                aria-roledescription={`file ${i + 1} containing ${
+                  file.name
+                }`}
+              >
+                  <Document className="z-[0] size-full" file={URL.createObjectURL(file)}>
+                    <Thumbnail width={containerWidth} pageNumber={1} />
+                  </Document>
+              </FileUploaderItem>
+            ))}
+          </FileUploaderContent>
+        </FileUploader>
       </CardContent>
     </div>
   );

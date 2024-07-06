@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 
 interface Props {
+  width: number
   name: string
   items: {
     value: string;
@@ -37,7 +38,7 @@ function ComboBox(props: Props) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="justify-between w-full"
         >
           {value
             ? props.items.find((item) => item.value === value)?.label
@@ -48,7 +49,9 @@ function ComboBox(props: Props) {
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent
+        className="p-0"
+      >
         <Command>
           <CommandInput placeholder={`Search ${props.name}...`} />
           <CommandList>
