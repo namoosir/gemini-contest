@@ -1,7 +1,6 @@
-import { prompt } from "@/services/gemini/base"
 import { InterviewBot } from "@/services/gemini/JobDParserBot"
 import { fetchAudioBuffer } from "@/services/voice/TTS"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface MessageData {
   channel?: {
@@ -20,14 +19,21 @@ function Chat() {
   const audioContextRef = useRef<AudioContext | null>(null)
   const socketRef = useRef<WebSocket | null>(null)
   const [transcript, setTranscript] = useState<string>("")
+  const [gemini, setGemini] = useState<InterviewBot | null>(null)
 
-  const gemini = new InterviewBot()
+  useEffect(() => {setGemini(new InterviewBot())}, [])
+
+
 
   async function jobSubmitHandler(event: React.FormEvent<HTMLFormElement>) {    
     event.preventDefault()
     if (jobDescription === "") { 
      alert("Provide job desc")
      return
+    }
+    if (!gemini) {
+      alert("Gemini not initialized")
+      return
     }
     await handleReponse(await gemini.initInterviewForJobD(jobDescription))
   }
@@ -136,7 +142,11 @@ function Chat() {
     }
     setIsRecording(false)
     setShowMic(false)
-    await handleReponse(await prompt(transcript))
+    if (!gemini) {
+      alert("Gemini not initialized")
+      return
+    }
+    await handleReponse(await gemini.prompt(transcript))
   }
 
   // TODO: Gotta clean up

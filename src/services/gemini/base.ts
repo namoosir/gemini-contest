@@ -1,18 +1,34 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_APP_GEMENI_API_KEY ?? '');
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const chat = model.startChat({
-  history: [],
-  generationConfig: {
-    maxOutputTokens: 100,
-  },
-});
+import {getVertexAI, getGenerativeModel, Content } from "firebase/vertexai-preview";
+import {app} from "../../FirebaseConfig";
 
+const vertexAI = getVertexAI(app);
 
-async function prompt(msg: string): Promise<string> {
+const model = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
+async function initalizeChat(setStr: string) : Promise<any> {
+
+  let history = [
+    {
+      role: "user",
+      parts: [{ text: setStr }],
+    },
+    {
+      role: "model",
+      parts: [{ text: "OK" }],
+    },
+  ] as Content[];
+  
+  return model.startChat({
+    history: history,
+    generationConfig: {
+      maxOutputTokens: 100,
+    },
+  });
+}
+
+async function prompt(chat: any, msg: string): Promise<string> {
   try {
     const result = await chat.sendMessage(msg);
-    const response = result.response;
+    const response = await result.response;
     const text = response.text();
     return text;
   } catch (error) {
@@ -22,4 +38,4 @@ async function prompt(msg: string): Promise<string> {
 }
 
 
-export { prompt }
+export { initalizeChat, prompt }
