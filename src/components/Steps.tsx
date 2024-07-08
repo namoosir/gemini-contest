@@ -2,6 +2,8 @@ import { mdiCheck, mdiCircleOutline } from "@mdi/js";
 import Icon from "@mdi/react";
 
 import { cn } from "@/lib/utils";
+import { Dispatch, SetStateAction } from "react";
+import { Page } from "./pages/Interview";
 
 interface Step {
   label: string;
@@ -10,6 +12,7 @@ interface Step {
 
 interface Props {
   currentStep: number;
+  onStepClick: Dispatch<SetStateAction<Page>>
 }
 
 export default function Steps(props: Props) {
@@ -22,7 +25,7 @@ export default function Steps(props: Props) {
   return (
     <div className="flex flex-row justify-center items-center">
       {steps.map((step, index) => (
-        <div key={index} className="flex flex-row justify-center items-center">
+        <div onClick={() => props.onStepClick((index) as Page)} key={index} className="flex flex-row justify-center items-center cursor-pointer">
           <div className="flex flex-row justify-center items-center gap-1">
             <Icon
               className={cn(

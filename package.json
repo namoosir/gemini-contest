@@ -13,6 +13,7 @@
   "dependencies": {
     "@deepgram/sdk": "^3.3.4",
     "@google/generative-ai": "^0.12.0",
+    "@hookform/resolvers": "^3.9.0",
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@radix-ui/react-avatar": "^1.1.0",
@@ -39,6 +40,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
+    "react-hook-form": "^7.52.1",
     "react-pdf": "^9.1.0",
     "react-router-dom": "^6.23.1",
     "react-siriwave": "^3.1.0",
@@ -46,7 +48,8 @@
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "ws": "^8.17.1"
+    "ws": "^8.17.1",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.12.13",

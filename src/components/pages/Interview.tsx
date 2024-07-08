@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { mdiArrowRight, mdiArrowLeft, mdiCheck } from "@mdi/js";
 import Icon from "@mdi/react";
 import { Page, pdfjs } from "react-pdf";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   getUserResumes,
@@ -27,7 +28,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
-type Page = 0 | 1 | 2;
+export type Page = 0 | 1 | 2;
 
 const Interview: React.FC = () => {
   const { storage, db } = useFirebaseContext();
@@ -96,6 +97,8 @@ const Interview: React.FC = () => {
     // todo
   };
 
+  
+
   const renderPage = () => {
     switch (currentPage) {
       case 0:
@@ -130,9 +133,18 @@ const Interview: React.FC = () => {
         </h3>
         <Card>
           <CardHeader>
-            <Steps currentStep={currentPage} />
+            <Steps onStepClick={setCurrentPage} currentStep={currentPage} />
           </CardHeader>
-          { renderPage() }
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              { renderPage() }
+            </motion.div>
+          </AnimatePresence>
           <CardFooter>
             <div className="flex w-full justify-between items-center">
               <Button
