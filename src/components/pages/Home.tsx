@@ -1,4 +1,3 @@
-import { app } from "../../FirebaseConfig";
 import { User, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
@@ -29,8 +28,6 @@ function Home() {
       console.error("Error signing out:", error);
     }
   };
-
-  console.log(app);
 
   return (
     <>

@@ -1,25 +1,32 @@
-import useFirebaseContext from "@/hooks/useFirebaseContext";
-import { addResume } from "@/services/firebase/resumeService";
-import { uploadResume } from "@/services/firebase/resumeService";
 import { useState } from "react";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
+
+import useAuthContext from "@/hooks/useAuthContext";
+import { addResume, uploadResume } from "@/services/firebase/resumeService";
+
+type changeEvent = React.ChangeEvent<HTMLInputElement> | undefined
+type submitEvent = React.FormEvent<HTMLFormElement>
 
 function ResumeForm() {
-  type changeEvent = React.ChangeEvent<HTMLInputElement> | undefined
-  type submitEvent = React.FormEvent<HTMLFormElement>
-
+  const { user } = useAuthContext()
   const [files, setFiles] = useState<File[]>()
   const { storage, db } = useFirebaseContext()
 
   async function submitHandler(event: submitEvent) {
     event.preventDefault();
+
+    if (!user) return;
+
     if (files) {
       for (const file of files) {        
-        const ref = uploadResume(storage, file, "uid")
+        const ref = await uploadResume(storage, file, user?.uid)
+        if (!ref) continue
+
         await addResume(db, {
           description: "description",
           url: ref,
           jobId: "jobId",
-          uid: "uid",
+          uid: user?.uid,
           filename: file.name
         })
       }
@@ -35,8 +42,9 @@ function ResumeForm() {
         fileList.push(file)
       }
       setFiles(fileList)
-    } else 
-    setFiles([])
+    } else {
+      setFiles([])
+    }
   }
 
   return (
