@@ -8,7 +8,7 @@ import Interview from "./components/pages/Interview.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.tsx";
-import { PageNotFound } from "./components/pages/PageNotFound.tsx";
+import PageNotFound from "./components/pages/PageNotFound.tsx";
 
 const AppRouter = () => {
   const { user } = useAuthContext();
