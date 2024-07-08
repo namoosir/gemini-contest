@@ -1,3 +1,4 @@
+import { Dispatch, SetStateAction } from "react";
 import { CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import {
@@ -11,8 +12,16 @@ import {
 
 interface Props {
   additionalInstructions: string | undefined;
-  setAdditionalInstructions: React.Dispatch<
-    React.SetStateAction<string | undefined>
+  setAdditionalInstructions: Dispatch<
+    SetStateAction<string | undefined>
+  >;
+  duration: string | undefined
+  setDuration: Dispatch<
+    SetStateAction<string | undefined>
+  >;
+  type: string | undefined
+  setType: Dispatch<
+    SetStateAction<string | undefined>
   >;
 }
 
@@ -58,9 +67,8 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col flex-1 gap-4 w-1/2">
           <div>
-            {/* <Label htmlFor="duration">Select duration</Label> */}
             <Select>
-              <SelectTrigger id="duration">
+              <SelectTrigger>
                 <SelectValue placeholder="Select a duration" />
               </SelectTrigger>
               <SelectContent>
@@ -76,9 +84,8 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
           </div>
 
           <div>
-            {/* <Label htmlFor="type">Select interview type</Label> */}
             <Select>
-              <SelectTrigger id="type">
+              <SelectTrigger>
                 <SelectValue placeholder="Select an interview type" />
               </SelectTrigger>
               <SelectContent>
@@ -94,16 +101,13 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
           </div>
         </div>
         <div className="flex-1">
-          {/* <Label htmlFor="additional-instructions">Additional instructions</Label> */}
           <Textarea
-            id="additional-instructions"
+            className="h-32"
             placeholder="Additional instructions"
             value={props.additionalInstructions}
             onChange={(e) => props.setAdditionalInstructions(e.target.value)}
           />
         </div>
-        {/* length, interview type, additional instructions */}
-        {/* Add your interview content here */}
       </CardContent>
     </div>
   );

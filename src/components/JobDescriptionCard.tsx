@@ -7,10 +7,8 @@ import { Textarea } from "./ui/textarea";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 
@@ -19,7 +17,11 @@ interface Props {
   setText: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
-const FormSchema = z.object({ text: z.string().min(50) });
+const FormSchema = z.object({
+  text: z.string().min(50, {
+    message: "Job Description must be at least 50 characters",
+  }),
+});
 
 const JobDescriptionCard: React.FC<Props> = (props: Props) => {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -29,7 +31,9 @@ const JobDescriptionCard: React.FC<Props> = (props: Props) => {
     },
   });
   
-  function onSubmit(data: z.infer<typeof FormSchema>) {}
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log(data)
+  }
 
   return (
     <div className="w-full">
@@ -43,11 +47,23 @@ const JobDescriptionCard: React.FC<Props> = (props: Props) => {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <Textarea
-              className="h-60"
-              placeholder="Paste here..."
-              value={props.text}
-              onChange={(e) => props.setText(e.target.value)}
+            <FormField
+              control={form.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      className="h-60"
+                      placeholder="Paste here..."
+                      value={props.text}
+                      onChange={(e) => props.setText(e.target.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </form>
         </Form>
