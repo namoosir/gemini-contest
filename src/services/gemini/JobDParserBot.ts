@@ -1,9 +1,8 @@
-import { initalizeChat } from './base';
-import { prompt as promptBase, promptStream as promptBaseStream } from './base';
+import { ChatSession } from "firebase/vertexai-preview";
+import { initalizeChat } from "./base";
+import { prompt as promptBase, promptStream as promptBaseStream } from "./base";
 
-
-const setupStr = 
-`
+const setupStr = `
     I want you to provide me 3 interview questions based on the job description i'm about to provide.
     I will prompt you 4 more times in the future.
     The first time will be the the job description. You will return me the first interview question.
@@ -22,30 +21,31 @@ const setupStr =
         You should only comment on my responses after the interview is over. When you return me an evaulation.
 
     Your responses should be conversational and should not be in markdown format.
-`
+`;
 class InterviewBot {
-    chat: any;
-    constructor() {
-        this.chat = null;
+  chat: unknown;
+  constructor() {
+    this.chat = null;
+  }
+
+  async initInterviewForJobD(jobDescritpion: string): Promise<string> {
+    this.chat = initalizeChat(setupStr);
+    return await promptBase(
+      this.chat as ChatSession,
+      `Here is the job description: ${jobDescritpion}`
+    );
+  }
+
+  async prompt(prompt: string): Promise<string> {
+    return await promptBase(this.chat as ChatSession, prompt);
+  }
+
+  async *promptSteam(prompt: string): AsyncIterable<string> {
+    const baseStream = promptBaseStream(this.chat as ChatSession, prompt);
+    for await (const chunk of baseStream) {
+      yield chunk;
     }
-
-    async initInterviewForJobD(jobDescritpion: string): Promise<string> {
-        this.chat = await initalizeChat(setupStr)
-        return await promptBase(this.chat, `Here is the job description: ${jobDescritpion}`)
-
-    }
-
-    async prompt(prompt: string): Promise<string> {
-        return await promptBase(this.chat, prompt)
-    }
-
-    async * promptSteam(prompt: string): AsyncIterable<string> {
-        const baseStream = promptBaseStream(this.chat, prompt);
-
-        for await (const chunk of baseStream) {
-            yield chunk;
-        }
-    }
+  }
 }
 
-export { InterviewBot }
+export { InterviewBot };
