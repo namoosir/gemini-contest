@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { mdiArrowRight, mdiArrowLeft, mdiCheck } from "@mdi/js";
-import Icon from "@mdi/react";
 import { Page, pdfjs } from "react-pdf";
 // import { motion, AnimatePresence } from "framer-motion";
 
@@ -12,7 +10,6 @@ import {
 import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import { Card, CardFooter, CardHeader } from "@/components/ui/card";
-import { Button } from "../ui/button";
 import Steps from "../Steps";
 import JobDescriptionCard from "../JobDescriptionCard";
 import ResumeCard from "../ResumeCard";
@@ -91,6 +88,7 @@ const Interview: React.FC = () => {
   }, [resumeURL]);
 
   const handleNextPage = () => {
+    console.log('next');
     setCurrentPage((prevPage: Page): Page => (prevPage + 1) as Page);
   };
 
@@ -158,40 +156,12 @@ const Interview: React.FC = () => {
           {renderPage()}
           {/* </motion.div>
           </AnimatePresence> */}
-          <CardFooter>
-            <div className="flex w-full justify-between items-center">
-              <Button
-                disabled={currentPage < 1}
-                variant="secondary"
-                onClick={handlePreviousPage}
-              >
-                <Icon className="h4 w-4 mr-2" path={mdiArrowLeft} />
-                Previous
-              </Button>
-
-              {currentPage < 2 && (
-                <Button
-                  className="ml-auto"
-                  variant="default"
-                  onClick={handleNextPage}
-                >
-                  Next
-                  <Icon className="h4 w-4 ml-2" path={mdiArrowRight} />
-                </Button>
-              )}
-
-              {currentPage === 2 && (
-                <Button
-                  className="ml-auto"
-                  variant="default"
-                  onClick={handleFinish}
-                >
-                  Start
-                  <Icon className="h4 w-4 ml-2" path={mdiCheck} />
-                </Button>
-              )}
-            </div>
-          </CardFooter>
+          <CardFooter 
+            handlePreviousPage={handlePreviousPage} 
+            handleNextPage={handleNextPage} 
+            handleFinish={handleFinish} 
+            currentPage={currentPage}
+          />
         </Card>
       </div>
     </div>

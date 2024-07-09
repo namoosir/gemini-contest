@@ -1,6 +1,9 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { Button } from "./button"
+import Icon from "@mdi/react"
+import { mdiArrowLeft, mdiArrowRight, mdiCheck } from "@mdi/js"
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -64,15 +67,49 @@ const CardContent = React.forwardRef<
 ))
 CardContent.displayName = "CardContent"
 
+interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+  handlePreviousPage: () => void,
+  handleNextPage: () => void,
+  handleFinish: () => void,
+  currentPage: number
+}
+
 const CardFooter = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
-    {...props}
-  />
+  CardFooterProps
+>(({ className, handlePreviousPage, handleNextPage, handleFinish, currentPage, ...props }, ref) => (
+  <div ref={ref} className="flex w-full justify-between items-center p-6 pt-0" {...props}>
+    <Button
+      disabled={currentPage < 1}
+      variant="secondary"
+      onClick={handlePreviousPage}
+    >
+      <Icon className="h4 w-4 mr-2" path={mdiArrowLeft} />
+      Previous
+    </Button>
+
+    {currentPage < 2 && (
+      <Button
+        className="ml-auto"
+        variant="default"
+        onClick={handleNextPage}
+      >
+        Next
+        <Icon className="h4 w-4 ml-2" path={mdiArrowRight} />
+      </Button>
+    )}
+
+    {currentPage === 2 && (
+      <Button
+        className="ml-auto"
+        variant="default"
+        onClick={handleFinish}
+      >
+        Start
+        <Icon className="h4 w-4 ml-2" path={mdiCheck} />
+      </Button>
+    )}
+  </div>
 ))
 CardFooter.displayName = "CardFooter"
 
