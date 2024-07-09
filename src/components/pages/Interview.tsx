@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { mdiArrowRight, mdiArrowLeft, mdiCheck } from "@mdi/js";
 import Icon from "@mdi/react";
 import { Page, pdfjs } from "react-pdf";
-import { motion, AnimatePresence } from "framer-motion";
+// import { motion, AnimatePresence } from "framer-motion";
 
 import {
   getUserResumes,
@@ -11,11 +11,7 @@ import {
 } from "@/services/firebase/resumeService";
 import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
-import {
-  Card,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import Steps from "../Steps";
 import JobDescriptionCard from "../JobDescriptionCard";
@@ -45,6 +41,15 @@ const Interview: React.FC = () => {
   const [selectedResume, setSelectedResume] = useState<
     "existing" | "new" | null
   >(null);
+  const [additionalInstructions, setAdditionalInstructions] = useState<
+    string | undefined
+  >(undefined);
+  const [interviewDuration, setInterviewDuration] = useState<
+    string | undefined
+  >(undefined);
+  const [interviewType, setInterviewType] = useState<string | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     const getResume = async () => {
@@ -75,13 +80,13 @@ const Interview: React.FC = () => {
 
   useEffect(() => {
     if (files?.length === 0 && resumeURL) {
-      setSelectedResume('existing');
+      setSelectedResume("existing");
     }
-  }, [files]);
+  }, [files, resumeURL]);
 
   useEffect(() => {
     if (resumeURL) {
-      setSelectedResume('existing');
+      setSelectedResume("existing");
     }
   }, [resumeURL]);
 
@@ -96,8 +101,6 @@ const Interview: React.FC = () => {
   const handleFinish = () => {
     // todo
   };
-
-  
 
   const renderPage = () => {
     switch (currentPage) {
@@ -119,7 +122,16 @@ const Interview: React.FC = () => {
           />
         );
       case 2:
-        return <InterviewSettingsCard />;
+        return (
+          <InterviewSettingsCard
+            additionalInstructions={additionalInstructions}
+            setAdditionalInstructions={setAdditionalInstructions}
+            duration={interviewDuration}
+            setDuration={setInterviewDuration}
+            type={interviewType}
+            setType={setInterviewType}
+          />
+        );
       default:
         return null;
     }
@@ -135,16 +147,17 @@ const Interview: React.FC = () => {
           <CardHeader>
             <Steps onStepClick={setCurrentPage} currentStep={currentPage} />
           </CardHeader>
-          <AnimatePresence>
+          {/* <AnimatePresence>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              key={currentPage}
+              initial={{ opacity: 0, x: 500 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -500 }}
               transition={{ duration: 0.2 }}
-            >
-              { renderPage() }
-            </motion.div>
-          </AnimatePresence>
+            > */}
+          {renderPage()}
+          {/* </motion.div>
+          </AnimatePresence> */}
           <CardFooter>
             <div className="flex w-full justify-between items-center">
               <Button
