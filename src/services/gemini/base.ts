@@ -38,4 +38,13 @@ async function prompt(chat: any, msg: string): Promise<string> {
 }
 
 
-export { initalizeChat, prompt }
+async function* promptStream(chat: any, msg: string): AsyncIterable<string> {
+  const result = await chat.sendMessageStream(msg);
+
+  for await (const chunk of result.stream) {
+    const chunkText = chunk.text();
+    yield chunkText;
+  }
+}
+
+export { initalizeChat, prompt, promptStream }

@@ -1,5 +1,5 @@
 import { initalizeChat } from './base';
-import { prompt as promptBase } from './base';
+import { prompt as promptBase, promptStream as promptBaseStream } from './base';
 
 
 const setupStr = 
@@ -26,21 +26,25 @@ const setupStr =
 class InterviewBot {
     chat: any;
     constructor() {
-        console.log(`fsdnkld`)
         this.chat = null;
     }
 
     async initInterviewForJobD(jobDescritpion: string): Promise<string> {
         this.chat = await initalizeChat(setupStr)
-        // await promptBase(this.chat, setupStr)
-        console.log(this.chat)
         return await promptBase(this.chat, `Here is the job description: ${jobDescritpion}`)
 
     }
 
     async prompt(prompt: string): Promise<string> {
-        console.log(this.chat)
         return await promptBase(this.chat, prompt)
+    }
+
+    async * promptSteam(prompt: string): AsyncIterable<string> {
+        const baseStream = promptBaseStream(this.chat, prompt);
+
+        for await (const chunk of baseStream) {
+            yield chunk;
+        }
     }
 }
 

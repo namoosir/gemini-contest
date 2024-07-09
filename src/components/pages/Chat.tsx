@@ -146,7 +146,11 @@ function Chat() {
       alert("Gemini not initialized")
       return
     }
-    await handleReponse(await gemini.prompt(transcript))
+    const responseStreamGen = gemini.promptSteam(transcript)
+    for await (const chunk of responseStreamGen) {
+      await handleReponse(chunk)
+    }
+    // await handleReponse(await gemini.prompt(transcript))
   }
 
   // TODO: Gotta clean up
