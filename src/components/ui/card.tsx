@@ -67,49 +67,15 @@ const CardContent = React.forwardRef<
 ))
 CardContent.displayName = "CardContent"
 
-interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
-  handlePreviousPage: () => void,
-  handleNextPage: () => void,
-  handleFinish: () => void,
-  currentPage: number
-}
-
 const CardFooter = React.forwardRef<
   HTMLDivElement,
-  CardFooterProps
->(({ className, handlePreviousPage, handleNextPage, handleFinish, currentPage, ...props }, ref) => (
-  <div ref={ref} className="flex w-full justify-between items-center p-6 pt-0" {...props}>
-    <Button
-      disabled={currentPage < 1}
-      variant="secondary"
-      onClick={handlePreviousPage}
-    >
-      <Icon className="h4 w-4 mr-2" path={mdiArrowLeft} />
-      Previous
-    </Button>
-
-    {currentPage < 2 && (
-      <Button
-        className="ml-auto"
-        variant="default"
-        onClick={handleNextPage}
-      >
-        Next
-        <Icon className="h4 w-4 ml-2" path={mdiArrowRight} />
-      </Button>
-    )}
-
-    {currentPage === 2 && (
-      <Button
-        className="ml-auto"
-        variant="default"
-        onClick={handleFinish}
-      >
-        Start
-        <Icon className="h4 w-4 ml-2" path={mdiCheck} />
-      </Button>
-    )}
-  </div>
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
 ))
 CardFooter.displayName = "CardFooter"
 

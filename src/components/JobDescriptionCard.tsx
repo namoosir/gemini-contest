@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { CardHeader, CardTitle, CardContent } from "./ui/card";
+import { CardHeader, CardTitle, CardContent, CardDescription } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import {
   Form,
@@ -30,19 +30,19 @@ const JobDescriptionCard: React.FC<Props> = (props: Props) => {
       text: "",
     },
   });
-  
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data)
+    console.log(data);
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full">
       <CardHeader>
         <CardTitle>Job Description</CardTitle>
-        <p className="text-base text-muted-foreground">
+        <CardDescription>
           Please enter the job description you would like to simulate an
           interview for.
-        </p>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -55,7 +55,7 @@ const JobDescriptionCard: React.FC<Props> = (props: Props) => {
                   <FormControl>
                     <Textarea
                       {...field}
-                      className="h-60"
+                      className="h-[268px]"
                       placeholder="Paste here..."
                       value={props.text}
                       onChange={(e) => props.setText(e.target.value)}
