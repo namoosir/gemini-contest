@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Page, pdfjs } from "react-pdf";
 import { motion, AnimatePresence } from "framer-motion";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { usePrevious } from "@uidotdev/usehooks";
+import { useForm } from "react-hook-form";
 
 import {
   getUserResumes,
@@ -9,13 +13,15 @@ import {
 } from "@/services/firebase/resumeService";
 import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
-import { Card, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import Steps from "../Steps";
 import JobDescriptionCard from "../JobDescriptionCard";
 import ResumeCard from "../ResumeCard";
 import InterviewSettingsCard from "../InterviewSettingsCard";
-import { usePrevious } from "@uidotdev/usehooks";
-import CardHOC from "../ui/cardHOC";
+import CardHOC from "../cardContentHOC";
+import {
+  Form,
+} from "@/components/ui/form";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -25,6 +31,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 export type Page = 0 | 1 | 2;
 
+const InterviewFormSchema = z.object({
+  text: z.string().min(50, {
+    message: "Job Description must be at least 50 characters",
+  }),
+});
+
 const Interview: React.FC = () => {
   const { storage, db } = useFirebaseContext();
   const { user } = useAuthContext();
@@ -32,7 +44,7 @@ const Interview: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(0);
   const previousPage = usePrevious(currentPage);
   const [jobDescription, setJobDescription] = useState<string | undefined>(
-    undefined
+    "Paste here..."
   );
 
   const [files, setFiles] = useState<File[] | null>([]);
@@ -103,44 +115,71 @@ const Interview: React.FC = () => {
     // todo
   };
 
+  const interviewForm = useForm<z.infer<typeof InterviewFormSchema>>({
+    resolver: zodResolver(InterviewFormSchema),
+    defaultValues: {
+      text: "",
+    },
+  });
+
+  function interviewOnSubmit(data: z.infer<typeof InterviewFormSchema>) {
+    setJobDescription(data.text)
+    handleNextPage()
+  }
+
   const renderPage = () => {
     switch (currentPage) {
       case 0:
         return (
-          <CardHOC
-            WrappedComponent={<JobDescriptionCard text={jobDescription} setText={setJobDescription}/>} 
-            handlePreviousPage={handlePreviousPage} 
-            handleNextPage={handleNextPage}
-            currentPage={currentPage}
-          />
-          
+          <Form {...interviewForm}>
+            <form
+              className="h-full w-full"
+              onSubmit={interviewForm.handleSubmit(interviewOnSubmit)}
+            >
+              <CardHOC
+                handlePreviousPage={handlePreviousPage}
+                handleNextPage={handleNextPage}
+                currentPage={currentPage}
+              >
+                <JobDescriptionCard
+                  form={interviewForm}
+                />
+              </CardHOC>
+            </form>
+          </Form>
         );
       case 1:
         return (
           <CardHOC
-            WrappedComponent={<ResumeCard resumeURL={resumeURL} files={files} setFiles={setFiles} selectedResume={selectedResume} setSelectedResume={setSelectedResume}/>}
             handlePreviousPage={handlePreviousPage}
             handleNextPage={handleNextPage}
             currentPage={currentPage}
-          />
+          >
+            <ResumeCard
+              resumeURL={resumeURL}
+              files={files}
+              setFiles={setFiles}
+              selectedResume={selectedResume}
+              setSelectedResume={setSelectedResume}
+            />
+          </CardHOC>
         );
       case 2:
         return (
           <CardHOC
-            WrappedComponent={
-              <InterviewSettingsCard
-                duration={interviewDuration}
-                setDuration={setInterviewDuration}
-                type={interviewType}
-                setType={setInterviewType}
-                mode={interviewMode}
-                setMode={setInterviewMode}
-              />
-            }
             handlePreviousPage={handlePreviousPage}
             handleFinish={handleFinish}
             currentPage={currentPage}
-          />
+          >
+            <InterviewSettingsCard
+              duration={interviewDuration}
+              setDuration={setInterviewDuration}
+              type={interviewType}
+              setType={setInterviewType}
+              mode={interviewMode}
+              setMode={setInterviewMode}
+            />
+          </CardHOC>
         );
       default:
         return null;
@@ -181,7 +220,6 @@ const Interview: React.FC = () => {
               </motion.div>
             </div>
           </AnimatePresence>
-          <CardFooter />
         </Card>
       </div>
     </div>

@@ -1,9 +1,6 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { Button } from "./button"
-import Icon from "@mdi/react"
-import { mdiArrowLeft, mdiArrowRight, mdiCheck } from "@mdi/js"
 
 const Card = React.forwardRef<
   HTMLDivElement,
