@@ -1,8 +1,15 @@
 import { User, signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
-import Icon from '@mdi/react'
-import { mdiLogout } from '@mdi/js'
+import Icon from "@mdi/react";
+import { mdiLogout, mdiMicrophone } from "@mdi/js";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+
+
+
 
 function Home() {
   const { auth } = useFirebaseContext();
@@ -40,11 +47,22 @@ function Home() {
               onClick={handleSignOut}
               title="Sign Out"
             >
-              <Icon
-                className="w-8 ml-1"
-                path={mdiLogout}
-              />
+              <Icon className="w-8 ml-1" path={mdiLogout} />
             </button>
+
+            <Card variant="primary">
+              <CardContent className="p-8">
+                <p className="font-black">This is the USER card content.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-8">
+                <p className="font-black">This is the Gemini card content.</p>
+              </CardContent>
+            </Card>
+
+            <Icon path={mdiMicrophone} />
           </>
         )}
         {!user && (
