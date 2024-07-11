@@ -44,7 +44,7 @@ const Interview: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(0);
   const previousPage = usePrevious(currentPage);
   const [jobDescription, setJobDescription] = useState<string | undefined>(
-    "Paste here..."
+    undefined
   );
 
   const [files, setFiles] = useState<File[] | null>([]);
