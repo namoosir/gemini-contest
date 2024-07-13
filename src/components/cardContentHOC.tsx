@@ -11,6 +11,7 @@ interface Props {
   handleNextPage?: () => void;
   handleFinish?: () => void;
   currentPage: number;
+  error?: string;
 }
 
 const CardHOC = (props: Props) => {
@@ -34,12 +35,18 @@ const CardHOC = (props: Props) => {
           <Icon className="h4 w-4 mr-2" path={mdiArrowLeft} />
           Previous
         </Button>
+        {currentPage === 0 && (
+          <Button className="ml-auto" variant="default" type="submit">
+            Next
+            <Icon className="h4 w-4 ml-2" path={mdiArrowRight} />
+          </Button>
+        )}
 
-        {currentPage < 2 && (
+        {currentPage === 1 && (
           <Button
             className="ml-auto"
             variant="default"
-            type="submit"
+            onClick={handleNextPage}
           >
             Next
             <Icon className="h4 w-4 ml-2" path={mdiArrowRight} />
@@ -47,11 +54,7 @@ const CardHOC = (props: Props) => {
         )}
 
         {currentPage === 2 && (
-          <Button
-            className="ml-auto"
-            variant="default"
-            onClick={handleFinish}
-          >
+          <Button className="ml-auto" variant="default" onClick={handleFinish}>
             Start
             <Icon className="h4 w-4 ml-2" path={mdiCheck} />
           </Button>

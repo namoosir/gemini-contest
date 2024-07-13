@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { usePrevious } from "@uidotdev/usehooks";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 
 import {
   getUserResumes,
@@ -19,9 +19,7 @@ import JobDescriptionCard from "../JobDescriptionCard";
 import ResumeCard from "../ResumeCard";
 import InterviewSettingsCard from "../InterviewSettingsCard";
 import CardHOC from "../cardContentHOC";
-import {
-  Form,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -32,12 +30,50 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 export type Page = 0 | 1 | 2;
 
 const InterviewFormSchema = z.object({
-  text: z.string().min(50, {
+  text: z.string().min(2, {
     message: "Job Description must be at least 50 characters",
   }),
 });
 
 const Interview: React.FC = () => {
+  const durations = [
+    {
+      value: "5",
+      name: "5 Minutes",
+    },
+    {
+      value: "10",
+      name: "10 Minutes",
+    },
+    {
+      value: "15",
+      name: "15 Minutes",
+    },
+  ];
+
+  const interviewTypes = [
+    {
+      value: "technical",
+      name: "Technical",
+    },
+    {
+      value: "behavioral",
+      name: "Behavioral",
+    },
+    {
+      value: "case-study",
+      name: "Case Study",
+    },
+  ];
+
+  const modes = [
+    {
+      value: "normal",
+      name: "Normal",
+    },
+    { value: "voice-only", name: "Voice Only" },
+  ];
+
   const { storage, db } = useFirebaseContext();
   const { user } = useAuthContext();
 
@@ -56,13 +92,15 @@ const Interview: React.FC = () => {
 
   const [interviewDuration, setInterviewDuration] = useState<
     string | undefined
-  >(undefined);
+  >(durations[0].value);
   const [interviewType, setInterviewType] = useState<string | undefined>(
-    undefined
+    interviewTypes[0].value
   );
   const [interviewMode, setInterviewMode] = useState<string | undefined>(
-    undefined
+    modes[0].value
   );
+
+  const [resumeError, setResumeError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const getResume = async () => {
@@ -91,17 +129,17 @@ const Interview: React.FC = () => {
     void fetchPDF();
   }, [resume, storage]);
 
-  useEffect(() => {
-    if (files?.length === 0 && resumeURL) {
-      setSelectedResume("existing");
-    }
-  }, [files, resumeURL]);
+  // useEffect(() => {
+  //   if (files?.length === 0 && resumeURL) {
+  //     setSelectedResume("existing");
+  //   }
+  // }, [files, resumeURL]);
 
-  useEffect(() => {
-    if (resumeURL) {
-      setSelectedResume("existing");
-    }
-  }, [resumeURL]);
+  // useEffect(() => {
+  //   if (resumeURL) {
+  //     setSelectedResume("existing");
+  //   }
+  // }, [resumeURL]);
 
   const handleNextPage = () => {
     setCurrentPage((prevPage: Page): Page => (prevPage + 1) as Page);
@@ -123,9 +161,18 @@ const Interview: React.FC = () => {
   });
 
   function interviewOnSubmit(data: z.infer<typeof InterviewFormSchema>) {
-    setJobDescription(data.text)
-    handleNextPage()
+    setJobDescription(data.text);
+    handleNextPage();
   }
+
+  const resumeNextPageHandler = () => {
+    console.log(selectedResume);
+    if (selectedResume != undefined) {
+      handleNextPage();
+    } else {
+      setResumeError("Please select a resume");
+    }
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -141,9 +188,7 @@ const Interview: React.FC = () => {
                 handleNextPage={handleNextPage}
                 currentPage={currentPage}
               >
-                <JobDescriptionCard
-                  form={interviewForm}
-                />
+                <JobDescriptionCard form={interviewForm} />
               </CardHOC>
             </form>
           </Form>
@@ -152,7 +197,7 @@ const Interview: React.FC = () => {
         return (
           <CardHOC
             handlePreviousPage={handlePreviousPage}
-            handleNextPage={handleNextPage}
+            handleNextPage={resumeNextPageHandler}
             currentPage={currentPage}
           >
             <ResumeCard
@@ -161,6 +206,8 @@ const Interview: React.FC = () => {
               setFiles={setFiles}
               selectedResume={selectedResume}
               setSelectedResume={setSelectedResume}
+              error={resumeError}
+              setError={setResumeError}
             />
           </CardHOC>
         );
@@ -178,6 +225,9 @@ const Interview: React.FC = () => {
               setType={setInterviewType}
               mode={interviewMode}
               setMode={setInterviewMode}
+              modes={modes}
+              durations={durations}
+              interviewTypes={interviewTypes}
             />
           </CardHOC>
         );
