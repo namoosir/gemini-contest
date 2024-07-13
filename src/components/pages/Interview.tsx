@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { mdiArrowRight, mdiArrowLeft, mdiCheck } from "@mdi/js";
-import Icon from "@mdi/react";
 import { Page, pdfjs } from "react-pdf";
 import { motion, AnimatePresence } from "framer-motion";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { usePrevious } from "@uidotdev/usehooks";
+import { useForm } from "react-hook-form";
 
 import {
   getUserResumes,
@@ -11,21 +13,26 @@ import {
 } from "@/services/firebase/resumeService";
 import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
-import { Card, CardFooter, CardHeader } from "@/components/ui/card";
-import { Button } from "../ui/button";
+import { Card, CardHeader } from "@/components/ui/card";
 import Steps from "../Steps";
 import JobDescriptionCard from "../JobDescriptionCard";
 import ResumeCard from "../ResumeCard";
 import InterviewSettingsCard from "../InterviewSettingsCard";
-import { usePrevious } from "@uidotdev/usehooks";
+import CardHOC from "../cardContentHOC";
+import { Form } from "@/components/ui/form";
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
 ).toString();
 
 export type Page = 0 | 1 | 2;
+
+const InterviewFormSchema = z.object({
+  text: z.string().min(50, {
+    message: "Job Description must be at least 50 characters",
+  }),
+});
 
 const Interview: React.FC = () => {
   const { storage, db } = useFirebaseContext();
@@ -44,15 +51,11 @@ const Interview: React.FC = () => {
     "existing" | "new" | null
   >(null);
 
-  const [interviewDuration, setInterviewDuration] = useState<
-    string | undefined
-  >(undefined);
-  const [interviewType, setInterviewType] = useState<string | undefined>(
-    undefined
-  );
-  const [interviewMode, setInterviewMode] = useState<string | undefined>(
-    undefined
-  );
+  const [interviewDuration, setInterviewDuration] = useState<string>("5");
+  const [interviewType, setInterviewType] = useState<string>("technical");
+  const [interviewMode, setInterviewMode] = useState<string>("normal");
+
+  const [resumeError, setResumeError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const getResume = async () => {
@@ -105,35 +108,80 @@ const Interview: React.FC = () => {
     // todo
   };
 
+  const interviewForm = useForm<z.infer<typeof InterviewFormSchema>>({
+    resolver: zodResolver(InterviewFormSchema),
+    defaultValues: {
+      text: "",
+    },
+  });
+
+  function interviewOnSubmit(data: z.infer<typeof InterviewFormSchema>) {
+    setJobDescription(data.text);
+    handleNextPage();
+  }
+
+  const resumeNextPageHandler = () => {
+    console.log(selectedResume);
+    if (selectedResume != undefined) {
+      handleNextPage();
+    } else {
+      setResumeError("Please select a resume");
+    }
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 0:
         return (
-          <JobDescriptionCard
-            text={jobDescription}
-            setText={setJobDescription}
-          />
+          <Form {...interviewForm}>
+            <form
+              className="h-full w-full"
+              onSubmit={interviewForm.handleSubmit(interviewOnSubmit)}
+            >
+              <CardHOC
+                handlePreviousPage={handlePreviousPage}
+                handleNextPage={handleNextPage}
+                currentPage={currentPage}
+              >
+                <JobDescriptionCard form={interviewForm} />
+              </CardHOC>
+            </form>
+          </Form>
         );
       case 1:
         return (
-          <ResumeCard
-            resumeURL={resumeURL}
-            files={files}
-            setFiles={setFiles}
-            selectedResume={selectedResume}
-            setSelectedResume={setSelectedResume}
-          />
+          <CardHOC
+            handlePreviousPage={handlePreviousPage}
+            handleNextPage={resumeNextPageHandler}
+            currentPage={currentPage}
+          >
+            <ResumeCard
+              resumeURL={resumeURL}
+              files={files}
+              setFiles={setFiles}
+              selectedResume={selectedResume}
+              setSelectedResume={setSelectedResume}
+              error={resumeError}
+              setError={setResumeError}
+            />
+          </CardHOC>
         );
       case 2:
         return (
-          <InterviewSettingsCard
-            duration={interviewDuration}
-            setDuration={setInterviewDuration}
-            type={interviewType}
-            setType={setInterviewType}
-            mode={interviewMode}
-            setMode={setInterviewMode}
-          />
+          <CardHOC
+            handlePreviousPage={handlePreviousPage}
+            handleFinish={handleFinish}
+            currentPage={currentPage}
+          >
+            <InterviewSettingsCard
+              duration={interviewDuration}
+              setDuration={setInterviewDuration}
+              type={interviewType}
+              setType={setInterviewType}
+              mode={interviewMode}
+              setMode={setInterviewMode}
+            />
+          </CardHOC>
         );
       default:
         return null;
@@ -174,40 +222,6 @@ const Interview: React.FC = () => {
               </motion.div>
             </div>
           </AnimatePresence>
-          <CardFooter>
-            <div className="flex w-full justify-between items-center">
-              <Button
-                disabled={currentPage < 1}
-                variant="secondary"
-                onClick={handlePreviousPage}
-              >
-                <Icon className="h4 w-4 mr-2" path={mdiArrowLeft} />
-                Previous
-              </Button>
-
-              {currentPage < 2 && (
-                <Button
-                  className="ml-auto"
-                  variant="default"
-                  onClick={handleNextPage}
-                >
-                  Next
-                  <Icon className="h4 w-4 ml-2" path={mdiArrowRight} />
-                </Button>
-              )}
-
-              {currentPage === 2 && (
-                <Button
-                  className="ml-auto"
-                  variant="default"
-                  onClick={handleFinish}
-                >
-                  Start
-                  <Icon className="h4 w-4 ml-2" path={mdiCheck} />
-                </Button>
-              )}
-            </div>
-          </CardFooter>
         </Card>
       </div>
     </div>
