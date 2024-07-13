@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
 
@@ -26,3 +26,7 @@ export const storage = getStorage(app);
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
 auth.languageCode = "it";
+
+// Connects app with firestore and storage emulators.
+connectFirestoreEmulator(db, "127.0.0.1", 8080);
+connectStorageEmulator(storage, "127.0.0.1", 9199);
