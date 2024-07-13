@@ -1,9 +1,10 @@
-import admin = require("firebase-admin");
-import express = require("express");
+import admin from "firebase-admin";
+import express from "express";
 import { https } from "firebase-functions/v2";
 import { getTTS } from "./deepgram";
 import { resumeTrigger } from "./triggers";
 import { setGlobalOptions } from "firebase-functions/v2";
+
 setGlobalOptions({ region: "northamerica-northeast1" });
 
 export const firebaseApp = admin.initializeApp();
