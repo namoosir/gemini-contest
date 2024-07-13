@@ -4,16 +4,51 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "./ui/label";
 
 interface Props {
-  duration: string | undefined;
-  setDuration: Dispatch<SetStateAction<string | undefined>>;
-  type: string | undefined;
-  setType: Dispatch<SetStateAction<string | undefined>>;
-  mode: string | undefined;
-  setMode: Dispatch<SetStateAction<string | undefined>>;
-  interviewTypes: { value: string; name: string }[];
-  modes: { value: string; name: string }[];
-  durations: { value: string; name: string }[];
+  duration: string;
+  setDuration: Dispatch<SetStateAction<string>>;
+  type: string;
+  setType: Dispatch<SetStateAction<string>>;
+  mode: string;
+  setMode: Dispatch<SetStateAction<string>>;
 }
+
+const durations = [
+  {
+    value: "5",
+    name: "5 Minutes",
+  },
+  {
+    value: "10",
+    name: "10 Minutes",
+  },
+  {
+    value: "15",
+    name: "15 Minutes",
+  },
+];
+
+const interviewTypes = [
+  {
+    value: "technical",
+    name: "Technical",
+  },
+  {
+    value: "behavioral",
+    name: "Behavioral",
+  },
+  {
+    value: "case-study",
+    name: "Case Study",
+  },
+];
+
+const modes = [
+  {
+    value: "normal",
+    name: "Normal",
+  },
+  { value: "voice-only", name: "Voice Only" },
+];
 
 const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
   return (
@@ -46,7 +81,7 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
                 }
               }}
             >
-              {props.durations.map((item) => (
+              {durations.map((item) => (
                 <ToggleGroupItem key={item.value} value={item.value}>
                   {item.name}
                 </ToggleGroupItem>
@@ -73,7 +108,7 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
                 }
               }}
             >
-              {props.interviewTypes.map((item) => (
+              {interviewTypes.map((item) => (
                 <ToggleGroupItem key={item.value} value={item.value}>
                   {item.name}
                 </ToggleGroupItem>
@@ -101,7 +136,7 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
                 }
               }}
             >
-              {props.modes.map((item) => (
+              {modes.map((item) => (
                 <ToggleGroupItem key={item.value} value={item.value}>
                   {item.name}
                 </ToggleGroupItem>

@@ -21,7 +21,6 @@ import InterviewSettingsCard from "../InterviewSettingsCard";
 import CardHOC from "../cardContentHOC";
 import { Form } from "@/components/ui/form";
 
- 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
@@ -36,44 +35,6 @@ const InterviewFormSchema = z.object({
 });
 
 const Interview: React.FC = () => {
-  const durations = [
-    {
-      value: "5",
-      name: "5 Minutes",
-    },
-    {
-      value: "10",
-      name: "10 Minutes",
-    },
-    {
-      value: "15",
-      name: "15 Minutes",
-    },
-  ];
-
-  const interviewTypes = [
-    {
-      value: "technical",
-      name: "Technical",
-    },
-    {
-      value: "behavioral",
-      name: "Behavioral",
-    },
-    {
-      value: "case-study",
-      name: "Case Study",
-    },
-  ];
-
-  const modes = [
-    {
-      value: "normal",
-      name: "Normal",
-    },
-    { value: "voice-only", name: "Voice Only" },
-  ];
-
   const { storage, db } = useFirebaseContext();
   const { user } = useAuthContext();
 
@@ -90,15 +51,9 @@ const Interview: React.FC = () => {
     "existing" | "new" | null
   >(null);
 
-  const [interviewDuration, setInterviewDuration] = useState<
-    string | undefined
-  >(durations[0].value);
-  const [interviewType, setInterviewType] = useState<string | undefined>(
-    interviewTypes[0].value
-  );
-  const [interviewMode, setInterviewMode] = useState<string | undefined>(
-    modes[0].value
-  );
+  const [interviewDuration, setInterviewDuration] = useState<string>("5");
+  const [interviewType, setInterviewType] = useState<string>("technical");
+  const [interviewMode, setInterviewMode] = useState<string>("normal");
 
   const [resumeError, setResumeError] = useState<string | undefined>(undefined);
 
@@ -225,9 +180,6 @@ const Interview: React.FC = () => {
               setType={setInterviewType}
               mode={interviewMode}
               setMode={setInterviewMode}
-              modes={modes}
-              durations={durations}
-              interviewTypes={interviewTypes}
             />
           </CardHOC>
         );
