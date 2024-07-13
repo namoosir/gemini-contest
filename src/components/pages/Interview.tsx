@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { usePrevious } from "@uidotdev/usehooks";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import {
   getUserResumes,
@@ -21,7 +21,7 @@ import InterviewSettingsCard from "../InterviewSettingsCard";
 import CardHOC from "../cardContentHOC";
 import { Form } from "@/components/ui/form";
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+ 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
@@ -30,7 +30,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 export type Page = 0 | 1 | 2;
 
 const InterviewFormSchema = z.object({
-  text: z.string().min(2, {
+  text: z.string().min(50, {
     message: "Job Description must be at least 50 characters",
   }),
 });
@@ -129,17 +129,17 @@ const Interview: React.FC = () => {
     void fetchPDF();
   }, [resume, storage]);
 
-  // useEffect(() => {
-  //   if (files?.length === 0 && resumeURL) {
-  //     setSelectedResume("existing");
-  //   }
-  // }, [files, resumeURL]);
+  useEffect(() => {
+    if (files?.length === 0 && resumeURL) {
+      setSelectedResume("existing");
+    }
+  }, [files, resumeURL]);
 
-  // useEffect(() => {
-  //   if (resumeURL) {
-  //     setSelectedResume("existing");
-  //   }
-  // }, [resumeURL]);
+  useEffect(() => {
+    if (resumeURL) {
+      setSelectedResume("existing");
+    }
+  }, [resumeURL]);
 
   const handleNextPage = () => {
     setCurrentPage((prevPage: Page): Page => (prevPage + 1) as Page);

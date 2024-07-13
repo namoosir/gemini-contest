@@ -1,8 +1,7 @@
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { CardHeader, CardTitle, CardContent, CardDescription } from "./ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "./ui/label";
-import { error } from "console";
 
 interface Props {
   duration: string | undefined;
@@ -46,7 +45,6 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
                   props.setDuration(value);
                 }
               }}
-              //defaultValue={durations[0].value}
             >
               {props.durations.map((item) => (
                 <ToggleGroupItem key={item.value} value={item.value}>
@@ -111,7 +109,6 @@ const InterviewSettingsCard: React.FC<Props> = (props: Props) => {
             </ToggleGroup>
           </div>
         </div>
-        <p className="text-sm font-medium text-destructive">{props.error}</p>
       </CardContent>
     </div>
   );

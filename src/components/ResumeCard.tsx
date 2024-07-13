@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { DropzoneOptions } from "react-dropzone";
 import { Document, Thumbnail } from "react-pdf";
 import Icon from "@mdi/react";
@@ -48,7 +48,6 @@ const ResumeCard: React.FC<Props> = (props) => {
       />
     </div>
   );
-
 
   return (
     <div className="w-full h-full">
