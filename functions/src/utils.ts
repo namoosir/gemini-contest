@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import https = require("https");
-import 'dotenv/config'
+import "dotenv/config";
 
-const DEEPGRAM_URL = "https://api.deepgram.com/v1/speak?model=aura-athena-en&encoding=linear16&container=wav";
+const DEEPGRAM_URL =
+  "https://api.deepgram.com/v1/speak?model=aura-athena-en&encoding=linear16&container=wav";
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
 export function segmentTextBySentence(text: string) {
@@ -16,9 +17,9 @@ export function synthesizeAudio(text: string): Promise<Uint8Array> {
       method: "POST",
       headers: {
         Authorization: `Token ${DEEPGRAM_API_KEY}`,
-        "Content-Type": "application/json"
-      }
-    }
+        "Content-Type": "application/json",
+      },
+    };
 
     const req = https.request(DEEPGRAM_URL, options, (res) => {
       const data: any = [];
@@ -28,7 +29,7 @@ export function synthesizeAudio(text: string): Promise<Uint8Array> {
       });
 
       res.on("end", () => {
-        const buffer = Buffer.concat(data)
+        const buffer = Buffer.concat(data);
         resolve(new Uint8Array(buffer));
       });
     });
