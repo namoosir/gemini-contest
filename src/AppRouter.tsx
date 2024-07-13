@@ -1,4 +1,9 @@
-import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from "react-router-dom";
+import {
+  Route,
+  createBrowserRouter,
+  createRoutesFromElements,
+  RouterProvider,
+} from "react-router-dom";
 import Login from "./components/pages/Login.tsx";
 import Home from "./components/pages/Home.tsx";
 import Voice from "./components/pages/Voice.tsx";
@@ -8,16 +13,17 @@ import Interview from "./components/pages/Interview.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.tsx";
+import ResumeForm from "./components/ResumeForm.tsx";
 
 const AppRouter = () => {
   const { user } = useAuthContext();
   const router = createBrowserRouter(
-
     createRoutesFromElements(
       <>
         <Route path="/" element={<RootLayout />}>
-          {!user ?
-            <Route index element={<Login />} /> :
+          {!user ? (
+            <Route index element={<Login />} />
+          ) : (
             <Route
               index
               element={
@@ -26,7 +32,7 @@ const AppRouter = () => {
                 </ProtectedRoute>
               }
             />
-          }
+          )}
           <Route
             path="/voice"
             element={
@@ -60,13 +66,19 @@ const AppRouter = () => {
             }
           />
         </Route>
+        <Route
+          path="/resume"
+          element={
+            <ProtectedRoute>
+              <ResumeForm />
+            </ProtectedRoute>
+          }
+        />
       </>
     )
-  )
-
-  return (
-    <RouterProvider router={router} />
   );
+
+  return <RouterProvider router={router} />;
 };
 
 export default AppRouter;
