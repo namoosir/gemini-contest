@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import https = require("https");
 import "dotenv/config";
 
@@ -22,15 +21,14 @@ export function synthesizeAudio(text: string): Promise<Uint8Array> {
     };
 
     const req = https.request(DEEPGRAM_URL, options, (res) => {
-      const data: any = [];
-
+      const data: Buffer[] = [];
       res.on("data", (chunk) => {
         data.push(chunk);
       });
 
       res.on("end", () => {
         const buffer = Buffer.concat(data);
-        resolve(new Uint8Array(buffer));
+        resolve(buffer);
       });
     });
 
