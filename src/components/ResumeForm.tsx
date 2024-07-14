@@ -1,28 +1,19 @@
 import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
-import { addResume } from "@/services/firebase/resumeService";
 import { uploadResume } from "@/services/firebase/resumeService";
 import { ChangeEvent, FormEvent, useState } from "react";
 
 function ResumeForm() {
   const { user } = useAuthContext();
   const [files, setFiles] = useState<File[]>([]);
-  const { storage, db } = useFirebaseContext();
+  const { storage } = useFirebaseContext();
 
   async function submitHandler(event: FormEvent) {
     event.preventDefault();
     if (user && files.length > 0) {
       for (const file of files) {
         try {
-          const ref = await uploadResume(storage, file, user.uid);
-          console.log(ref);
-          await addResume(db, {
-            description: "description",
-            url: ref,
-            jobId: "jobId",
-            uid: user.uid,
-            filename: file.name,
-          });
+          await uploadResume(storage, file, user.uid);
         } catch (error) {
           alert("Something went wrong while tryiing to upload Resume.");
           console.error(error as string);
