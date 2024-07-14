@@ -1,4 +1,9 @@
-import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from "react-router-dom";
+import {
+  Route,
+  createBrowserRouter,
+  createRoutesFromElements,
+  RouterProvider,
+} from "react-router-dom";
 import Login from "./components/pages/Login.tsx";
 import Home from "./components/pages/Home.tsx";
 import Voice from "./components/pages/Voice.tsx";
@@ -6,7 +11,6 @@ import Test from "./components/pages/Test.tsx";
 import Chat from "./components/pages/Chat.tsx";
 import Interview from "./components/pages/Interview.tsx";
 import ResumeForm from "./components/ResumeForm.tsx";
-import Test2 from "./components/pages/Test2.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.tsx";
@@ -15,12 +19,12 @@ import PageNotFound from "./components/pages/PageNotFound.tsx";
 const AppRouter = () => {
   const { user } = useAuthContext();
   const router = createBrowserRouter(
-
     createRoutesFromElements(
       <>
         <Route path="/" element={<RootLayout />}>
-          {!user ?
-            <Route index element={<Login />} /> :
+          {!user ? (
+            <Route index element={<Login />} />
+          ) : (
             <Route
               index
               element={
@@ -29,7 +33,7 @@ const AppRouter = () => {
                 </ProtectedRoute>
               }
             />
-          }
+          )}
           <Route
             path="/voice"
             element={
@@ -70,23 +74,13 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/test2"
-            element={
-              <ProtectedRoute>
-                <Test2 />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<PageNotFound/>}/>
+          <Route path="*" element={<PageNotFound />} />
         </Route>
       </>
     )
-  )
-
-  return (
-    <RouterProvider router={router} />
   );
+
+  return <RouterProvider router={router} />;
 };
 
 export default AppRouter;
