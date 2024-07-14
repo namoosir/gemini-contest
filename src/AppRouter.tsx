@@ -6,6 +6,7 @@ import Test from "./components/pages/Test.tsx";
 import Chat from "./components/pages/Chat.tsx";
 import Interview from "./components/pages/Interview.tsx";
 import ResumeForm from "./components/ResumeForm.tsx";
+import Test2 from "./components/pages/Test2.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.tsx";
@@ -66,6 +67,14 @@ const AppRouter = () => {
             element={
               <ProtectedRoute>
                 <ResumeForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/test2"
+            element={
+              <ProtectedRoute>
+                <Test2 />
               </ProtectedRoute>
             }
           />
