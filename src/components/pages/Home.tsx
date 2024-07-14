@@ -1,72 +1,41 @@
-import { User, signOut } from "firebase/auth";
-import { useEffect, useState } from "react";
-import useFirebaseContext from "@/hooks/useFirebaseContext";
 import Icon from "@mdi/react";
 import { mdiLogout, mdiMicrophone } from "@mdi/js";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-
-
-
+import useAuthContext from "@/hooks/useAuthContext";
 
 function Home() {
-  const { auth } = useFirebaseContext();
-
-  const [user, setUser] = useState<User | undefined>(undefined);
-
-  useEffect(() => {
-    const signin = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(undefined);
-      }
-    });
-    return () => signin();
-  }, [auth]);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
+  const { user, logout } = useAuthContext()
 
   return (
     <>
-      <div className="signinpage">
+      <div>
         {user && (
           <>
             <p>{user.displayName} is logged in...</p>
             <button
-              className="signoutbutton"
-              onClick={handleSignOut}
+              onClick={logout}
               title="Sign Out"
             >
               <Icon className="w-8 ml-1" path={mdiLogout} />
             </button>
 
-            <Card variant="primary">
-              <CardContent className="p-8">
-                <p className="font-black">This is the USER card content.</p>
+            <Card className="bg-primary text-primary-foreground">
+              <CardContent>
+                <p>This is the USER card content.</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-8">
-                <p className="font-black">This is the Gemini card content.</p>
+            <Card className="bg-muted">
+              <CardContent>
+                <p>This is the Gemini card content.</p>
               </CardContent>
             </Card>
 
-            <Icon path={mdiMicrophone} />
+            <Icon className="w-8 h-8" path={mdiMicrophone} />
           </>
-        )}
-        {!user && (
-          <p>Unsuccessful Login Attempt, but you somehow made it through...</p>
         )}
       </div>
     </>
