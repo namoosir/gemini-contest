@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 import { Card, CardContent } from "./ui/card";
 import { useWindowScroll } from "@uidotdev/usehooks";
 
-interface ChatMessage {
+export interface ChatMessage {
   sender: "user" | "gemini";
   content: string;
 }
@@ -25,19 +25,24 @@ const Chats: React.FC<Props> = (props: Props) => {
       top: textContainerRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [chats]);
+  }, [chats, scrollTo]);
 
   const renderChats = () => {
-    return chats.map((chat) => {
+    return chats.map((chat, index) => {
+      if (!chat.content) return
+      
       if (chat.sender === "user") {
         return (
-          <Card className="w-max max-w-[75%] bg-primary text-primary-foreground">
+          <Card
+            key={index}
+            className="w-max max-w-[75%] bg-primary text-primary-foreground ml-auto"
+          >
             <CardContent className="p-4">{chat.content}</CardContent>
           </Card>
         );
       } else {
         return (
-          <Card className="w-max max-w-[75%] bg-muted ml-auto">
+          <Card key={index} className="w-max max-w-[75%] bg-muted">
             <CardContent className="p-4">{chat.content}</CardContent>
           </Card>
         );

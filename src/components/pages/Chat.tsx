@@ -1,8 +1,8 @@
 import { prompt } from "@/services/gemini/base";
 import { InterviewBot } from "@/services/gemini/JobDParserBot";
 import { fetchAudioBuffer } from "@/services/voice/TTS";
-import { useEffect, useRef, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useRef, useState } from "react";
+import Chats, { ChatMessage } from "../Chats";
 
 interface MessageData {
   channel?: {
@@ -10,11 +10,6 @@ interface MessageData {
       transcript?: string;
     }[];
   };
-}
-
-interface ChatMessage {
-  sender: "User" | "Gemini";
-  content: string;
 }
 
 function Chat() {
@@ -26,7 +21,6 @@ function Chat() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const [transcript, setTranscript] = useState<string>("");
-  const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   const gemini = new InterviewBot();
 
@@ -42,13 +36,21 @@ function Chat() {
   async function handleReponse(text: string) {
     const data = await fetchAudioBuffer(text);
     const audioCtx = new AudioContext();
-    setChat((history) => [...history, { sender: "Gemini", content: "\n" }]);
+    setChat((history) => [...history, { sender: "gemini", content: "" }]);
 
     for (const chunk of data) {
-      setChat((history) => [
-        ...history,
-        { sender: "Gemini", content: chunk.word },
-      ]);
+      setChat((history) => {
+        const newHistory = [...history]
+        const lastItem = newHistory[newHistory.length - 1]
+
+        newHistory[newHistory.length - 1] = {
+          ...lastItem,
+          content: lastItem.content + " " + chunk.word
+        }
+        
+        return newHistory
+      });
+
       const typedArray = new Uint8Array(Object.values(chunk.buffer));
       const arrayBuffer = typedArray.buffer;
       const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
@@ -74,7 +76,7 @@ function Chat() {
     try {
       setShowMic(true);
       setTranscript("");
-      setChat((history) => [...history, { sender: "User", content: "\n" }]);
+      setChat((history) => [...history, { sender: "user", content: "" }]);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, {
@@ -109,10 +111,17 @@ function Chat() {
             received?.channel?.alternatives?.[0].transcript;
 
           if (transcriptText) {
-            setChat((history) => [
-              ...history,
-              { sender: "User", content: transcriptText },
-            ]);
+            setChat((history) => {
+              const newHistory = [...history]
+              const lastItem = newHistory[newHistory.length - 1]
+
+              newHistory[newHistory.length - 1] = {
+                ...lastItem,
+                content: lastItem.content + " " + transcriptText
+              }
+              
+              return newHistory
+            });
             setTranscript((history) => (history += transcriptText));
           }
         }
@@ -152,70 +161,16 @@ function Chat() {
     await handleReponse(await prompt(transcript));
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // const scrollToBottom = () => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [chat]);
-
-  function renderMessages(messages: ChatMessage[]) {
-    const cards = [];
-    let currentCardMessages: ChatMessage[] = [];
-    let currentSender = "";
-
-    messages.forEach((message, index) => {
-      if (message.content === "\n") {
-        if (currentCardMessages.length > 0) {
-          cards.push(
-            <Card
-              className={
-                currentSender === "User" ? "self-end w-3/4" : "self-start w-3/4"
-              }
-              key={cards.length}
-              variant={currentSender === "User" ? "primary" : "default"}
-            >
-              <CardContent className="p-8">
-                <p className="font-black">
-                  {currentCardMessages.map((msg) => msg.content).join(" ")}
-                </p>
-              </CardContent>
-            </Card>
-          );
-          currentCardMessages = [];
-        }
-      } else {
-        if (currentCardMessages.length === 0) {
-          currentSender = message.sender;
-        }
-        currentCardMessages.push(message);
-      }
-    });
-
-    if (currentCardMessages.length > 0) {
-      cards.push(
-        <Card
-          className={
-            currentSender === "User" ? "self-end w-3/4" : "self-start w-3/4"
-          }
-          key={cards.length}
-          variant={currentSender === "User" ? "primary" : "default"}
-        >
-          <CardContent className="p-8">
-            <p className="font-black">
-              {currentCardMessages.map((msg) => msg.content).join(" ")}
-            </p>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return cards;
-  }
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [chat]);
 
   return (
-    <div className="flex flex-col min-h-screen overflow-hidden">
+    <div className="flex flex-col h-full">
       <form onSubmit={jobSubmitHandler} className="p-4">
         <label>
           Provide the Job description to Start the interview process:
@@ -228,14 +183,7 @@ function Chat() {
         <button type="submit">Submit</button>
       </form>
 
-      <h1 className="p-4 ">Chat</h1>
-      <div
-        className="relative h-screen flex flex-col space-y-4 overflow-y-auto"
-        style={{ maxHeight: "55vh" }}
-      >
-        {renderMessages(chat)}
-        <div ref={messagesEndRef} />
-      </div>
+      <Chats chats={chat} />
 
       {showMic && (
         <div
