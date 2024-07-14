@@ -33,23 +33,27 @@ function Chat() {
     await handleReponse(await gemini.initInterviewForJobD(jobDescription));
   }
 
+  const updateLatestChat = (text: string) => {
+    setChat((history) => {
+      const newHistory = [...history];
+      const lastItem = newHistory[newHistory.length - 1];
+
+      newHistory[newHistory.length - 1] = {
+        ...lastItem,
+        content: lastItem.content + " " + text,
+      };
+
+      return newHistory;
+    });
+  }
+
   async function handleReponse(text: string) {
     const data = await fetchAudioBuffer(text);
     const audioCtx = new AudioContext();
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
 
     for (const chunk of data) {
-      setChat((history) => {
-        const newHistory = [...history]
-        const lastItem = newHistory[newHistory.length - 1]
-
-        newHistory[newHistory.length - 1] = {
-          ...lastItem,
-          content: lastItem.content + " " + chunk.word
-        }
-        
-        return newHistory
-      });
+      updateLatestChat(chunk.word)
 
       const typedArray = new Uint8Array(Object.values(chunk.buffer));
       const arrayBuffer = typedArray.buffer;
@@ -111,17 +115,7 @@ function Chat() {
             received?.channel?.alternatives?.[0].transcript;
 
           if (transcriptText) {
-            setChat((history) => {
-              const newHistory = [...history]
-              const lastItem = newHistory[newHistory.length - 1]
-
-              newHistory[newHistory.length - 1] = {
-                ...lastItem,
-                content: lastItem.content + " " + transcriptText
-              }
-              
-              return newHistory
-            });
+            updateLatestChat(transcriptText)
             setTranscript((history) => (history += transcriptText));
           }
         }
@@ -160,14 +154,6 @@ function Chat() {
     setShowMic(false);
     await handleReponse(await prompt(transcript));
   };
-
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  // };
-
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [chat]);
 
   return (
     <div className="flex flex-col h-full">
