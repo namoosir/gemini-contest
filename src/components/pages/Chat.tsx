@@ -22,9 +22,9 @@ function Chat() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const socketIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const gemini = new InterviewBot();
-  let socketInterval: NodeJS.Timeout;
 
   const updateLatestChat = (text: string) => {
     setChat((history) => {
@@ -45,7 +45,7 @@ function Chat() {
       setApiKey(await getAPIKey())
     }
 
-    fetchKey()
+    void fetchKey()
   }, []);
 
   useEffect(() => {
@@ -59,9 +59,10 @@ function Chat() {
       );
   
       socket.onopen = () => {
+        console.log("WebSocket connected");
         const keepAliveMsg = JSON.stringify({ type: "KeepAlive" });
 
-        socketInterval = setInterval(() => {
+        socketIntervalRef.current = setInterval(() => {
           socket.send(keepAliveMsg)
         }, 3000)
       };
@@ -88,10 +89,40 @@ function Chat() {
       };
       
       socketRef.current = socket;
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
+      });
+
+      const audioContext = new AudioContext()
+      audioContextRef.current = audioContext;
+
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        if (event.data && event.data.size > 0) {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(event.data);
+          }
+        }
+      });
+
+      mediaRecorder.start(250);  // Start recording, gather data every second
+
+      mediaRecorder.pause();
+
+      mediaRecorderRef.current = mediaRecorder;
     }
 
-    initWebSocket()
+    void initWebSocket()
   }, [apiKey])
+
+  useEffect(() => {
+    if (isRecording) {
+      mediaRecorderRef.current?.resume();
+    } else {
+      mediaRecorderRef.current?.pause();
+    }
+  }, [isRecording])
 
   async function jobSubmitHandler(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -128,35 +159,14 @@ function Chat() {
       });
     }
     await audioCtx.close();
-    await startRecording();
+    startRecording();
   }
 
-  const startRecording = async () => {
+  const startRecording = () => {
     try {
       setShowMic(true);
       setTranscript("");
       setChat((history) => [...history, { sender: "user", content: "" }]);
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
-      });
-
-      mediaRecorderRef.current = mediaRecorder
-
-      const audioContext = new AudioContext();
-      audioContextRef.current = audioContext;
-      const socket = socketRef.current!
-
-      mediaRecorder.addEventListener("dataavailable", (event) => {
-        if (event.data && event.data.size > 0) {
-          if (socket.readyState === WebSocket.OPEN) {
-            socket.send(event.data);
-          }
-        }
-      });
-
-      mediaRecorder.start(250);
 
       setIsRecording(true);
     } catch (error) {
@@ -165,30 +175,10 @@ function Chat() {
   };
 
   const stopRecording = async () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
-    if (audioContextRef.current) {
-      await audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
     setIsRecording(false);
     setShowMic(false);
     await handleResponse(await prompt(transcript));
   };
-
-  // TODO: Gotta clean up
-  // async function cleanup() {
-  //   stopRecording
-  //   mediaRecorderRef.current?.stop()
-  //   socketRef.current?.close()
-  //   await audioContextRef.current?.close()
-
-  //   mediaRecorderRef.current = null
-  //   socketRef.current = null
-  //   audioContextRef.current = null
-  // }
 
   return (
     <div className="flex flex-col h-full">

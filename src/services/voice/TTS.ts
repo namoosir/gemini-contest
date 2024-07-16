@@ -34,7 +34,7 @@ export const getAPIKey = async () => {
 
   if (response.ok) {
     const data = await response.text();
-    return JSON.parse(data).key;
+    return JSON.parse(data).key as string;
   }
 };
 
