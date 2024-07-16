@@ -1,7 +1,7 @@
 import { prompt } from "@/services/gemini/base";
 import { InterviewBot } from "@/services/gemini/JobDParserBot";
-import { fetchAudioBuffer } from "@/services/voice/TTS";
-import { useRef, useState } from "react";
+import { fetchAudioBuffer, getAPIKey } from "@/services/voice/TTS";
+import { useRef, useState, useEffect } from "react";
 import Chats, { ChatMessage } from "../Chats";
 
 interface MessageData {
@@ -16,22 +16,15 @@ function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [jobDescription, setJobDescription] = useState<string>("");
   const [showMic, setShowMic] = useState<boolean>(false);
+  const [transcript, setTranscript] = useState<string>("");
+  const [apiKey, setApiKey] = useState<string | undefined>()
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
-  const [transcript, setTranscript] = useState<string>("");
-
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  
   const gemini = new InterviewBot();
-
-  async function jobSubmitHandler(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (jobDescription === "") {
-      alert("Provide job desc");
-      return;
-    }
-    await handleReponse(await gemini.initInterviewForJobD(jobDescription));
-  }
+  let socketInterval: NodeJS.Timeout;
 
   const updateLatestChat = (text: string) => {
     setChat((history) => {
@@ -47,7 +40,69 @@ function Chat() {
     });
   }
 
-  async function handleReponse(text: string) {
+  useEffect(() => {
+    async function fetchKey() {
+      setApiKey(await getAPIKey())
+    }
+
+    fetchKey()
+  }, []);
+
+  useEffect(() => {
+    if (!apiKey)
+      return
+
+    const initWebSocket = async () => {
+      const socket = new WebSocket(
+        "wss://api.deepgram.com/v1/listen?punctuate=true",
+        ["token", apiKey || ""]
+      );
+  
+      socket.onopen = () => {
+        const keepAliveMsg = JSON.stringify({ type: "KeepAlive" });
+
+        socketInterval = setInterval(() => {
+          socket.send(keepAliveMsg)
+        }, 3000)
+      };
+  
+      socket.onmessage = (message) => {
+        if (message?.data) {
+          const received = JSON.parse(message.data as string) as MessageData;
+          const transcriptText =
+            received?.channel?.alternatives?.[0].transcript;
+  
+          if (transcriptText) {
+            updateLatestChat(transcriptText)
+            setTranscript((history) => (history += transcriptText));
+          }
+        }
+      };
+  
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+  
+      socket.onclose = () => {
+        console.log("WebSocket closed.", new Date());
+      };
+      
+      socketRef.current = socket;
+    }
+
+    initWebSocket()
+  }, [apiKey])
+
+  async function jobSubmitHandler(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (jobDescription === "") {
+      alert("Provide job desc");
+      return;
+    }
+    await handleResponse(await gemini.initInterviewForJobD(jobDescription));
+  }
+
+  async function handleResponse(text: string) {
     const data = await fetchAudioBuffer(text);
     const audioCtx = new AudioContext();
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
@@ -87,47 +142,21 @@ function Chat() {
         mimeType: "audio/webm",
       });
 
+      mediaRecorderRef.current = mediaRecorder
+
       const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
+      const socket = socketRef.current!
 
-      const socket = new WebSocket(
-        "wss://api.deepgram.com/v1/listen?punctuate=true",
-        ["token", import.meta.env.VITE_DEEPGRAM_API_KEY || ""]
-      );
-      socketRef.current = socket;
-
-      socket.onopen = () => {
-        mediaRecorder.addEventListener("dataavailable", (event) => {
-          if (event.data && event.data.size > 0) {
-            if (socket.readyState === WebSocket.OPEN) {
-              socket.send(event.data);
-            }
-          }
-        });
-
-        mediaRecorder.start(250);
-      };
-
-      socket.onmessage = (message) => {
-        if (message?.data) {
-          const received = JSON.parse(message.data as string) as MessageData;
-          const transcriptText =
-            received?.channel?.alternatives?.[0].transcript;
-
-          if (transcriptText) {
-            updateLatestChat(transcriptText)
-            setTranscript((history) => (history += transcriptText));
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        if (event.data && event.data.size > 0) {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(event.data);
           }
         }
-      };
+      });
 
-      socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-      };
-
-      socket.onclose = () => {
-        console.log("WebSocket closed.");
-      };
+      mediaRecorder.start(250);
 
       setIsRecording(true);
     } catch (error) {
@@ -140,20 +169,26 @@ function Chat() {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
     }
-    if (socketRef.current) {
-      if (socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.close();
-      }
-      socketRef.current = null;
-    }
     if (audioContextRef.current) {
       await audioContextRef.current.close();
       audioContextRef.current = null;
     }
     setIsRecording(false);
     setShowMic(false);
-    await handleReponse(await prompt(transcript));
+    await handleResponse(await prompt(transcript));
   };
+
+  // TODO: Gotta clean up
+  // async function cleanup() {
+  //   stopRecording
+  //   mediaRecorderRef.current?.stop()
+  //   socketRef.current?.close()
+  //   await audioContextRef.current?.close()
+
+  //   mediaRecorderRef.current = null
+  //   socketRef.current = null
+  //   audioContextRef.current = null
+  // }
 
   return (
     <div className="flex flex-col h-full">
@@ -172,26 +207,15 @@ function Chat() {
       <Chats chats={chat} />
 
       {showMic && (
-        <div
-          className="flex justify-center items-center p-4"
-          style={{ height: "10vh" }}
+        <button
+          className="bg-primary p-4 rounded my-2"
+          onClick={isRecording ? stopRecording : startRecording}
         >
-          <button
-            className="bg-primary p-4 rounded"
-            onClick={isRecording ? stopRecording : startRecording}
-          >
-            {isRecording ? "Stop Recording" : "Start Recording"}
-          </button>
-        </div>
+          {isRecording ? "Stop Recording" : "Start Recording"}
+        </button>
       )}
-
-      <div
-        id="mic-activity"
-        className="flex justify-center items-center"
-        style={{ height: "15vh" }}
-      >
-        <p>Put Mic Div Here</p>
-      </div>
+      <br></br>
+      {/* <Button onClick={() => clearInterval(socketInterval)}>stop</Button> */}
     </div>
   );
 }

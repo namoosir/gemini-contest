@@ -1,15 +1,42 @@
-export const fetchAudioBuffer = async (sentence: string): Promise<{word: string, buffer: Uint8Array}[]> => {
+export const fetchAudioBuffer = async (
+  sentence: string
+): Promise<{ word: string; buffer: Uint8Array }[]> => {
   try {
-    const response = await fetch('http://127.0.0.1:5001/gemini-contest/us-central1/api/audio/tts', {
-      method: "POST",
-      body: JSON.stringify({ "text": sentence, "model": "" })
-    });
-    return await response.json() as Promise<{word: string, buffer: Uint8Array}[]>
+    const response = await fetch(
+      "http://127.0.0.1:5001/gemini-contest/us-central1/api/audio/tts",
+      {
+        method: "POST",
+        body: JSON.stringify({ text: sentence, model: "" }),
+      }
+    );
+    return (await response.json()) as Promise<
+      { word: string; buffer: Uint8Array }[]
+    >;
   } catch (error) {
-    alert('Something went wrong while trying to fetch, maybe turn on cloud function or fix backend')
-    throw new Error(`${error as string}`)
+    alert(
+      "Something went wrong while trying to fetch, maybe turn on cloud function or fix backend"
+    );
+    throw new Error(`${error as string}`);
   }
-}
+};
+
+export const getAPIKey = async () => {
+  const response = await fetch(
+    "http://127.0.0.1:5001/gemini-contest/us-central1/api/audio/stt/key",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ uid: "test" }),
+    }
+  );
+
+  if (response.ok) {
+    const data = await response.text();
+    return JSON.parse(data).key;
+  }
+};
 
 // export const playAudio = (arrayBuffer: ArrayBuffer, audioCtx: AudioContext) => {
 //   return new Promise<void>(resolve => {
