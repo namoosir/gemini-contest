@@ -1,11 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { Card, CardContent } from "./ui/card";
 import { useWindowScroll } from "@uidotdev/usehooks";
-
-export interface ChatMessage {
-  sender: "user" | "gemini";
-  content: string;
-}
+import { ChatMessage } from "@/services/voice/TTS";
 
 interface Props {
   chats: ChatMessage[];
