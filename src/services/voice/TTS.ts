@@ -53,7 +53,7 @@ export const getAPIKey = async () => {
 
 export const initVoiceWebSocket = async (
   apiKey: string | undefined,
-  interval: NodeJS.Timeout | null,
+  interval: React.MutableRefObject<NodeJS.Timeout | null>,
   setTranscript: React.Dispatch<React.SetStateAction<string>>,
   setChat: React.Dispatch<React.SetStateAction<ChatMessage[]>>
 ) => {
@@ -66,7 +66,7 @@ export const initVoiceWebSocket = async (
     console.log("WebSocket connected");
     const keepAliveMsg = JSON.stringify({ type: "KeepAlive" });
 
-    interval = setInterval(() => {
+    interval.current = setInterval(() => {
       socket.send(keepAliveMsg);
     }, 3000);
   };
@@ -110,7 +110,7 @@ export const initMediaRecorder = async (socket: WebSocket | null) => {
 
   mediaRecorder.start(250); // Start recording, gather data every second
   mediaRecorder.pause();
-  return {mediaRecorder, stream};
+  return { mediaRecorder, stream };
 };
 
 export const playbackGeminiResponse = async (

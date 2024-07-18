@@ -9,14 +9,14 @@ interface Props {
 }
 
 const AnimatedMic: React.FC<Props> = (props: Props) => {
-  const FACTOR = 34
+  const FACTOR = 34;
 
   return (
     <div
       className="rounded-full flex items-center justify-center bg-muted"
       style={{
-        height: `${props.amplitude * FACTOR}px`,
-        width: `${props.amplitude * FACTOR}px`,
+        height: `${props.isRecording ? props.amplitude * FACTOR : 80}px`,
+        width: `${props.isRecording ? props.amplitude * FACTOR : 80}px`,
       }}
     >
       <Button
@@ -24,9 +24,8 @@ const AnimatedMic: React.FC<Props> = (props: Props) => {
         variant={props.isRecording ? "destructive" : "secondary"}
         disabled={!props.isRecording}
         onClick={() => {
-          console.log('clicked', props.isRecording)
-          if (props.isRecording)
-            props.stopRecording()
+          console.log("clicked", props.isRecording);
+          if (props.isRecording) props.stopRecording();
         }}
       >
         <Icon

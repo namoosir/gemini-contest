@@ -11,6 +11,11 @@ import {
 import { useRef, useState, useEffect, useCallback } from "react";
 import Chats from "../Chats";
 import AnimatedMic from "../AnimatedMic";
+import { Button } from "../ui/button";
+import { useNavigate } from "react-router-dom";
+import { mdiClose } from "@mdi/js";
+import Icon from "@mdi/react";
+import { Card } from "../ui/card";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -25,6 +30,12 @@ function Chat() {
   const socketIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const isRecordingRef = useRef<boolean>(isRecording);
+  const audioContextRef = useRef<AudioContext | undefined>();
+  const micAudioContextRef = useRef<AudioContext | undefined>();
+  const streamRef = useRef<MediaStream | undefined>();
+  const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
+
+  const navigate = useNavigate();
 
   const gemini = new InterviewBot();
 
@@ -50,7 +61,7 @@ function Chat() {
     // Scale the normalized amplitude to a range between 5 and 13
     const scaledAmplitude = 1.5 + normalizedAmplitude * 35; // 5 + (0-1) * (13 - 5)
 
-    const smoothingFactor = 0.15;
+    const smoothingFactor = 0.1;
     setAmplitude((prevAmplitude) => {
       const smoothedAmplitude =
         prevAmplitude + smoothingFactor * (scaledAmplitude - prevAmplitude);
@@ -76,7 +87,7 @@ function Chat() {
     const initWebSocket = async () => {
       socketRef.current = await initVoiceWebSocket(
         apiKey,
-        socketIntervalRef.current,
+        socketIntervalRef,
         setTranscript,
         setChat
       );
@@ -88,9 +99,14 @@ function Chat() {
       mediaRecorderRef.current = mediaRecorder;
 
       const audioContext = new AudioContext();
+
+      micAudioContextRef.current = audioContext;
+
+      streamRef.current = mediaStream;
+
       const analyser = audioContext.createAnalyser();
-      const source = audioContext.createMediaStreamSource(mediaStream);
-      source.connect(analyser);
+      sourceRef.current = audioContext.createMediaStreamSource(mediaStream);
+      sourceRef.current.connect(analyser);
 
       analyserRef.current = analyser;
     };
@@ -121,6 +137,9 @@ function Chat() {
   async function handleResponse(text: string) {
     const data = await fetchAudioBuffer(text);
     const audioCtx = new AudioContext();
+
+    audioContextRef.current = audioCtx;
+
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
     await playbackGeminiResponse(data, setChat, audioCtx);
     await audioCtx.close();
@@ -139,10 +158,64 @@ function Chat() {
   };
 
   const stopRecording = async () => {
-    console.log('stopping')
+    console.log("stopping");
     setIsRecording(false);
     await handleResponse(await prompt(transcript));
   };
+
+  const stopListening = () => {
+    setIsRecording(false);
+  
+    if (socketIntervalRef.current) {
+      clearInterval(socketIntervalRef.current);
+      socketIntervalRef.current = null;
+    }
+  
+    if (socketRef.current) {
+      const closeMessage = JSON.stringify({ type: "CloseStream" });
+      socketRef.current.send(closeMessage);
+      socketRef.current.close();
+      socketRef.current = null;
+    }
+  
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+  
+    if (analyserRef.current) {
+      analyserRef.current.disconnect();
+      analyserRef.current = null;
+    }
+  
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      console.log(audioContextRef.current.state);
+      audioContextRef.current = undefined;
+    }
+  
+    if (micAudioContextRef.current) {
+      micAudioContextRef.current.close();
+      console.log(micAudioContextRef.current.state)
+      micAudioContextRef.current = undefined;
+    }
+
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks();
+      tracks.forEach((track) => {
+        track.stop();
+      });
+      streamRef.current = undefined;
+    }
+  
+    if (sourceRef.current) {
+      sourceRef.current.disconnect();
+      sourceRef.current = undefined;
+    }
+  
+    navigate("/interview");
+  };
+
 
   return (
     <div className="flex flex-col h-full">
@@ -162,16 +235,31 @@ function Chat() {
         <Chats chats={chat} />
       </div>
 
-      <div
-        className="h-40 w-full flex items-center justify-center"
-      >
-        <AnimatedMic
-          isRecording={isRecording}
-          amplitude={amplitude}
-          stopRecording={stopRecording}
-        />
+      <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
+        <Button
+          variant={"secondary"}
+          className="items-center self-center h-16 w-16 rounded-full hover:bg-destructive hover:text-destructive-foreground"
+          onClick={stopListening}
+        >
+          <Icon path={mdiClose} className="h-6 w-6" />
+        </Button>
+
+        <div className="w-40 h-40 flex items-center justify-center">
+          <AnimatedMic
+            isRecording={isRecording}
+            amplitude={amplitude}
+            stopRecording={stopRecording}
+          />
+        </div>
+
+        <Button
+          variant={"destructive"}
+          className="items-center self-center h-16 w-16 rounded-full invisible"
+          onClick={stopListening}
+        >
+          <Icon path={mdiClose} className="h-6 w-6" />
+        </Button>
       </div>
-      {/* <Button onClick={() => clearInterval(socketInterval)}>stop</Button> */}
     </div>
   );
 }
