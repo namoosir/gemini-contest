@@ -4,6 +4,7 @@ import Icon from "@mdi/react";
 import { cn } from "@/lib/utils";
 import { Dispatch, SetStateAction } from "react";
 import { Page } from "./pages/Interview";
+import { Button } from "./ui/button";
 
 interface Step {
   label: string;
@@ -12,7 +13,7 @@ interface Step {
 
 interface Props {
   currentStep: number;
-  onStepClick: Dispatch<SetStateAction<Page>>
+  onStepClick: Dispatch<SetStateAction<Page>>;
 }
 
 export default function Steps(props: Props) {
@@ -23,21 +24,36 @@ export default function Steps(props: Props) {
   ];
 
   return (
-    <div className="flex flex-row justify-center items-center">
+    <div className="flex flex-row justify-center items-center ">
       {steps.map((step, index) => (
-        <div onClick={() => props.onStepClick((index) as Page)} key={index} className="flex flex-row justify-center items-center cursor-pointer">
-          <div className="flex flex-row justify-center items-center gap-1">
-            <Icon
+        <div
+          key={index}
+          className="flex flex-row justify-center items-center cursor-pointer"
+        >
+          <Button
+            variant="link"
+            onClick={() => props.onStepClick(index as Page)}
+          >
+            <div className="flex flex-row justify-center items-center gap-1">
+              <Icon
+                className={cn(
+                  "h-4 w-4 text-muted-foreground",
+                  (index > 0 ? steps[index - 1].completed : true)
+                    ? "text-primary"
+                    : ""
+                )}
+                path={step.completed ? mdiCheck : mdiCircleOutline}
+              />
+            </div>
+            <p
               className={cn(
-                "h-4 w-4 text-muted-foreground",
-                (index > 0 ? steps[index - 1].completed : true) ? "text-primary" : ""
+                "ml-1 text-muted-foreground",
+                step.completed ? "text-primary" : ""
               )}
-              path={step.completed ? mdiCheck : mdiCircleOutline}
-            />
-          </div>
-          <p className={cn("ml-1 text-muted-foreground", step.completed ? "text-primary" : "")}>
-            {step.label}
-          </p>
+            >
+              {step.label}
+            </p>
+          </Button>
           {index < steps.length - 1 && (
             <div
               className={cn(
