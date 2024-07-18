@@ -10,30 +10,28 @@ import {
 } from "@/services/voice/TTS";
 import { useRef, useState, useEffect, useCallback } from "react";
 import Chats from "../Chats";
-import { mdiMicrophone, mdiMicrophoneOff } from "@mdi/js";
-import { Icon } from "@mdi/react";
+import AnimatedMic from "../AnimatedMic";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [jobDescription, setJobDescription] = useState<string>("");
-  const [showMic, setShowMic] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
   const [apiKey, setApiKey] = useState<string | undefined>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [amplitude, setAmplitude] = useState<number>(0);
+  const [amplitude, setAmplitude] = useState<number>(2.3);
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const socketIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  const isRecordingRef = useRef<boolean>(isRecording);
 
   const gemini = new InterviewBot();
 
-  const updateAmplitude = () => {
+  const updateAmplitude = useCallback(() => {
     if (!analyserRef.current) return;
 
-    const analyser = analyserRef.current
+    const analyser = analyserRef.current;
 
     analyser.fftSize = 2048;
     const bufferLength = analyser.frequencyBinCount;
@@ -52,15 +50,17 @@ function Chat() {
     // Scale the normalized amplitude to a range between 5 and 13
     const scaledAmplitude = 1.5 + normalizedAmplitude * 35; // 5 + (0-1) * (13 - 5)
 
-    console.log("Scaled Amplitude:", scaledAmplitude); // Log to verify values
+    const smoothingFactor = 0.15;
+    setAmplitude((prevAmplitude) => {
+      const smoothedAmplitude =
+        prevAmplitude + smoothingFactor * (scaledAmplitude - prevAmplitude);
+      return Math.max(Math.min(smoothedAmplitude, 3.8), 2.3);
+    });
 
-    const boundedAmplitude = Math.min(scaledAmplitude, 3.8);
-    setAmplitude(boundedAmplitude);
-
-    if (isRecording) {
-      animationFrameRef.current = requestAnimationFrame(updateAmplitude);
+    if (isRecordingRef.current) {
+      requestAnimationFrame(updateAmplitude);
     }
-  };
+  }, []);
 
   useEffect(() => {
     async function fetchKey() {
@@ -99,15 +99,13 @@ function Chat() {
   }, [apiKey]);
 
   useEffect(() => {
+    isRecordingRef.current = isRecording;
+
     if (isRecording) {
       mediaRecorderRef.current?.resume();
-      animationFrameRef.current = requestAnimationFrame(updateAmplitude);
+      requestAnimationFrame(updateAmplitude);
     } else {
       mediaRecorderRef.current?.pause();
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
     }
   }, [isRecording, updateAmplitude]);
 
@@ -131,19 +129,18 @@ function Chat() {
 
   const startRecording = () => {
     try {
-      setShowMic(true);
       setTranscript("");
       setChat((history) => [...history, { sender: "user", content: "" }]);
       setIsRecording(true);
-      updateAmplitude()
+      updateAmplitude();
     } catch (error) {
       console.error("Error accessing media devices.", error);
     }
   };
 
   const stopRecording = async () => {
+    console.log('stopping')
     setIsRecording(false);
-    setShowMic(false);
     await handleResponse(await prompt(transcript));
   };
 
@@ -161,35 +158,19 @@ function Chat() {
         <button type="submit">Submit</button>
       </form>
 
-      <Chats chats={chat} />
+      <div className="overflow-hidden flex-1">
+        <Chats chats={chat} />
+      </div>
 
-      {showMic && (
-        <div
-          id="mic-activity"
-          className="h-[4rem] flex items-center justify-center"
-          onClick={isRecording ? stopRecording : startRecording}
-        >
-          {showMic ? (
-            <div
-              id="ampCircle"
-              className="rounded-full bg-primary flex items-center justify-center"
-              style={{
-                width: `${amplitude}rem`,
-                height: `${amplitude}rem`,
-              }}
-            >
-              <Icon className="w-7 h-7" path={mdiMicrophone} />
-            </div>
-          ) : (
-            <div
-              id="ampCircle"
-              className="rounded-full bg-primary w-[2.5rem] h-[2.5rem] flex items-center justify-center"
-            >
-              <Icon className="w-7 h-7" path={mdiMicrophoneOff} />
-            </div>
-          )}
-        </div>
-      )}
+      <div
+        className="h-40 w-full flex items-center justify-center"
+      >
+        <AnimatedMic
+          isRecording={isRecording}
+          amplitude={amplitude}
+          stopRecording={stopRecording}
+        />
+      </div>
       {/* <Button onClick={() => clearInterval(socketInterval)}>stop</Button> */}
     </div>
   );
