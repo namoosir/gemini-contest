@@ -110,7 +110,7 @@ export const initMediaRecorder = async (socket: WebSocket | null) => {
 
   mediaRecorder.start(250); // Start recording, gather data every second
   mediaRecorder.pause();
-  return mediaRecorder;
+  return {mediaRecorder, stream};
 };
 
 export const playbackGeminiResponse = async (
@@ -173,3 +173,5 @@ const updateLatestChat = (
 //     })
 //   })
 // }
+
+
