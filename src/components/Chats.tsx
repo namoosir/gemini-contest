@@ -47,7 +47,7 @@ const Chats: React.FC<Props> = (props: Props) => {
   };
 
   return (
-    <div ref={textContainerRef} className="h-full mb-4 space-y-4">
+    <div ref={textContainerRef} className="h-full my-4 space-y-4">
       {/* <div className="h-full relative">
         <div className="h-full w-full overflow-y-auto">
           <div className="space-y-4"> */}

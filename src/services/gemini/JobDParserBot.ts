@@ -32,8 +32,6 @@ class InterviewBot {
         )
 
         return await prompt(`Here is the job description: ${jobDescritpion}`)  
-
-
     }
 }
 

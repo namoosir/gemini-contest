@@ -24,16 +24,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../ui/alertDialog";
+} from "../ui/alert-dialog";
+import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
-  // const [jobDescription, setJobDescription] = useState<string>("");
   const [transcript, setTranscript] = useState<string>("");
-  const [apiKey, setApiKey] = useState<string | undefined>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [amplitude, setAmplitude] = useState<number>(2.3);
-  const [hasInterviewEnded, setHasInterviewEnded] = useState<boolean>(false);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [lastLocation, setLastLocation] = useState<null | string>(null);
+  const [confirmedNavigation, setConfirmedNavigation] = useState<boolean>(false);
+  const [hasInterviewStarted, setHasInterviewStarted] = useState<boolean>(false)
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -47,9 +50,53 @@ function Chat() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const renderRef = useRef<boolean>(false);
 
   const gemini = new InterviewBot();
+
+  const handleBlockedNavigation = (_: any, nextLocation: any) => {
+    if (!confirmedNavigation) {
+      pauseInterview();
+      setIsDialogOpen(true);
+      setLastLocation(nextLocation);
+      return true;
+    }
+    return false;
+  };
+
+  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
+    handleBlockedNavigation(currentLocation, nextLocation)
+  );
+
+  useEffect(() => {
+    if (confirmedNavigation && lastLocation) {
+      navigate(lastLocation);
+    }
+  }, [confirmedNavigation, lastLocation, navigate]);
+
+  const confirmNavigation = () => {
+    setIsDialogOpen(false);
+    setConfirmedNavigation(true);
+
+    if (blocker?.state === "blocked") {
+      blocker.proceed();
+    }
+  };
+
+  const cancelNavigation = () => {
+    setIsDialogOpen(false);
+    setConfirmedNavigation(false);
+
+    if (blocker?.state === "blocked") {
+      blocker.reset();
+    }
+  };
+
+  useBeforeUnload((event: Event) => {
+    if (!confirmedNavigation) {
+      event.preventDefault();
+      return "";
+    }
+  });
 
   const updateAmplitude = useCallback(() => {
     if (!analyserRef.current) return;
@@ -66,14 +113,10 @@ function Chat() {
       sum += Math.abs(dataArray[i] - 125);
     }
     const average = sum / bufferLength;
-
-    // Normalize the amplitude to a range between 0 and 1
     const normalizedAmplitude = average / 128; // Assuming 128 is the maximum average value
-
-    // Scale the normalized amplitude to a range between 5 and 13
     const scaledAmplitude = 1.5 + normalizedAmplitude * 35; // 5 + (0-1) * (13 - 5)
-
     const smoothingFactor = 0.1;
+
     setAmplitude((prevAmplitude) => {
       const smoothedAmplitude =
         prevAmplitude + smoothingFactor * (scaledAmplitude - prevAmplitude);
@@ -87,16 +130,11 @@ function Chat() {
 
   useEffect(() => {
     async function fetchKey() {
-      setApiKey(await getAPIKey());
+      const apiKey = await getAPIKey();
+      await initWebSocket(apiKey)
     }
 
-    void fetchKey();
-  }, []);
-
-  useEffect(() => {
-    if (!apiKey) return;
-
-    const initWebSocket = async () => {
+    async function initWebSocket(apiKey?: string) {
       socketRef.current = await initVoiceWebSocket(
         apiKey,
         socketIntervalRef,
@@ -121,18 +159,14 @@ function Chat() {
       sourceRef.current.connect(analyser);
 
       analyserRef.current = analyser;
+    }
 
-      if (renderRef.current) {
-        await handleResponse(
-          await gemini.initInterviewForJobD(location.state.jobDescription)
-        );
-      }
-      renderRef.current = true;
+    void fetchKey();
+
+    return () => {
+      cleanup();
     };
-
-    void initWebSocket();
-    return () => stopListening();
-  }, [apiKey]);
+  }, []);
 
   useEffect(() => {
     isRecordingRef.current = isRecording;
@@ -144,14 +178,6 @@ function Chat() {
       mediaRecorderRef.current?.pause();
     }
   }, [isRecording, updateAmplitude]);
-
-  // async function jobSubmitHandler(event: React.FormEvent<HTMLFormElement>) {
-  //   event.preventDefault();
-  //   if (jobDescription === "") {
-  //     alert("Provide job desc");
-  //     return;
-  //   }
-  // }
 
   async function handleResponse(text: string) {
     const data = await fetchAudioBuffer(text);
@@ -181,7 +207,45 @@ function Chat() {
     await handleResponse(await prompt(transcript));
   };
 
-  const stopListening = async () => {
+  const handleAlertContinue = () => {
+    cleanup();
+    confirmNavigation();
+    console.log(blocker.state);
+    if (blocker.state !== "blocked") {
+      navigate("/");
+    }
+  };
+
+  const handleAlertCancel = () => {
+    cancelNavigation();
+    resumeInterview();
+    setIsDialogOpen(false);
+  };
+
+  const pauseInterview = () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.pause();
+      micAudioContextRef.current?.suspend();
+    } else {
+      audioContextRef.current?.suspend();
+    }
+  };
+
+  const resumeInterview = () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.resume();
+      micAudioContextRef.current?.resume();
+    } else {
+      audioContextRef.current?.resume();
+    }
+  };
+
+  const onXClicked = () => {
+    pauseInterview();
+    setIsDialogOpen(true);
+  };
+
+  const cleanup = async () => {
     setIsRecording(false);
 
     if (socketIntervalRef.current) {
@@ -189,128 +253,116 @@ function Chat() {
       socketIntervalRef.current = null;
     }
 
-    if (socketRef.current) {
-      if (socketRef.current.readyState === 1) {
-        const closeMessage = JSON.stringify({ type: "CloseStream" });
-        socketRef.current.send(closeMessage);
-      }
-
-      socketRef.current.close();
-      socketRef.current = null;
+    if (socketRef.current?.readyState === 1) {
+      const closeMessage = JSON.stringify({ type: "CloseStream" });
+      socketRef.current.send(closeMessage);
     }
 
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
+    socketRef.current?.close();
+    socketRef.current = null;
 
-    if (analyserRef.current) {
-      analyserRef.current.disconnect();
-      analyserRef.current = null;
-    }
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
 
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      console.log(audioContextRef.current.state);
-      audioContextRef.current = undefined;
-    }
+    analyserRef.current?.disconnect();
+    analyserRef.current = null;
 
-    if (micAudioContextRef.current) {
-      micAudioContextRef.current.close();
-      console.log(micAudioContextRef.current.state);
-      micAudioContextRef.current = undefined;
-    }
+    audioContextRef.current?.close();
+    audioContextRef.current = undefined;
 
-    if (streamRef.current) {
-      const tracks = streamRef.current.getTracks();
-      tracks.forEach((track) => {
-        track.stop();
-      });
-      streamRef.current = undefined;
-    }
+    micAudioContextRef.current?.close();
+    micAudioContextRef.current = undefined;
 
-    if (sourceRef.current) {
-      sourceRef.current.disconnect();
-      sourceRef.current = undefined;
-    }
-
-    if (renderRef.current) {
-      setHasInterviewEnded(true);
-    }
-    // navigate("/interview");
+    const tracks = streamRef.current?.getTracks();
+    tracks?.forEach((track) => {
+      track.stop();
+    });
+    streamRef.current = undefined;
+    
+    sourceRef.current?.disconnect();
+    sourceRef.current = undefined;
+    
   };
 
-  const handleAlertContinue = () => {
-    navigate("/interview");
-  };
-
-  const handleAlertCancel = () => {
-    setHasInterviewEnded(false);
-  };
+  const startInterview = async () => {
+    setHasInterviewStarted(true);
+    await handleResponse(
+      await gemini.initInterviewForJobD(location.state.jobDescription)
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
-      {/* <form onSubmit={jobSubmitHandler} className="p-4">
-        <label>
-          Provide the Job description to Start the interview process:
-          <textarea
-            style={{ color: "black" }}
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-          />
-        </label>
-        <button type="submit">Submit</button>
-      </form> */}
+
+      {!hasInterviewStarted && 
+        <div className="h-full flex flex-col items-center justify-center">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Your Interview
+              </CardTitle>
+              <CardDescription>
+                Your { location.state.interviewDuration } minute { location.state.interviewType } Interview is about to start in { location.state.interviewMode } mode
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* TODO: ADD A VIDEO PREVIEW OF THE  */}
+            </CardContent>
+            <CardFooter>
+              <Button onClick={startInterview} className="w-full">Start Interview</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      }
 
       <div className="overflow-hidden flex-1">
         <Chats chats={chat} />
       </div>
 
-      <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
-        <Button
-          variant={"secondary"}
-          className="items-center self-center h-16 w-16 rounded-full hover:bg-destructive hover:text-destructive-foreground"
-          onClick={stopListening}
-        >
-          <Icon path={mdiClose} className="h-6 w-6" />
-        </Button>
 
-        <div className="w-40 h-40 flex items-center justify-center">
-          <AnimatedMic
-            isRecording={isRecording}
-            amplitude={amplitude}
-            stopRecording={stopRecording}
-          />
+      {hasInterviewStarted &&
+        <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
+          <Button
+            variant={"secondary"}
+            className="items-center self-center h-16 w-16 rounded-full hover:bg-destructive hover:text-destructive-foreground"
+            onClick={onXClicked}
+          >
+            <Icon path={mdiClose} className="h-6 w-6" />
+          </Button>
+
+          <div className="w-40 h-40 flex items-center justify-center">
+            <AnimatedMic
+              isRecording={isRecording}
+              amplitude={amplitude}
+              stopRecording={stopRecording}
+            />
+          </div>
+
+          <Button
+            variant={"destructive"}
+            className="items-center self-center h-16 w-16 rounded-full invisible"
+          >
+            <Icon path={mdiClose} className="h-6 w-6" />
+          </Button>
         </div>
+      }
 
-        <Button
-          variant={"destructive"}
-          className="items-center self-center h-16 w-16 rounded-full invisible"
-          onClick={stopListening}
-        >
-          <Icon path={mdiClose} className="h-6 w-6" />
-        </Button>
-      </div>
-      <AlertDialog
-        open={hasInterviewEnded}
-        onOpenChange={() => setHasInterviewEnded(false)}
-      >
+      <AlertDialog open={isDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
+              Are you sure you want to quit this interview? None of your answers will be saved.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel asChild>
-              <Button variant={"destructive"} onClick={handleAlertCancel}>
+              <Button variant={"secondary"} onClick={handleAlertCancel}>
                 Cancel
               </Button>
             </AlertDialogCancel>
             <AlertDialogAction asChild>
-              <Button variant={"default"} onClick={handleAlertContinue}>
+              <Button variant="destructive" onClick={handleAlertContinue}>
                 Continue
               </Button>
             </AlertDialogAction>
