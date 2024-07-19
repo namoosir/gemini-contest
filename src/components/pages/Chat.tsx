@@ -12,18 +12,28 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import Chats from "../Chats";
 import AnimatedMic from "../AnimatedMic";
 import { Button } from "../ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { mdiClose } from "@mdi/js";
 import Icon from "@mdi/react";
-import { Card } from "../ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alertDialog";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
-  const [jobDescription, setJobDescription] = useState<string>("");
+  // const [jobDescription, setJobDescription] = useState<string>("");
   const [transcript, setTranscript] = useState<string>("");
   const [apiKey, setApiKey] = useState<string | undefined>();
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [amplitude, setAmplitude] = useState<number>(2.3);
+  const [hasInterviewEnded, setHasInterviewEnded] = useState<boolean>(false);
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -36,6 +46,8 @@ function Chat() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const renderRef = useRef<boolean>(false);
 
   const gemini = new InterviewBot();
 
@@ -109,9 +121,17 @@ function Chat() {
       sourceRef.current.connect(analyser);
 
       analyserRef.current = analyser;
+
+      if (renderRef.current) {
+        await handleResponse(
+          await gemini.initInterviewForJobD(location.state.jobDescription)
+        );
+      }
+      renderRef.current = true;
     };
 
     void initWebSocket();
+    return () => stopListening();
   }, [apiKey]);
 
   useEffect(() => {
@@ -125,14 +145,13 @@ function Chat() {
     }
   }, [isRecording, updateAmplitude]);
 
-  async function jobSubmitHandler(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (jobDescription === "") {
-      alert("Provide job desc");
-      return;
-    }
-    await handleResponse(await gemini.initInterviewForJobD(jobDescription));
-  }
+  // async function jobSubmitHandler(event: React.FormEvent<HTMLFormElement>) {
+  //   event.preventDefault();
+  //   if (jobDescription === "") {
+  //     alert("Provide job desc");
+  //     return;
+  //   }
+  // }
 
   async function handleResponse(text: string) {
     const data = await fetchAudioBuffer(text);
@@ -141,8 +160,8 @@ function Chat() {
     audioContextRef.current = audioCtx;
 
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
-    await playbackGeminiResponse(data, setChat, audioCtx);
-    await audioCtx.close();
+    await playbackGeminiResponse(data, setChat, audioContextRef.current);
+    await audioContextRef.current.close();
     startRecording();
   }
 
@@ -158,45 +177,47 @@ function Chat() {
   };
 
   const stopRecording = async () => {
-    console.log("stopping");
     setIsRecording(false);
     await handleResponse(await prompt(transcript));
   };
 
-  const stopListening = () => {
+  const stopListening = async () => {
     setIsRecording(false);
-  
+
     if (socketIntervalRef.current) {
       clearInterval(socketIntervalRef.current);
       socketIntervalRef.current = null;
     }
-  
+
     if (socketRef.current) {
-      const closeMessage = JSON.stringify({ type: "CloseStream" });
-      socketRef.current.send(closeMessage);
+      if (socketRef.current.readyState === 1) {
+        const closeMessage = JSON.stringify({ type: "CloseStream" });
+        socketRef.current.send(closeMessage);
+      }
+
       socketRef.current.close();
       socketRef.current = null;
     }
-  
+
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
     }
-  
+
     if (analyserRef.current) {
       analyserRef.current.disconnect();
       analyserRef.current = null;
     }
-  
+
     if (audioContextRef.current) {
       audioContextRef.current.close();
       console.log(audioContextRef.current.state);
       audioContextRef.current = undefined;
     }
-  
+
     if (micAudioContextRef.current) {
       micAudioContextRef.current.close();
-      console.log(micAudioContextRef.current.state)
+      console.log(micAudioContextRef.current.state);
       micAudioContextRef.current = undefined;
     }
 
@@ -207,19 +228,29 @@ function Chat() {
       });
       streamRef.current = undefined;
     }
-  
+
     if (sourceRef.current) {
       sourceRef.current.disconnect();
       sourceRef.current = undefined;
     }
-  
+
+    if (renderRef.current) {
+      setHasInterviewEnded(true);
+    }
+    // navigate("/interview");
+  };
+
+  const handleAlertContinue = () => {
     navigate("/interview");
   };
 
+  const handleAlertCancel = () => {
+    setHasInterviewEnded(false);
+  };
 
   return (
     <div className="flex flex-col h-full">
-      <form onSubmit={jobSubmitHandler} className="p-4">
+      {/* <form onSubmit={jobSubmitHandler} className="p-4">
         <label>
           Provide the Job description to Start the interview process:
           <textarea
@@ -229,7 +260,7 @@ function Chat() {
           />
         </label>
         <button type="submit">Submit</button>
-      </form>
+      </form> */}
 
       <div className="overflow-hidden flex-1">
         <Chats chats={chat} />
@@ -260,6 +291,32 @@ function Chat() {
           <Icon path={mdiClose} className="h-6 w-6" />
         </Button>
       </div>
+      <AlertDialog
+        open={hasInterviewEnded}
+        onOpenChange={() => setHasInterviewEnded(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant={"destructive"} onClick={handleAlertCancel}>
+                Cancel
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button variant={"default"} onClick={handleAlertContinue}>
+                Continue
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
