@@ -1,41 +1,39 @@
 import {
+  Timestamp,
   getDocs,
+  addDoc,
   collection,
   query,
   where,
   Firestore,
 } from "firebase/firestore";
-import { FirebaseStorage, ref, uploadBytes } from "firebase/storage";
+import {
+  FirebaseStorage,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
 
-export const getUserResume = async (
+export interface Resume {
+  description: string | null;
+  url: string;
+  uid: string;
+  filename: string;
+}
+
+export const getUserResumes = async (
   db: Firestore,
-  uid: string,
-  filename: string
-) => {
+  uid: string
+): Promise<Resume[] | false> => {
   try {
-    const q = query(
-      collection(db, "resumes"),
-      where("uid", "==", uid),
-      where("filename", "==", filename)
-    );
-    const docSnap = await getDocs(q);
-    docSnap.forEach((doc) => console.log(doc.id, " => ", doc.data()));
-    return docSnap;
-  } catch (error) {
-    throw new Error(
-      `Something went wrong while trying to fetch user(${uid}) resumes: ${
-        error as string
-      }`
-    );
-  }
-};
+    const result: Resume[] = [];
 
-export const getUserResumes = async (db: Firestore, uid: string) => {
-  try {
     const q = query(collection(db, "resumes"), where("uid", "==", uid));
     const docSnap = await getDocs(q);
-    docSnap.forEach((doc) => console.log(doc.id, " => ", doc.data()));
-    return docSnap;
+
+    docSnap.forEach((doc) => result.push(doc.data() as Resume));
+
+    return result;
   } catch (error) {
     throw new Error(
       `Something went wrong while trying to fetch all user resumes: ${
@@ -58,5 +56,19 @@ export const uploadResume = async (
     throw new Error(
       `Some error happened while uploading resume: ${error as string}`
     );
+  }
+};
+
+export const getResumeObject = async (
+  storage: FirebaseStorage,
+  url: string
+) => {
+  try {
+    const result = await getDownloadURL(ref(storage, url));
+
+    return result;
+  } catch (error) {
+    console.error("Error fetching file from GCS:", error);
+    throw error;
   }
 };

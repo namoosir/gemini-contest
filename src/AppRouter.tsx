@@ -10,10 +10,11 @@ import Voice from "./components/pages/Voice.tsx";
 import Test from "./components/pages/Test.tsx";
 import Chat from "./components/pages/Chat.tsx";
 import Interview from "./components/pages/Interview.tsx";
+import ResumeForm from "./components/ResumeForm.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.tsx";
-import ResumeForm from "./components/ResumeForm.tsx";
+import PageNotFound from "./components/pages/PageNotFound.tsx";
 
 const AppRouter = () => {
   const { user } = useAuthContext();
@@ -65,6 +66,15 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/resume-form"
+            element={
+              <ProtectedRoute>
+                <ResumeForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<PageNotFound />} />
         </Route>
         <Route
           path="/resume"
