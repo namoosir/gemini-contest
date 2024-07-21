@@ -20,6 +20,7 @@ import ResumeCard from "../ResumeCard";
 import InterviewSettingsCard from "../InterviewSettingsCard";
 import CardHOC from "../cardContentHOC";
 import { Form } from "@/components/ui/form";
+import { useNavigate } from "react-router-dom";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -29,7 +30,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 export type Page = 0 | 1 | 2;
 
 const InterviewFormSchema = z.object({
-  text: z.string().min(50, {
+  text: z.string().min(2, {
     message: "Job Description must be at least 50 characters",
   }),
 });
@@ -56,6 +57,8 @@ const Interview: React.FC = () => {
   const [interviewMode, setInterviewMode] = useState<string>("normal");
 
   const [resumeError, setResumeError] = useState<string | undefined>(undefined);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getResume = async () => {
@@ -106,6 +109,17 @@ const Interview: React.FC = () => {
 
   const handleFinish = () => {
     // todo
+    console.log("jobDescription", jobDescription);
+    console.log("resume", resume);
+    console.log("settings", interviewDuration, interviewType, interviewMode);
+    const params = {
+      jobDescription: jobDescription,
+      resume: resume,
+      interviewDuration: interviewDuration,
+      interviewType: interviewType,
+      interviewMode: interviewMode,
+    };
+    navigate("/chat", { state: params });
   };
 
   const interviewForm = useForm<z.infer<typeof InterviewFormSchema>>({

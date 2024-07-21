@@ -1,30 +1,45 @@
-import { logger } from "firebase-functions";
-import { segmentTextBySentence, synthesizeAudio } from "./utils"
+import { createClient } from "@deepgram/sdk";
+import "dotenv/config";
+// import { logger } from "firebase-functions/v2";
+// import { logger } from "firebase-functions/v2";
+
+const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 
 export const getTTS = async (text: string) => {
-  type response = {
-    word: string,
-    buffer: Uint8Array
-  }[];
-
-  try {
-    const segments = segmentTextBySentence(text);
-    const responseArray: response = [];
-
-    if (segments) {
-      for (const segment of segments) {
-        try {
-          const audioData = await synthesizeAudio(segment);
-          responseArray.push({ word: segment, buffer: audioData });
-        } catch (error) {
-          logger.error(`Something went wrong while trying to synthesize audio: ${error}`);
-          throw new Error(`Something went wrong while trying to synthesize audio: ${error}`)
-        }
-      }
+  const response = await deepgram.speak.request(
+    { text },
+    {
+      model: "aura-asteria-en",
+      encoding: "linear16",
+      container: "wav",
     }
-    return responseArray;
-  } catch (error) {
-    logger.error(error)
-    throw new Error(`Some error occured while processing request: ${error}`)
+  );
+
+  const stream = await response.getStream();
+  if (stream) {
+    const buffer = await getAudioBuffer(stream);
+    return buffer;
+  } else {
+    throw new Error("Error generating audio:");
   }
-}
+};
+
+// helper function to convert stream to audio buffer
+const getAudioBuffer = async (response: ReadableStream<Uint8Array>) => {
+  const reader = response.getReader();
+  const chunks = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    chunks.push(value);
+  }
+
+  const dataArray = chunks.reduce(
+    (acc, chunk) => Uint8Array.from([...acc, ...chunk]),
+    new Uint8Array(0)
+  );
+
+  return Buffer.from(dataArray.buffer);
+};
