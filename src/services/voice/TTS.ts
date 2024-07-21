@@ -73,7 +73,7 @@ export const initVoiceWebSocket = async (
 ) => {
   const socket = new WebSocket(
     "wss://api.deepgram.com/v1/listen?punctuate=true",
-    ["token", apiKey || ""]
+    ["token", apiKey!]
   );
 
   socket.onopen = () => {
