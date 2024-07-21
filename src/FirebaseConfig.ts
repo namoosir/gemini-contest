@@ -29,7 +29,8 @@ export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
 auth.languageCode = "it";
 
-// Connects app with firestore and storage emulators.
-connectFirestoreEmulator(db, "127.0.0.1", 8080);
-connectStorageEmulator(storage, "127.0.0.1", 9199);
-connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+if (import.meta.env.MODE === "dev") {
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectStorageEmulator(storage, "127.0.0.1", 9199);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+}
