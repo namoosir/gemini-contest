@@ -11,6 +11,8 @@ export const resumeTrigger = onObjectFinalized(
   },
   async (event) => {
     try {
+      logger.log(event)
+
       const firestore = getFirestore();
       const fileBucket = event.data.bucket; // Storage bucket containing the file.
       const filePath = event.data.name; // File path in the bucket.
@@ -39,18 +41,16 @@ export const resumeTrigger = onObjectFinalized(
       const [downloadResponse] = await bucket.file(filePath).download();
       const pdfObj = await pdf(downloadResponse);
 
-      logger.log(pdfObj.text);
-
-      // TODO: processing on pdf
-
       // Adding the document to firestore
+      const gsUrl = `gs://${fileBucket}/${filePath}`;
 
       const docRef = firestore.doc(`resume/${uid}`);
       await docRef.set({
-        description: "description",
-        url: event.data.mediaLink,
+        uid: uid,
+        url: gsUrl,
         filename: fileName,
-        date: new Date().toUTCString(),
+        dateCreated: new Date().toUTCString(),
+        data: pdfObj.text
       });
     } catch (error) {
       logger.error("Something went wrong in pdf trigger:", error);
