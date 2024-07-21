@@ -1,4 +1,3 @@
-import { prompt } from "@/services/gemini/base";
 import { InterviewBot } from "@/services/gemini/JobDParserBot";
 import {
   ChatMessage,
@@ -53,9 +52,9 @@ function Chat() {
 
   const gemini = new InterviewBot();
 
-  const handleBlockedNavigation = (_: any, nextLocation: any) => {
+  const handleBlockedNavigation = async (_: any, nextLocation: any) => {
     if (!confirmedNavigation) {
-      pauseInterview();
+      await pauseInterview();
       setIsDialogOpen(true);
       setLastLocation(nextLocation);
       return true;
@@ -164,7 +163,7 @@ function Chat() {
     void fetchKey();
 
     return () => {
-      cleanup();
+      void cleanup();
     };
   }, []);
 
@@ -204,11 +203,11 @@ function Chat() {
 
   const stopRecording = async () => {
     setIsRecording(false);
-    await handleResponse(await prompt(transcript));
+    await handleResponse(await gemini.prompt(transcript));
   };
 
-  const handleAlertContinue = () => {
-    cleanup();
+  const handleAlertContinue = async () => {
+    await cleanup();
     confirmNavigation();
     console.log(blocker.state);
     if (blocker.state !== "blocked") {
@@ -216,32 +215,32 @@ function Chat() {
     }
   };
 
-  const handleAlertCancel = () => {
+  const handleAlertCancel = async () => {
     cancelNavigation();
-    resumeInterview();
+    await resumeInterview();
     setIsDialogOpen(false);
   };
 
-  const pauseInterview = () => {
+  const pauseInterview = async () => {
     if (isRecording) {
       mediaRecorderRef.current?.pause();
-      micAudioContextRef.current?.suspend();
+      await micAudioContextRef.current?.suspend();
     } else {
-      audioContextRef.current?.suspend();
+      await audioContextRef.current?.suspend();
     }
   };
 
-  const resumeInterview = () => {
+  const resumeInterview = async () => {
     if (isRecording) {
       mediaRecorderRef.current?.resume();
-      micAudioContextRef.current?.resume();
+      await micAudioContextRef.current?.resume();
     } else {
-      audioContextRef.current?.resume();
+      await audioContextRef.current?.resume();
     }
   };
 
-  const onXClicked = () => {
-    pauseInterview();
+  const onXClicked = async () => {
+    await pauseInterview();
     setIsDialogOpen(true);
   };
 
@@ -267,10 +266,10 @@ function Chat() {
     analyserRef.current?.disconnect();
     analyserRef.current = null;
 
-    audioContextRef.current?.close();
+    await audioContextRef.current?.close();
     audioContextRef.current = undefined;
 
-    micAudioContextRef.current?.close();
+    await micAudioContextRef.current?.close();
     micAudioContextRef.current = undefined;
 
     const tracks = streamRef.current?.getTracks();
