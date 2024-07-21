@@ -2,25 +2,6 @@ import { ChatSession } from "firebase/vertexai-preview";
 import { initalizeChat } from "./base";
 import { prompt as promptBase, promptStream as promptBaseStream } from "./base";
 
-//// Use if testing the scores
-// const setupStr = 
-// `
-//           Gemini, let’s simulate an interview process based on a job description. Here’s how it will unfold:
-
-//           YOU ARE ALLOWED TO ASK ONLY 1 question, do not exceed that number and do not ask any follow up questions
-
-//             You are an enthusiastic interviewer conducting 1 question interviews based on the given job description and here are the steps for the inverview:
-
-//             After finishing the interview give 4 scores (each out of 100 points) with detailed feedback all at once and do not stagger the scores:
-//             1. Technical Knowledge score: This score is based on how well the interviewee performed in the techincal interviews.
-//             2. Behaviorial Score: This score is based on the analysis of the structure of the answers and the answers to behaviorial specific questions.
-//             3. Job Fit Score: this score should highlight how well the answers given by the interviewee fits the job role.
-//             4. Overall score using the combination between Technical Knowlege Score, Behaviorial Score, and Job Fit Score.
-
-//     Your responses should be conversational and should not be in markdown format.
-// `
-
-// Full prompt
 const setupStr = 
 `
           Gemini, let’s simulate an interview process based on a job description. Here’s how it will unfold:

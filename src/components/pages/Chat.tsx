@@ -46,11 +46,10 @@ function Chat() {
   const micAudioContextRef = useRef<AudioContext | undefined>();
   const streamRef = useRef<MediaStream | undefined>();
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
+  const geminiRef = useRef<InterviewBot>(new InterviewBot())
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  const gemini = new InterviewBot();
 
   const handleBlockedNavigation = async (_: any, nextLocation: any) => {
     if (!confirmedNavigation) {
@@ -203,7 +202,7 @@ function Chat() {
 
   const stopRecording = async () => {
     setIsRecording(false);
-    await handleResponse(await gemini.prompt(transcript));
+    await handleResponse(await geminiRef.current.prompt(transcript));
   };
 
   const handleAlertContinue = async () => {
@@ -286,7 +285,7 @@ function Chat() {
   const startInterview = async () => {
     setHasInterviewStarted(true);
     await handleResponse(
-      await gemini.initInterviewForJobD(location.state.jobDescription)
+      await geminiRef.current.initInterviewForJobD(location.state.jobDescription)
     );
   }
 
