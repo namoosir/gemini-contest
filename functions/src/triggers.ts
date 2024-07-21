@@ -11,8 +11,7 @@ export const resumeTrigger = onObjectFinalized(
   },
   async (event) => {
     try {
-      logger.log(event)
-
+      logger.log("Resume Trigger Activated!");
       const firestore = getFirestore();
       const fileBucket = event.data.bucket; // Storage bucket containing the file.
       const filePath = event.data.name; // File path in the bucket.
@@ -22,7 +21,7 @@ export const resumeTrigger = onObjectFinalized(
       const [files] = await getStorage()
         .bucket(fileBucket)
         .getFiles({
-          prefix: `resume/${uid}/`,
+          prefix: `resumes/${uid}/`,
         });
 
       if (files.length > 1) {
@@ -33,7 +32,7 @@ export const resumeTrigger = onObjectFinalized(
       }
 
       if (!contentType?.startsWith("application/pdf")) {
-        return logger.warn("This is not a pdf.");
+        logger.warn("This is not a pdf.");
       }
 
       // Creating a temp buffer in memory to store pdf file
@@ -44,13 +43,13 @@ export const resumeTrigger = onObjectFinalized(
       // Adding the document to firestore
       const gsUrl = `gs://${fileBucket}/${filePath}`;
 
-      const docRef = firestore.doc(`resume/${uid}`);
+      const docRef = firestore.doc(`resumes/${uid}`);
       await docRef.set({
         uid: uid,
         url: gsUrl,
         filename: fileName,
         dateCreated: new Date().toUTCString(),
-        data: pdfObj.text
+        data: pdfObj.text,
       });
     } catch (error) {
       logger.error("Something went wrong in pdf trigger:", error);

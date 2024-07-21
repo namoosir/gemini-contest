@@ -10,6 +10,7 @@ import {
   getUserResumes,
   getResumeObject,
   Resume,
+  uploadResume,
 } from "@/services/firebase/resumeService";
 import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
@@ -98,6 +99,16 @@ const Interview: React.FC = () => {
       setSelectedResume("existing");
     }
   }, [resumeURL]);
+
+  // Uploads resume. Works for now
+  useEffect(() => {
+    const uploadResumeToStorage = async () => {
+      if (files?.length === 1 && user)
+        await uploadResume(storage, files[0], user.uid);
+    };
+
+    void uploadResumeToStorage();
+  }, [user, storage, files]);
 
   const handleNextPage = () => {
     setCurrentPage((prevPage: Page): Page => (prevPage + 1) as Page);
