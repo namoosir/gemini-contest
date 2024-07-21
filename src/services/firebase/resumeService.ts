@@ -15,10 +15,11 @@ import {
 } from "firebase/storage";
 
 export interface Resume {
-  description: string | null;
+  data: string;
+  dateCreated: string;
+  filename: string;
   url: string;
   uid: string;
-  filename: string;
 }
 
 export const getUserResumes = async (
@@ -35,11 +36,7 @@ export const getUserResumes = async (
 
     return result;
   } catch (error) {
-    throw new Error(
-      `Something went wrong while trying to fetch all user resumes: ${
-        error as string
-      }`
-    );
+    throw new Error(`Error trying to fetch user Resume. ${error}`);
   }
 };
 
