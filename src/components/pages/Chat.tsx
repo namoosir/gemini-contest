@@ -46,6 +46,8 @@ function Chat() {
     useState<boolean>(false);
   const [hasInterviewStarted, setHasInterviewStarted] =
     useState<boolean>(false);
+  
+  const [seconds, setSeconds] = useState(0);
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -189,6 +191,26 @@ function Chat() {
     }
   }, [isRecording, updateAmplitude]);
 
+  useEffect(() => {
+    if (seconds > 0) {
+        const interval = setInterval(() => {
+            setSeconds(prevSeconds => prevSeconds - 1);
+        }, 1000);
+
+        return () => clearInterval(interval); // Cleanup interval on component unmount
+    }
+  }, [seconds]);
+
+  function formatTime(seconds: number): string {
+
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+
+    const minutesStr = minutes.toString().padStart(2, '0');
+    const secondsStr = secs.toString().padStart(2, '0');
+
+    return `${minutesStr}:${secondsStr}`;
+}
   async function handleResponse(text: string) {
     const data = await fetchAudioBufferV2(text, functions);
     const audioCtx = new AudioContext();
@@ -211,10 +233,9 @@ function Chat() {
       console.error("Error accessing media devices.", error);
     }
   };
-
   const stopRecording = async () => {
     setIsRecording(false);
-    await handleResponse(await geminiRef.current.prompt(transcript));
+    await handleResponse(await geminiRef.current.promptWithTimeRemaing(transcript, seconds));
   };
 
   const handleAlertContinue = async () => {
@@ -294,15 +315,18 @@ function Chat() {
 
   const startInterview = async () => {
     setHasInterviewStarted(true);
+    setSeconds(location.state.interviewDuration * 60);
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
-        location.state.jobDescription
+        location.state.jobDescription,
+        location.state.interviewType,
       )
     );
   };
 
   return (
     <div className="flex flex-col h-full">
+      <p>{formatTime(seconds)} seconds remaining</p>
       {!hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>

@@ -36,15 +36,27 @@ const setupStr =
             4. Overall score: using the combination between Technical Knowlege Score, Behaviorial Score, and Job Fit Score.
 
     Your responses should be conversational and should not be in markdown format.
+
+    - The interview should be a %s interview.
+    - Each response will provide 1 section with the user response, and 1 section with the time remaining in the interview.
+      if you see "Time is up! You stop with the questions and move on to the evaluation" then the interview is over and proceed to the evaluation.
+      If there is time remaining, continue with to provide more interview questions.
 `;
+
+function formatString(str : string, ...values: string[]) {
+  return str.replace(/%s/g, () => values.shift()!);
+}
+
 class InterviewBot {
   chat: unknown;
   constructor() {
     this.chat = null;
   }
 
-  async initInterviewForJobD(jobDescritpion: string): Promise<string> {
-    this.chat = initalizeChat(setupStr);
+  async initInterviewForJobD(jobDescritpion: string, interviewType: string): Promise<string> {
+    const setupStr2 = formatString(setupStr, interviewType);
+    this.chat = initalizeChat(setupStr2);
+
     return await promptBase(
       this.chat as ChatSession,
       `Here is the job description: ${jobDescritpion}`
@@ -52,6 +64,15 @@ class InterviewBot {
   }
 
   async prompt(prompt: string): Promise<string> {
+    return await promptBase(this.chat as ChatSession, prompt);
+  }
+
+  async promptWithTimeRemaing(prompt: string, timeRemainingSec: number): Promise<string> {
+    prompt = `User Response "${prompt}"\n.There is ${timeRemainingSec} seconds remaining`;
+    if (timeRemainingSec == 0){
+      prompt = `User Response "${prompt}"\n. Time is up! You stop with the questions and move on to the evaluation`;
+    }
+    console.log(prompt);
     return await promptBase(this.chat as ChatSession, prompt);
   }
 
