@@ -11,7 +11,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import Chats from "../Chats";
 import AnimatedMic from "../AnimatedMic";
 import { Button } from "../ui/button";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { mdiClose } from "@mdi/js";
 import Icon from "@mdi/react";
 import {
@@ -61,14 +61,12 @@ function Chat() {
   const location = useLocation();
 
   const handleBlockedNavigation = async (_: any, nextLocation: any) => {
-    console.log("OLA")
     if (!confirmedNavigation) {
       await pauseInterview();
       setIsDialogOpen(true);
       setLastLocation(nextLocation);
       return true;
     }
-    console.log("OLA 2.0")
     return false;
   };
 
@@ -217,12 +215,7 @@ function Chat() {
   };
 
   const handleAlertContinue = async () => {
-    // await cleanup();
     confirmNavigation();
-    console.log(blocker.state);
-    if (blocker.state !== "blocked") {
-      navigate("/");
-    }
   };
 
   const handleAlertCancel = async () => {
@@ -338,8 +331,11 @@ function Chat() {
             variant={"secondary"}
             className="items-center self-center h-16 w-16 rounded-full hover:bg-destructive hover:text-destructive-foreground"
             onClick={onXClicked}
+            asChild
           >
-            <Icon path={mdiClose} className="h-6 w-6" />
+            <Link to="/">
+              <Icon path={mdiClose} className="h-6 w-6" />
+            </Link>
           </Button>
 
           <div className="w-40 h-40 flex items-center justify-center">
