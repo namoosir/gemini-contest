@@ -19,7 +19,6 @@ import JobDescriptionCard from "../JobDescriptionCard";
 import ResumeCard from "../ResumeCard";
 import InterviewSettingsCard from "../InterviewSettingsCard";
 import CardHOC from "../cardContentHOC";
-import { Form } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -57,6 +56,9 @@ const Interview: React.FC = () => {
   const [interviewMode, setInterviewMode] = useState<string>("normal");
 
   const [resumeError, setResumeError] = useState<string | undefined>(undefined);
+  const [jobDescriptionError, setJobDescriptionError] = useState<
+    string | undefined
+  >(undefined);
 
   const navigate = useNavigate();
 
@@ -129,9 +131,10 @@ const Interview: React.FC = () => {
     },
   });
 
-  function interviewOnSubmit(data: z.infer<typeof InterviewFormSchema>) {
-    setJobDescription(data.text);
-    handleNextPage();
+  function interviewNextPageHandler() {
+    if (jobDescription === undefined || jobDescription === "") {
+      setJobDescriptionError("Please enter a job description");
+    } else handleNextPage();
   }
 
   const resumeNextPageHandler = () => {
@@ -147,20 +150,18 @@ const Interview: React.FC = () => {
     switch (currentPage) {
       case 0:
         return (
-          <Form {...interviewForm}>
-            <form
-              className="h-full w-full"
-              onSubmit={interviewForm.handleSubmit(interviewOnSubmit)}
-            >
-              <CardHOC
-                handlePreviousPage={handlePreviousPage}
-                handleNextPage={handleNextPage}
-                currentPage={currentPage}
-              >
-                <JobDescriptionCard form={interviewForm} />
-              </CardHOC>
-            </form>
-          </Form>
+          <CardHOC
+            handlePreviousPage={handlePreviousPage}
+            handleNextPage={interviewNextPageHandler}
+            currentPage={currentPage}
+          >
+            <JobDescriptionCard
+              text={jobDescription}
+              setText={setJobDescription}
+              error={jobDescriptionError}
+              setError={setJobDescriptionError}
+            />
+          </CardHOC>
         );
       case 1:
         return (

@@ -1,22 +1,24 @@
-import { UseFormReturn } from "react-hook-form";
 import { CardHeader, CardTitle, CardContent, CardDescription } from "./ui/card";
 import { Textarea } from "./ui/textarea";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
 
 interface Props {
-  form: UseFormReturn<{
-      text: string;
-  }, any, undefined>;
+  text: string | undefined;
+  setText: React.Dispatch<React.SetStateAction<string | undefined>>;
+  error: string | undefined;
+  setError: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 const JobDescriptionCard: React.FC<Props> = (props: Props) => {
+  const handleTextareaChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    props.setText(event.target.value);
+    if (event.target.value != "" || event.target.value === undefined)
+      props.setError(undefined);
+  };
+
   return (
-    <>
+    <div className="w-full h-full">
       <CardHeader>
         <CardTitle>Job Description</CardTitle>
         <CardDescription>
@@ -25,24 +27,15 @@ const JobDescriptionCard: React.FC<Props> = (props: Props) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <FormField
-          control={props.form.control}
-          name="text"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  className="h-[268px]"
-                  placeholder="Paste here..."
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <Textarea
+          className="h-[268px]"
+          placeholder="Paste here..."
+          value={props.text}
+          onChange={handleTextareaChange}
         />
+        <p className="text-sm font-medium text-destructive">{props.error}</p>
       </CardContent>
-    </>
+    </div>
   );
 };
 
