@@ -1,13 +1,13 @@
 import { InterviewBot } from "@/services/gemini/JobDParserBot";
 import {
   ChatMessage,
-  fetchAudioBuffer,
   getAPIKey,
   initVoiceWebSocket,
   initMediaRecorder,
   playbackGeminiResponse,
+  fetchAudioBufferV2,
 } from "@/services/voice/TTS";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useContext } from "react";
 import Chats from "../Chats";
 import AnimatedMic from "../AnimatedMic";
 import { Button } from "../ui/button";
@@ -33,6 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -56,6 +57,8 @@ function Chat() {
   const streamRef = useRef<MediaStream | undefined>();
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
+
+  const { functions } = useFirebaseContext();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -187,7 +190,7 @@ function Chat() {
   }, [isRecording, updateAmplitude]);
 
   async function handleResponse(text: string) {
-    const data = await fetchAudioBuffer(text);
+    const data = await fetchAudioBufferV2(text, functions);
     const audioCtx = new AudioContext();
 
     audioContextRef.current = audioCtx;
