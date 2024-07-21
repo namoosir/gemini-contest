@@ -2,14 +2,15 @@ import {
   getVertexAI,
   getGenerativeModel,
   Content,
+  ChatSession,
 } from "firebase/vertexai-preview";
 import { app } from "../../FirebaseConfig";
 
 const vertexAI = getVertexAI(app);
 
-const model = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
-async function initalizeChat(setStr: string): Promise<any> {
-  let history = [
+const model = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash-001" });
+function initalizeChat(setStr: string): ChatSession {
+  const history = [
     {
       role: "user",
       parts: [{ text: setStr }],
@@ -28,10 +29,10 @@ async function initalizeChat(setStr: string): Promise<any> {
   });
 }
 
-async function prompt(chat: any, msg: string): Promise<string> {
+async function prompt(chat: ChatSession, msg: string): Promise<string> {
   try {
     const result = await chat.sendMessage(msg);
-    const response = await result.response;
+    const response = result.response;
     const text = response.text();
     return text;
   } catch (error) {
@@ -40,7 +41,10 @@ async function prompt(chat: any, msg: string): Promise<string> {
   }
 }
 
-async function* promptStream(chat: any, msg: string): AsyncIterable<string> {
+async function* promptStream(
+  chat: ChatSession,
+  msg: string
+): AsyncIterable<string> {
   const result = await chat.sendMessageStream(msg);
 
   for await (const chunk of result.stream) {

@@ -1,5 +1,6 @@
-import { initalizeChat } from './base';
-import { prompt as promptBase, promptStream as promptBaseStream } from './base';
+import { ChatSession } from "firebase/vertexai-preview";
+import { initalizeChat } from "./base";
+import { prompt as promptBase, promptStream as promptBaseStream } from "./base";
 
 //// Use if testing the scores
 // const setupStr = 
@@ -54,31 +55,31 @@ const setupStr =
             4. Overall score: using the combination between Technical Knowlege Score, Behaviorial Score, and Job Fit Score.
 
     Your responses should be conversational and should not be in markdown format.
-`
-
+`;
 class InterviewBot {
-    chat: any;
-    constructor() {
-        this.chat = null;
+  chat: unknown;
+  constructor() {
+    this.chat = null;
+  }
+
+  async initInterviewForJobD(jobDescritpion: string): Promise<string> {
+    this.chat = initalizeChat(setupStr);
+    return await promptBase(
+      this.chat as ChatSession,
+      `Here is the job description: ${jobDescritpion}`
+    );
+  }
+
+  async prompt(prompt: string): Promise<string> {
+    return await promptBase(this.chat as ChatSession, prompt);
+  }
+
+  async *promptSteam(prompt: string): AsyncIterable<string> {
+    const baseStream = promptBaseStream(this.chat as ChatSession, prompt);
+    for await (const chunk of baseStream) {
+      yield chunk;
     }
-
-    async initInterviewForJobD(jobDescritpion: string): Promise<string> {
-        this.chat = await initalizeChat(setupStr)
-        return await promptBase(this.chat, `Here is the job description: ${jobDescritpion}`)
-
-    }
-
-    async prompt(prompt: string): Promise<string> {
-        return await promptBase(this.chat, prompt)
-    }
-
-    async * promptSteam(prompt: string): AsyncIterable<string> {
-        const baseStream = promptBaseStream(this.chat, prompt);
-
-        for await (const chunk of baseStream) {
-            yield chunk;
-        }
-    }
+  }
 }
 
-export { InterviewBot }
+export { InterviewBot };

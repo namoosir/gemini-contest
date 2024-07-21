@@ -1,43 +1,45 @@
 /**
  * References
- * 
+ *
  * Status code: https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
  */
 
-import { WebSocketServer } from "ws"
-import { getTTS } from "./deepgram.js"
+import { WebSocketServer } from "ws";
+import { getSTT, getTTS } from "./deepgram.js";
 
-const wss = new WebSocketServer({ port: 8080 }, () => console.log("WebSocket server started on port 8080"))
+const wss = new WebSocketServer({ port: 8080 }, () =>
+  console.log("WebSocket server started on port 8080")
+);
 
 wss.on("connection", (client, req) => {
-  console.log("Client connected")
+  console.log("Client connected");
 
-  client.on("message", data => {
+  client.on("message", (data) => {
     try {
-      const jsonObj = JSON.parse(data.toString())
-      const { action } = jsonObj
+      const jsonObj = JSON.parse(data.toString());
+      const { action } = jsonObj;
 
-      switch(action) {
+      switch (action) {
         case "tts":
-          const { text } = jsonObj
-          getTTS(text, client)
-          console.log(`TTS request for this text: ${text}`)
-          break
+          const { text } = jsonObj;
+          getTTS(text, client);
+          console.log(`TTS request for this text: ${text}`);
+          break;
 
         case "stt":
-          
-          break
+          const { blob } = jsonObj;
+          getSTT(blob, client);
+          break;
 
         default:
-          client.close(1011, "Invalid request")
+          client.close(1011, "Invalid request");
       }
-      
     } catch (error) {
-      console.error(error)
-      client.close(1003, error)
+      console.error(error);
+      client.close(1003, error);
     }
-  })
+  });
 
-  client.on("error", err => console.error(err.message))
-  client.on("close", () => console.log("Session closed."))
-})
+  client.on("error", (err) => console.error(err.message));
+  client.on("close", () => console.log("Session closed."));
+});
