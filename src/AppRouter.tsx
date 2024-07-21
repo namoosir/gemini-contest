@@ -76,6 +76,14 @@ const AppRouter = () => {
           />
           <Route path="*" element={<PageNotFound />} />
         </Route>
+        <Route
+          path="/resume"
+          element={
+            <ProtectedRoute>
+              <ResumeForm />
+            </ProtectedRoute>
+          }
+        />
       </>
     )
   );

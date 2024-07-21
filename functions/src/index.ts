@@ -1,8 +1,14 @@
-import admin = require("firebase-admin");
-import express = require("express");
+import admin from "firebase-admin";
+import express from "express";
 import { https } from "firebase-functions/v2";
 import { getTTS } from "./deepgram";
+import { resumeTrigger } from "./triggers";
+import { setGlobalOptions } from "firebase-functions/v2";
+import { tts } from "./callable";
 import { getDeepgramKey } from "./utils";
+
+
+setGlobalOptions({ region: "northamerica-northeast1" });
 
 admin.initializeApp();
 const app = express();
@@ -31,3 +37,5 @@ app.post("/audio/stt/key", async (req, res) => {
 // TODO: add endpoint for STT
 
 exports.api = https.onRequest(app);
+exports.resumeTrigger = resumeTrigger;
+exports.tts = tts;

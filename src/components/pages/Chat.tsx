@@ -25,7 +25,14 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { useBeforeUnload, useBlocker } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -34,8 +41,10 @@ function Chat() {
   const [amplitude, setAmplitude] = useState<number>(2.3);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [lastLocation, setLastLocation] = useState<null | string>(null);
-  const [confirmedNavigation, setConfirmedNavigation] = useState<boolean>(false);
-  const [hasInterviewStarted, setHasInterviewStarted] = useState<boolean>(false)
+  const [confirmedNavigation, setConfirmedNavigation] =
+    useState<boolean>(false);
+  const [hasInterviewStarted, setHasInterviewStarted] =
+    useState<boolean>(false);
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -46,18 +55,20 @@ function Chat() {
   const micAudioContextRef = useRef<AudioContext | undefined>();
   const streamRef = useRef<MediaStream | undefined>();
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
-  const geminiRef = useRef<InterviewBot>(new InterviewBot())
+  const geminiRef = useRef<InterviewBot>(new InterviewBot());
 
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleBlockedNavigation = async (_: any, nextLocation: any) => {
+    console.log("OLA")
     if (!confirmedNavigation) {
       await pauseInterview();
       setIsDialogOpen(true);
       setLastLocation(nextLocation);
       return true;
     }
+    console.log("OLA 2.0")
     return false;
   };
 
@@ -129,7 +140,7 @@ function Chat() {
   useEffect(() => {
     async function fetchKey() {
       const apiKey = await getAPIKey();
-      await initWebSocket(apiKey)
+      await initWebSocket(apiKey);
     }
 
     async function initWebSocket(apiKey?: string) {
@@ -206,7 +217,7 @@ function Chat() {
   };
 
   const handleAlertContinue = async () => {
-    await cleanup();
+    // await cleanup();
     confirmNavigation();
     console.log(blocker.state);
     if (blocker.state !== "blocked") {
@@ -265,12 +276,12 @@ function Chat() {
     analyserRef.current?.disconnect();
     analyserRef.current = null;
 
-    if (audioContextRef.current?.state !== 'closed') {
+    if (audioContextRef.current?.state !== "closed") {
       await audioContextRef.current?.close();
       audioContextRef.current = undefined;
     }
 
-    if (micAudioContextRef.current?.state !== 'closed') {
+    if (micAudioContextRef.current?.state !== "closed") {
       await micAudioContextRef.current?.close();
       micAudioContextRef.current = undefined;
     }
@@ -280,49 +291,48 @@ function Chat() {
       track.stop();
     });
     streamRef.current = undefined;
-    
+
     sourceRef.current?.disconnect();
     sourceRef.current = undefined;
-    
   };
 
   const startInterview = async () => {
     setHasInterviewStarted(true);
     await handleResponse(
-      await geminiRef.current.initInterviewForJobD(location.state.jobDescription)
+      await geminiRef.current.initInterviewForJobD(
+        location.state.jobDescription
+      )
     );
-  }
+  };
 
   return (
     <div className="flex flex-col h-full">
-
-      {!hasInterviewStarted && 
+      {!hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>
             <CardHeader>
-              <CardTitle>
-                Your Interview
-              </CardTitle>
+              <CardTitle>Your Interview</CardTitle>
               <CardDescription>
-                Your { location.state.interviewDuration } minute { location.state.interviewType } Interview is about to start in { location.state.interviewMode } mode
+                Your {location.state.interviewDuration} minute{" "}
+                {location.state.interviewType} Interview is about to start in{" "}
+                {location.state.interviewMode} mode
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              {/* TODO: ADD A VIDEO PREVIEW OF THE  */}
-            </CardContent>
+            <CardContent>{/* TODO: ADD A VIDEO PREVIEW OF THE  */}</CardContent>
             <CardFooter>
-              <Button onClick={startInterview} className="w-full">Start Interview</Button>
+              <Button onClick={startInterview} className="w-full">
+                Start Interview
+              </Button>
             </CardFooter>
           </Card>
         </div>
-      }
+      )}
 
       <div className="overflow-hidden flex-1">
         <Chats chats={chat} />
       </div>
 
-
-      {hasInterviewStarted &&
+      {hasInterviewStarted && (
         <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
           <Button
             variant={"secondary"}
@@ -347,14 +357,15 @@ function Chat() {
             <Icon path={mdiClose} className="h-6 w-6" />
           </Button>
         </div>
-      }
+      )}
 
       <AlertDialog open={isDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to quit this interview? None of your answers will be saved.
+              Are you sure you want to quit this interview? None of your answers
+              will be saved.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
