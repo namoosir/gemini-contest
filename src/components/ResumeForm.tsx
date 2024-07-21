@@ -2,6 +2,7 @@ import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import { uploadResume } from "@/services/firebase/resumeService";
 import { ChangeEvent, FormEvent, useState } from "react";
+import { Button } from "./ui/button";
 
 function ResumeForm() {
   const { user } = useAuthContext();
@@ -39,7 +40,7 @@ function ResumeForm() {
       <form onSubmit={async (e) => await submitHandler(e)}>
         <label htmlFor="file">Choose your resume to upload </label>
         <input type="file" accept=".pdf" onChange={(e) => changeHandler(e)} />
-        <button type="submit">Submit</button>
+        <Button type="submit">Submit</Button>
       </form>
     </>
   );
