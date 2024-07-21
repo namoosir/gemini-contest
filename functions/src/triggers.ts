@@ -21,7 +21,7 @@ export const resumeTrigger = onObjectFinalized(
       const [files] = await getStorage()
         .bucket(fileBucket)
         .getFiles({
-          prefix: `resumes/${uid}/`,
+          prefix: `resume/${uid}/`,
         });
 
       if (files.length > 1) {
