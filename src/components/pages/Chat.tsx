@@ -265,11 +265,15 @@ function Chat() {
     analyserRef.current?.disconnect();
     analyserRef.current = null;
 
-    await audioContextRef.current?.close();
-    audioContextRef.current = undefined;
+    if (audioContextRef.current?.state !== 'closed') {
+      await audioContextRef.current?.close();
+      audioContextRef.current = undefined;
+    }
 
-    await micAudioContextRef.current?.close();
-    micAudioContextRef.current = undefined;
+    if (micAudioContextRef.current?.state !== 'closed') {
+      await micAudioContextRef.current?.close();
+      micAudioContextRef.current = undefined;
+    }
 
     const tracks = streamRef.current?.getTracks();
     tracks?.forEach((track) => {
