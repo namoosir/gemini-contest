@@ -9,9 +9,13 @@ import {
 } from "@/components/ui/form";
 
 interface Props {
-  form: UseFormReturn<{
+  form: UseFormReturn<
+    {
       text: string;
-  }, any, undefined>;
+    },
+    any,
+    undefined
+  >;
 }
 
 const JobDescriptionCard: React.FC<Props> = (props: Props) => {

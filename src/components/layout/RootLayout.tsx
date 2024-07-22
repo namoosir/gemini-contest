@@ -1,6 +1,6 @@
-import useAuthContext from '@/hooks/useAuthContext';
-import { Outlet } from 'react-router-dom';
-import Header from '../Header';
+import useAuthContext from "@/hooks/useAuthContext";
+import { Outlet } from "react-router-dom";
+import Header from "../Header";
 
 export const RootLayout = () => {
   const { user } = useAuthContext();
@@ -13,4 +13,4 @@ export const RootLayout = () => {
       </div>
     </div>
   );
-}
+};

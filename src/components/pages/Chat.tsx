@@ -1,18 +1,18 @@
 import { InterviewBot } from "@/services/gemini/JobDParserBot";
 import {
   ChatMessage,
-  fetchAudioBuffer,
   getAPIKey,
   initVoiceWebSocket,
   initMediaRecorder,
   playbackGeminiResponse,
+  fetchAudioBuffer,
 } from "@/services/voice/TTS";
 import { useRef, useState, useEffect, useCallback } from "react";
 import Chats from "../Chats";
 import AnimatedMic from "../AnimatedMic";
 import { Button } from "../ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { mdiClose } from "@mdi/js";
+import { mdiClose, mdiLoading } from "@mdi/js";
 import Icon from "@mdi/react";
 import {
   AlertDialog,
@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
-import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { useBlocker } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -33,6 +33,16 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
+import useAuthContext from "@/hooks/useAuthContext";
+import { getUserResumes, Resume } from "@/services/firebase/resumeService";
+import {
+  calculateAmplitudeFromAnalyser,
+  FINAL_INTERVIEW_RESPONSE,
+  formatTime,
+} from "@/utils";
+import { isInterviewProps, InterviewProps } from "./types";
+import { ChatSession } from "firebase/vertexai-preview";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -40,11 +50,17 @@ function Chat() {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [amplitude, setAmplitude] = useState<number>(2.3);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [lastLocation, setLastLocation] = useState<null | string>(null);
+  const [resume, setResume] = useState<Resume | undefined>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSocketSetupLoading, setIsSocketSetupLoading] =
+    useState<boolean>(true);
   const [confirmedNavigation, setConfirmedNavigation] =
     useState<boolean>(false);
   const [hasInterviewStarted, setHasInterviewStarted] =
     useState<boolean>(false);
+  const [seconds, setSeconds] = useState(0);
+  const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
+  const [isDoneDialogOpen, setIsDoneDialogOpen] = useState<boolean>(false);
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -56,29 +72,31 @@ function Chat() {
   const streamRef = useRef<MediaStream | undefined>();
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
+  const locationStateRef = useRef<InterviewProps | undefined>();
 
-  const navigate = useNavigate();
+  const { functions, db } = useFirebaseContext();
+  const { user } = useAuthContext();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const handleBlockedNavigation = async (_: any, nextLocation: any) => {
+  useEffect(() => {
+    if (isInterviewProps(location.state)) {
+      locationStateRef.current = location.state;
+    } else {
+      // navigate out
+      navigate("/404");
+    }
+  }, [location, navigate]);
+
+  const handleBlockedNavigation = () => {
     if (!confirmedNavigation) {
-      await pauseInterview();
       setIsDialogOpen(true);
-      setLastLocation(nextLocation);
       return true;
     }
     return false;
   };
 
-  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
-    handleBlockedNavigation(currentLocation, nextLocation)
-  );
-
-  useEffect(() => {
-    if (confirmedNavigation && lastLocation) {
-      navigate(lastLocation);
-    }
-  }, [confirmedNavigation, lastLocation, navigate]);
+  const blocker = useBlocker(() => handleBlockedNavigation());
 
   const confirmNavigation = () => {
     setIsDialogOpen(false);
@@ -98,35 +116,17 @@ function Chat() {
     }
   };
 
-  useBeforeUnload((event: Event) => {
-    if (!confirmedNavigation) {
-      event.preventDefault();
-      return "";
-    }
-  });
-
   const updateAmplitude = useCallback(() => {
     if (!analyserRef.current) return;
 
     const analyser = analyserRef.current;
 
-    analyser.fftSize = 2048;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyser.getByteTimeDomainData(dataArray);
-
-    let sum = 0;
-    for (let i = 0; i < bufferLength; i++) {
-      sum += Math.abs(dataArray[i] - 125);
-    }
-    const average = sum / bufferLength;
-    const normalizedAmplitude = average / 128; // Assuming 128 is the maximum average value
-    const scaledAmplitude = 1.5 + normalizedAmplitude * 35; // 5 + (0-1) * (13 - 5)
+    const newAmplitude = calculateAmplitudeFromAnalyser(analyser);
     const smoothingFactor = 0.1;
 
     setAmplitude((prevAmplitude) => {
       const smoothedAmplitude =
-        prevAmplitude + smoothingFactor * (scaledAmplitude - prevAmplitude);
+        prevAmplitude + smoothingFactor * (newAmplitude - prevAmplitude);
       return Math.max(Math.min(smoothedAmplitude, 3.8), 2.3);
     });
 
@@ -139,10 +139,12 @@ function Chat() {
     async function fetchKey() {
       const apiKey = await getAPIKey();
       await initWebSocket(apiKey);
+
+      setIsSocketSetupLoading(false);
     }
 
     async function initWebSocket(apiKey?: string) {
-      socketRef.current = await initVoiceWebSocket(
+      socketRef.current = initVoiceWebSocket(
         apiKey,
         socketIntervalRef,
         setTranscript,
@@ -176,6 +178,25 @@ function Chat() {
   }, []);
 
   useEffect(() => {
+    const fetchResume = async () => {
+      if (!user) return;
+      const resumes = await getUserResumes(db, user.uid);
+
+      if (!resumes || resumes.length === 0) return;
+
+      return setResume(resumes[0]);
+    };
+
+    void fetchResume();
+  }, [user, db]);
+
+  useEffect(() => {
+    if (resume && !isSocketSetupLoading) {
+      setIsLoading(false);
+    }
+  }, [resume, isSocketSetupLoading]);
+
+  useEffect(() => {
     isRecordingRef.current = isRecording;
 
     if (isRecording) {
@@ -186,8 +207,25 @@ function Chat() {
     }
   }, [isRecording, updateAmplitude]);
 
-  async function handleResponse(text: string) {
-    const data = await fetchAudioBuffer(text);
+  useEffect(() => {
+    if (seconds > 0) {
+      const interval = setInterval(() => {
+        setSeconds((prevSeconds) => prevSeconds - 1);
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [seconds]);
+
+  useEffect(() => {
+    if (!interviewEnded) return;
+
+    setIsDoneDialogOpen(true);
+    setConfirmedNavigation(true);
+  }, [interviewEnded]);
+
+  async function handleResponse(text: string, done?: boolean) {
+    const data = await fetchAudioBuffer(text, functions);
     const audioCtx = new AudioContext();
 
     audioContextRef.current = audioCtx;
@@ -195,7 +233,8 @@ function Chat() {
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
     await playbackGeminiResponse(data, setChat, audioContextRef.current);
     await audioContextRef.current.close();
-    startRecording();
+
+    if (!done) startRecording();
   }
 
   const startRecording = () => {
@@ -211,10 +250,16 @@ function Chat() {
 
   const stopRecording = async () => {
     setIsRecording(false);
-    await handleResponse(await geminiRef.current.prompt(transcript));
+    if (seconds === 0) {
+      await geminiRef.current.handleInterviewFinish(transcript);
+      await handleResponse(FINAL_INTERVIEW_RESPONSE, true);
+      setInterviewEnded(true);
+    } else {
+      await handleResponse(await geminiRef.current.prompt(transcript));
+    }
   };
 
-  const handleAlertContinue = async () => {
+  const handleAlertContinue = () => {
     confirmNavigation();
   };
 
@@ -224,14 +269,20 @@ function Chat() {
     setIsDialogOpen(false);
   };
 
-  const pauseInterview = async () => {
+  const pauseInterview = useCallback(async () => {
     if (isRecording) {
       mediaRecorderRef.current?.pause();
       await micAudioContextRef.current?.suspend();
     } else {
       await audioContextRef.current?.suspend();
     }
-  };
+  }, [isRecording]);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      void pauseInterview();
+    }
+  }, [isDialogOpen, pauseInterview]);
 
   const resumeInterview = async () => {
     if (isRecording) {
@@ -242,8 +293,7 @@ function Chat() {
     }
   };
 
-  const onXClicked = async () => {
-    await pauseInterview();
+  const onXClicked = () => {
     setIsDialogOpen(true);
   };
 
@@ -291,24 +341,45 @@ function Chat() {
 
   const startInterview = async () => {
     setHasInterviewStarted(true);
+    setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
-        location.state.jobDescription
+        locationStateRef.current!.jobDescription ??
+          "No job description provided",
+        locationStateRef.current!.interviewType,
+        resume?.data ?? "No resume provided"
       )
     );
   };
 
+  const loader = (
+    <div className="flex h-full w-full justify-center items-center gap-8 flex-col text-2xl leading-none tracking-tight">
+      <h1>Please wait while we set up your interview</h1>
+      <Icon className="h-12 w-12 animate-spin" path={mdiLoading} />
+    </div>
+  );
+
+  const handleResultsClick = async () => {
+    const chat = geminiRef.current.chat as ChatSession
+    const history = await chat.getHistory()
+    
+    navigate('/results', { state: { history } })
+  }
+
   return (
     <div className="flex flex-col h-full">
-      {!hasInterviewStarted && (
+      {isLoading && loader}
+
+      <p>{formatTime(seconds)} seconds remaining</p>
+      {!isLoading && !hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>
             <CardHeader>
               <CardTitle>Your Interview</CardTitle>
               <CardDescription>
-                Your {location.state.interviewDuration} minute{" "}
-                {location.state.interviewType} Interview is about to start in{" "}
-                {location.state.interviewMode} mode
+                Your {locationStateRef.current!.interviewDuration} minute{" "}
+                {locationStateRef.current!.interviewType} Interview is about to
+                start in {locationStateRef.current!.interviewMode} mode
               </CardDescription>
             </CardHeader>
             <CardContent>{/* TODO: ADD A VIDEO PREVIEW OF THE  */}</CardContent>
@@ -373,6 +444,29 @@ function Chat() {
             <AlertDialogAction asChild>
               <Button variant="destructive" onClick={handleAlertContinue}>
                 Continue
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDoneDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Your interview is done!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Proceed to view your results or go back home.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant="secondary" asChild>
+                <Link to="/">Home</Link>
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button variant="default" onClick={handleResultsClick}>
+                Results
               </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
