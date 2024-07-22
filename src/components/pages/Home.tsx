@@ -1,13 +1,10 @@
 import Icon from "@mdi/react";
 import { mdiLogout, mdiMicrophone } from "@mdi/js";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import useAuthContext from "@/hooks/useAuthContext";
 
 function Home() {
-  const { user, logout } = useAuthContext()
+  const { user, logout } = useAuthContext();
 
   return (
     <>
@@ -15,10 +12,7 @@ function Home() {
         {user && (
           <>
             <p>{user.displayName} is logged in...</p>
-            <button
-              onClick={logout}
-              title="Sign Out"
-            >
+            <button onClick={logout} title="Sign Out">
               <Icon className="w-8 ml-1" path={mdiLogout} />
             </button>
 

@@ -29,7 +29,8 @@ export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
 auth.languageCode = "it";
 
-if (import.meta.env.MODE === "dev") {
+if (import.meta.env.VITE_MODE === "dev") {
+  console.log("Dev Mode!")
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectStorageEmulator(storage, "127.0.0.1", 9199);
   connectFunctionsEmulator(functions, "127.0.0.1", 5001);

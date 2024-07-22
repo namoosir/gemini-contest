@@ -12,26 +12,10 @@ export interface MessageData {
   };
 }
 
-export const fetchAudioBuffer = async (
-  sentence: string
-): Promise<{ word: string; buffer: Uint8Array }[]> => {
-  try {
-    const response = await fetch(
-      "http://127.0.0.1:5001/gemini-contest/northamerica-northeast1/api/audio/tts",
-      {
-        method: "POST",
-        body: JSON.stringify({ text: sentence, model: "" }),
-      }
-    );
-    return (await response.json()) as Promise<
-      { word: string; buffer: Uint8Array }[]
-    >;
-  } catch (error) {
-    throw new Error(error as string);
-  }
-};
+const BASE_URL =
+  "http://127.0.0.1:5001/gemini-contest/northamerica-northeast1/api";
 
-export const fetchAudioBufferV2 = async (
+export const fetchAudioBuffer = async (
   sentence: string,
   functions: Functions
 ) => {
@@ -48,16 +32,13 @@ export const fetchAudioBufferV2 = async (
 };
 
 export const getAPIKey = async () => {
-  const response = await fetch(
-    "http://127.0.0.1:5001/gemini-contest/northamerica-northeast1/api/audio/stt/key",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ uid: "test" }),
-    }
-  );
+  const response = await fetch(`${BASE_URL}/audio/stt/key`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ uid: "test" }),
+  });
 
   if (response.ok) {
     const data = await response.text();
@@ -65,7 +46,7 @@ export const getAPIKey = async () => {
   }
 };
 
-export const initVoiceWebSocket = async (
+export const initVoiceWebSocket = (
   apiKey: string | undefined,
   interval: React.MutableRefObject<NodeJS.Timeout | null>,
   setTranscript: React.Dispatch<React.SetStateAction<string>>,

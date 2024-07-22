@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import useAuthContext from "@/hooks/useAuthContext";
 
-type Page = "dashboard" | "interview" | "learning" | "";
+type Page = "interview" | "learning" | "";
 interface Menu {
   name: string;
   path: Page;
@@ -46,7 +46,7 @@ const Header = () => {
   const menu: Menu[] = [
     {
       name: "Dashboard",
-      path: "dashboard",
+      path: "",
       icon: <Icon className="h-4 w-4 mr-2" path={mdiHomeAnalytics} />,
     },
     {

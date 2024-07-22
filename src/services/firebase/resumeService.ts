@@ -1,7 +1,5 @@
 import {
-  Timestamp,
   getDocs,
-  addDoc,
   collection,
   query,
   where,
@@ -15,10 +13,11 @@ import {
 } from "firebase/storage";
 
 export interface Resume {
-  description: string | null;
+  data: string;
+  dateCreated: string;
+  filename: string;
   url: string;
   uid: string;
-  filename: string;
 }
 
 export const getUserResumes = async (
@@ -36,9 +35,7 @@ export const getUserResumes = async (
     return result;
   } catch (error) {
     throw new Error(
-      `Something went wrong while trying to fetch all user resumes: ${
-        error as string
-      }`
+      `Error trying to fetch user Resume. ${(error as Error).message}`
     );
   }
 };
@@ -54,7 +51,7 @@ export const uploadResume = async (
     return resumeRef.toString();
   } catch (error) {
     throw new Error(
-      `Some error happened while uploading resume: ${error as string}`
+      `Some error happened while uploading resume: ${(error as Error).message}`
     );
   }
 };

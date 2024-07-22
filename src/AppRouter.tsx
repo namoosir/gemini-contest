@@ -6,11 +6,8 @@ import {
 } from "react-router-dom";
 import Login from "./components/pages/Login.tsx";
 import Home from "./components/pages/Home.tsx";
-import Voice from "./components/pages/Voice.tsx";
-import Test from "./components/pages/Test.tsx";
 import Chat from "./components/pages/Chat.tsx";
 import Interview from "./components/pages/Interview.tsx";
-import ResumeForm from "./components/ResumeForm.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.tsx";
@@ -35,22 +32,6 @@ const AppRouter = () => {
             />
           )}
           <Route
-            path="/voice"
-            element={
-              <ProtectedRoute>
-                <Voice />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/test"
-            element={
-              <ProtectedRoute>
-                <Test />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/chat"
             element={
               <ProtectedRoute>
@@ -66,24 +47,9 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/resume-form"
-            element={
-              <ProtectedRoute>
-                <ResumeForm />
-              </ProtectedRoute>
-            }
-          />
           <Route path="*" element={<PageNotFound />} />
         </Route>
-        <Route
-          path="/resume"
-          element={
-            <ProtectedRoute>
-              <ResumeForm />
-            </ProtectedRoute>
-          }
-        />
+        
       </>
     )
   );
