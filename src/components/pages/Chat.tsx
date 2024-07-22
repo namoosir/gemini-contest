@@ -360,16 +360,16 @@ function Chat() {
   );
 
   const handleResultsClick = async () => {
-    const chat = geminiRef.current.chat as ChatSession
-    const history = await chat.getHistory()
-    
-    navigate('/results', { state: { history } })
-  }
+    const chat = geminiRef.current.chat as ChatSession;
+    const history = await chat.getHistory();
+
+    navigate("/results", { state: { history } });
+  };
 
   return (
     <div className="flex flex-col h-full">
       {isLoading && loader}
-
+      {resume ? "Resume loaded" : "GGS"}
       <p>{formatTime(seconds)} seconds remaining</p>
       {!isLoading && !hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
