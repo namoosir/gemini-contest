@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
-import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { useBlocker } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -36,8 +36,13 @@ import {
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import useAuthContext from "@/hooks/useAuthContext";
 import { getUserResumes, Resume } from "@/services/firebase/resumeService";
-import { formatTime } from "@/utils";
+import {
+  calculateAmplitudeFromAnalyser,
+  FINAL_INTERVIEW_RESPONSE,
+  formatTime,
+} from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
+import { ChatSession } from "firebase/vertexai-preview";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -54,6 +59,8 @@ function Chat() {
   const [hasInterviewStarted, setHasInterviewStarted] =
     useState<boolean>(false);
   const [seconds, setSeconds] = useState(0);
+  const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
+  const [isDoneDialogOpen, setIsDoneDialogOpen] = useState<boolean>(false);
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -71,8 +78,6 @@ function Chat() {
   const { user } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
-
-  
 
   useEffect(() => {
     if (isInterviewProps(location.state)) {
@@ -111,35 +116,17 @@ function Chat() {
     }
   };
 
-  useBeforeUnload((event: Event) => {
-    if (!confirmedNavigation) {
-      event.preventDefault();
-      return "";
-    }
-  });
-
   const updateAmplitude = useCallback(() => {
     if (!analyserRef.current) return;
 
     const analyser = analyserRef.current;
 
-    analyser.fftSize = 2048;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyser.getByteTimeDomainData(dataArray);
-
-    let sum = 0;
-    for (let i = 0; i < bufferLength; i++) {
-      sum += Math.abs(dataArray[i] - 125);
-    }
-    const average = sum / bufferLength;
-    const normalizedAmplitude = average / 128; // Assuming 128 is the maximum average value
-    const scaledAmplitude = 1.5 + normalizedAmplitude * 35; // 5 + (0-1) * (13 - 5)
+    const newAmplitude = calculateAmplitudeFromAnalyser(analyser);
     const smoothingFactor = 0.1;
 
     setAmplitude((prevAmplitude) => {
       const smoothedAmplitude =
-        prevAmplitude + smoothingFactor * (scaledAmplitude - prevAmplitude);
+        prevAmplitude + smoothingFactor * (newAmplitude - prevAmplitude);
       return Math.max(Math.min(smoothedAmplitude, 3.8), 2.3);
     });
 
@@ -157,7 +144,7 @@ function Chat() {
     }
 
     async function initWebSocket(apiKey?: string) {
-      socketRef.current = await initVoiceWebSocket(
+      socketRef.current = initVoiceWebSocket(
         apiKey,
         socketIntervalRef,
         setTranscript,
@@ -226,11 +213,18 @@ function Chat() {
         setSeconds((prevSeconds) => prevSeconds - 1);
       }, 1000);
 
-      return () => clearInterval(interval); // Cleanup interval on component unmount
+      return () => clearInterval(interval);
     }
   }, [seconds]);
 
-  async function handleResponse(text: string) {
+  useEffect(() => {
+    if (!interviewEnded) return;
+
+    setIsDoneDialogOpen(true);
+    setConfirmedNavigation(true);
+  }, [interviewEnded]);
+
+  async function handleResponse(text: string, done?: boolean) {
     const data = await fetchAudioBuffer(text, functions);
     const audioCtx = new AudioContext();
 
@@ -239,7 +233,8 @@ function Chat() {
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
     await playbackGeminiResponse(data, setChat, audioContextRef.current);
     await audioContextRef.current.close();
-    startRecording();
+
+    if (!done) startRecording();
   }
 
   const startRecording = () => {
@@ -252,11 +247,16 @@ function Chat() {
       console.error("Error accessing media devices.", error);
     }
   };
+
   const stopRecording = async () => {
     setIsRecording(false);
-    await handleResponse(
-      await geminiRef.current.promptWithTimeRemaing(transcript, seconds)
-    );
+    if (seconds === 0) {
+      await geminiRef.current.handleInterviewFinish(transcript);
+      await handleResponse(FINAL_INTERVIEW_RESPONSE, true);
+      setInterviewEnded(true);
+    } else {
+      await handleResponse(await geminiRef.current.prompt(transcript));
+    }
   };
 
   const handleAlertContinue = () => {
@@ -359,6 +359,13 @@ function Chat() {
     </div>
   );
 
+  const handleResultsClick = async () => {
+    const chat = geminiRef.current.chat as ChatSession
+    const history = await chat.getHistory()
+    
+    navigate('/results', { state: { history } })
+  }
+
   return (
     <div className="flex flex-col h-full">
       {isLoading && loader}
@@ -437,6 +444,29 @@ function Chat() {
             <AlertDialogAction asChild>
               <Button variant="destructive" onClick={handleAlertContinue}>
                 Continue
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDoneDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Your interview is done!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Proceed to view your results or go back home.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant="secondary" asChild>
+                <Link to="/">Home</Link>
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button variant="default" onClick={handleResultsClick}>
+                Results
               </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
