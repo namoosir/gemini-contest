@@ -1,7 +1,5 @@
 import {
-  Timestamp,
   getDocs,
-  addDoc,
   collection,
   query,
   where,
@@ -36,7 +34,9 @@ export const getUserResumes = async (
 
     return result;
   } catch (error) {
-    throw new Error(`Error trying to fetch user Resume. ${error}`);
+    throw new Error(
+      `Error trying to fetch user Resume. ${(error as Error).message}`
+    );
   }
 };
 
@@ -51,7 +51,7 @@ export const uploadResume = async (
     return resumeRef.toString();
   } catch (error) {
     throw new Error(
-      `Some error happened while uploading resume: ${error as string}`
+      `Some error happened while uploading resume: ${(error as Error).message}`
     );
   }
 };

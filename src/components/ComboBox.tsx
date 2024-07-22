@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/popover";
 
 interface Props {
-  name: string
+  name: string;
   items: {
     value: string;
     label: string;
-  }[]
+  }[];
 }
 
 function ComboBox(props: Props) {
@@ -48,9 +48,7 @@ function ComboBox(props: Props) {
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className="p-0"
-      >
+      <PopoverContent className="p-0">
         <Command>
           <CommandInput placeholder={`Search ${props.name}...`} />
           <CommandList>

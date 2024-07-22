@@ -22,6 +22,7 @@ import InterviewSettingsCard from "../InterviewSettingsCard";
 import CardHOC from "../cardContentHOC";
 import { Form } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
+import { InterviewProps } from "./types";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -42,9 +43,7 @@ const Interview: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState<Page>(0);
   const previousPage = usePrevious(currentPage);
-  const [jobDescription, setJobDescription] = useState<string | undefined>(
-    undefined
-  );
+  const [jobDescription, setJobDescription] = useState<string | undefined>();
 
   const [files, setFiles] = useState<File[] | null>([]);
   const [resume, setResume] = useState<Resume | null>(null);
@@ -80,7 +79,7 @@ const Interview: React.FC = () => {
     const fetchPDF = async () => {
       if (!resume) return;
 
-      const url = await getResumeObject(storage, resume.url); // Assuming gcsUrl is the direct HTTP link to the PDF file
+      const url = await getResumeObject(storage, resume.url);
 
       setResumeURL(url);
     };
@@ -114,14 +113,10 @@ const Interview: React.FC = () => {
   };
 
   const handleFinish = () => {
-    // todo
-    console.log("jobDescription", jobDescription);
-    console.log("resume", resume);
-    console.log("settings", interviewDuration, interviewType, interviewMode);
-    uploadResumeToStorage();
-    const params = {
+    void uploadResumeToStorage();
+
+    const params: InterviewProps = {
       jobDescription: jobDescription,
-      resume: resume,
       interviewDuration: interviewDuration,
       interviewType: interviewType,
       interviewMode: interviewMode,

@@ -41,6 +41,7 @@ const setupStr =
     - Each response will provide 1 section with the user response, and 1 section with the time remaining in the interview.
       if you see "Time is up! You stop with the questions and move on to the evaluation" then the interview is over and proceed to the evaluation.
       If there is time remaining, continue with to provide more interview questions.
+    - The resume of the person that you are interviewing is provided here: %s
 `;
 
 function formatString(str : string, ...values: string[]) {
@@ -53,8 +54,8 @@ class InterviewBot {
     this.chat = null;
   }
 
-  async initInterviewForJobD(jobDescritpion: string, interviewType: string): Promise<string> {
-    const setupStr2 = formatString(setupStr, interviewType);
+  async initInterviewForJobD(jobDescritpion: string, interviewType: string, resume: string): Promise<string> {
+    const setupStr2 = formatString(setupStr, interviewType, resume);
     this.chat = initalizeChat(setupStr2);
 
     return await promptBase(
