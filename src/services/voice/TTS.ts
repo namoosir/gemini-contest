@@ -22,7 +22,7 @@ export const fetchAudioBuffer = async (
   try {
     const getTTS = httpsCallable(functions, "tts");
     const result = await getTTS({ text: sentence, model: "" });
-    return result.data as Promise<{ word: string; buffer: Uint8Array }[]>;
+    return result.data as { word: string; buffer: Uint8Array }[];
   } catch (error) {
     alert(
       "Something went wrong while trying to fetch, maybe turn on cloud function or fix backend"

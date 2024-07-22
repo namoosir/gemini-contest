@@ -4,7 +4,7 @@ import { https } from "firebase-functions/v2";
 import { resumeTrigger } from "./triggers";
 import { setGlobalOptions } from "firebase-functions/v2";
 import { tts } from "./callable";
-import { getDeepgramKey } from "./utils";
+import { getDeepgramKey } from "./deepgram";
 
 setGlobalOptions({ region: "northamerica-northeast1" });
 
