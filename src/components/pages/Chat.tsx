@@ -43,6 +43,7 @@ import {
 } from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
+import { Badge } from "@/components/ui/badge";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -360,17 +361,21 @@ function Chat() {
   );
 
   const handleResultsClick = async () => {
-    const chat = geminiRef.current.chat as ChatSession
-    const history = await chat.getHistory()
-    
-    navigate('/results', { state: { history } })
-  }
+    const chat = geminiRef.current.chat as ChatSession;
+    const history = await chat.getHistory();
+
+    navigate("/results", { state: { history } });
+  };
 
   return (
     <div className="flex flex-col h-full">
       {isLoading && loader}
 
-      <p>{formatTime(seconds)} seconds remaining</p>
+      <div className="mt-4 text-center">
+        <Badge className=" text-md cursor-default font-bold">
+          {formatTime(seconds)}
+        </Badge>
+      </div>
       {!isLoading && !hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>
