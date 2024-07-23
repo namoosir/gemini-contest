@@ -12,10 +12,10 @@ export const RadialChart = () => {
   const INNER_RADIUS = 90;
   const OUTER_RADIUS = INNER_RADIUS * 1.625; //Properly Calculated
   const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 100;
-  const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.35;
+  const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.345;
 
   useEffect(() => {
-    setAvgScore(50); //Need to pull score from database over the week to calculate average score
+    setAvgScore(90); //Need to pull score from database over the week to calculate average score
   }, []);
 
   const chartData = [
@@ -42,7 +42,7 @@ export const RadialChart = () => {
       style={{ width: RADIAL_GRAPH_WIDTH }}
     >
       <div
-        className="bg-primary z-50 h-[5px] absolute"
+        className="bg-primary z-50 h-[3px] absolute"
         style={{ width: START_LINE }}
       ></div>
       <ChartContainer

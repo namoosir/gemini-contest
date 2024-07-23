@@ -122,44 +122,42 @@ export const DashboardBarChart = () => {
 
   useEffect(() => {
     setBarChartData(() => {
-      getAvgPerformance(exampleData); //Need to pull data from database, use query to gett current month and previous month
-      getOverallMonthScore(exampleData);
-      getPercentageMonthIncrease(exampleData, examplePrevMonthData);
+      const currMonth  = getPerformanceSum(exampleData);
+      const prevMonth = getPerformanceSum(examplePrevMonthData);
+      getAvgPerformance(currMonth); //Need to pull data from database, use query to gett current month and previous month
+      getOverallMonthScore(currMonth);
+      getPercentageMonthIncrease(currMonth, prevMonth);
+
       return exampleData;
     });
   }, []);
 
-  const getAvgPerformance = (data: { date: string; performance: number }[]) => {
+  const getPerformanceSum = (data: { date: string; performance: number }[]) => {
     let sum = 0;
     for (let i = 0; i < data.length; i++) {
       sum += data[i].performance;
     }
-    setAvgPerformance(Math.floor(sum / data.length));
+    let length = data.length
+
+    return {sum, length};
+  }
+ 
+ 
+  const getAvgPerformance = (currMonth: {sum: number, length: number}) => {
+    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length));
   };
 
-  const getOverallMonthScore = (
-    data: { date: string; performance: number }[]
-  ) => {
-    let sum = 0;
-    for (let i = 0; i < data.length; i++) {
-      sum += data[i].performance;
-    }
-    setOverallMonthScore(sum);
+  const getOverallMonthScore = (currMonth: { sum: number; length: number }) => {
+    setOverallMonthScore(currMonth.sum);
   };
 
   const getPercentageMonthIncrease = (
-    currMonthData: { date: string; performance: number }[],
-    prevMonthData: { date: string; performance: number }[]
+    currMonth: { sum: number; length: number },
+    prevMonth: { sum: number; length: number }
   ) => {
-    let currSum = 0;
-    for (let i = 0; i < currMonthData.length; i++) {
-      currSum += currMonthData[i].performance;
-    }
 
-    let prevSum = 0;
-    for (let i = 0; i < prevMonthData.length; i++) {
-      prevSum += prevMonthData[i].performance;
-    }
+    const currSum = currMonth.sum;
+    const prevSum = prevMonth.sum;
 
     setPercentageMonthIncrease(
       ((currSum - prevSum) / ((currSum + prevSum) / 2)) * 100
