@@ -370,12 +370,13 @@ function Chat() {
   return (
     <div className="flex flex-col h-full">
       {isLoading && loader}
-
-      <div className="mt-4 text-center">
-        <Badge className=" text-md cursor-default font-bold">
-          {formatTime(seconds)}
-        </Badge>
-      </div>
+      {hasInterviewStarted && (
+        <div className="mt-4 text-center">
+          <Badge className=" text-md cursor-default font-bold">
+            {formatTime(seconds)}
+          </Badge>
+        </div>
+      )}
       {!isLoading && !hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>
