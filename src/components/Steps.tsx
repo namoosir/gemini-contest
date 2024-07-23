@@ -23,12 +23,6 @@ export default function Steps(props: Props) {
     { label: "Options", completed: props.currentStep >= 3 },
   ];
 
-  const onStepClickHelper = (index: number) => {
-    if (steps[index].completed) {
-      props.onStepClick(index as Page);
-    }
-  };
-
   return (
     <div className="flex flex-row justify-center items-center ">
       {steps.map((step, index) => (
@@ -38,8 +32,8 @@ export default function Steps(props: Props) {
         >
           <Button
             variant="link"
-            onClick={() => onStepClickHelper(index)}
-            disabled={!step.completed && index === props.currentStep - 1}
+            onClick={() => props.onStepClick(index as Page)}
+            disabled={!step.completed && index !== props.currentStep}
           >
             <div className="flex flex-row justify-center items-center gap-1">
               <Icon
