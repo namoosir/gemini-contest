@@ -33,6 +33,7 @@ export default function Steps(props: Props) {
           <Button
             variant="link"
             onClick={() => props.onStepClick(index as Page)}
+            disabled={!step.completed && index !== props.currentStep}
           >
             <div className="flex flex-row justify-center items-center gap-1">
               <Icon
@@ -53,6 +54,7 @@ export default function Steps(props: Props) {
             >
               {step.label}
             </p>
+            {/*For dash: --- */}
           </Button>
           {index < steps.length - 1 && (
             <div
