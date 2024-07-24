@@ -4,23 +4,25 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "../components/ui/chart";
+} from "./ui/chart";
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
-export const RadialChart = () => {
+interface Props {
+  data: number;
+}
+
+export const PreviousResultsRadialChart: React.FC<Props> = ({ data }) => {
   const [avgScore, setAvgScore] = useState<number>(0);
-  const INNER_RADIUS = 90;
-  const OUTER_RADIUS = INNER_RADIUS * 1.625;
-  const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 100;
-  const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.345;
+  const INNER_RADIUS = 17;
+  const OUTER_RADIUS = INNER_RADIUS * 1.625; //Properly Calculated
+  const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 20;
+  const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.5;
 
   useEffect(() => {
-    setAvgScore(90); //Need to pull score from database over the week to calculate average score
+    setAvgScore(data); //Need to pull score from database over the week to calculate average score
   }, []);
 
-  const chartData = [
-    { month: "january", averageScore: avgScore, improvability: 100 - avgScore },
-  ]; 
+  const chartData = [{ averageScore: avgScore, improvability: 100 - avgScore }];
 
   const chartConfig = {
     averageScore: {
@@ -31,9 +33,9 @@ export const RadialChart = () => {
       label: "Improvability",
       color: "hsl(var(--primary-foregrund))",
     },
-  } satisfies ChartConfig; 
+  } satisfies ChartConfig;
 
-  const totalScore = chartData[0].averageScore; 
+  const totalScore = chartData[0].averageScore;
 
   return (
     <div
@@ -67,17 +69,10 @@ export const RadialChart = () => {
                     <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
                       <tspan
                         x={viewBox.cx}
-                        y={(viewBox.cy || 0) - 16}
-                        className="fill-foreground text-2xl font-bold"
-                      >
-                        {totalScore.toLocaleString() + "%"}
-                      </tspan>
-                      <tspan
-                        x={viewBox.cx}
                         y={(viewBox.cy || 0) + 4}
-                        className="fill-muted-foreground"
+                        className="fill-foreground text-xs"
                       >
-                        Average Weekly Score
+                        {totalScore.toLocaleString()}
                       </tspan>
                     </text>
                   );
