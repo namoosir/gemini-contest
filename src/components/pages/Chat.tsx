@@ -1,12 +1,5 @@
 import { InterviewBot } from "@/services/gemini/JobDParserBot";
-import {
-  ChatMessage,
-  getAPIKey,
-  initVoiceWebSocket,
-  initMediaRecorder,
-  playbackGeminiResponse,
-  fetchAudioBuffer,
-} from "@/services/voice/TTS";
+import { ChatMessage, fetchAudio } from "@/services/voice/TTS";
 import { useRef, useState, useEffect, useCallback } from "react";
 import Chats from "../Chats";
 import AnimatedMic from "../AnimatedMic";
@@ -43,17 +36,51 @@ import {
 } from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
+import useAudioStore from "@/hooks/useAudioStore";
+import useDeepgram from "@/hooks/useDeepgram";
+import useMicrophone from "@/hooks/useMicrophone";
+import { useNowPlaying } from "react-nowplaying";
+import { useQueue } from "@uidotdev/usehooks";
+import {
+  LiveClient,
+  LiveTranscriptionEvent,
+  LiveTranscriptionEvents,
+} from "@deepgram/sdk";
 
 function Chat() {
+  const { connection, connectionReady } = useDeepgram();
+  const { addAudio } = useAudioStore();
+  const { player, play: startAudio, pause: pauseAudio } = useNowPlaying();
+  const {
+    microphoneOpen,
+    queue: microphoneQueue,
+    queueSize: microphoneQueueSize,
+    firstBlob,
+    removeBlob,
+    stream,
+    startMicrophone,
+    stopMicrophone,
+    analyser,
+  } = useMicrophone();
+  const { db } = useFirebaseContext();
+  const { user } = useAuthContext();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const {
+    add: addTranscriptPart,
+    queue: transcriptParts,
+    clear: clearTranscriptParts,
+  } = useQueue<{ is_final: boolean; speech_final: boolean; text: string }>([]);
+
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [isProcessing, setProcessing] = useState(false);
+
   const [chat, setChat] = useState<ChatMessage[]>([]);
-  const [transcript, setTranscript] = useState<string>("");
-  const [isRecording, setIsRecording] = useState<boolean>(false);
   const [amplitude, setAmplitude] = useState<number>(2.3);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [resume, setResume] = useState<Resume | undefined>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSocketSetupLoading, setIsSocketSetupLoading] =
-    useState<boolean>(true);
   const [confirmedNavigation, setConfirmedNavigation] =
     useState<boolean>(false);
   const [hasInterviewStarted, setHasInterviewStarted] =
@@ -62,22 +89,15 @@ function Chat() {
   const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
   const [isDoneDialogOpen, setIsDoneDialogOpen] = useState<boolean>(false);
 
-  const socketRef = useRef<WebSocket | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const socketIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const isRecordingRef = useRef<boolean>(isRecording);
-  const audioContextRef = useRef<AudioContext | undefined>();
-  const micAudioContextRef = useRef<AudioContext | undefined>();
-  const streamRef = useRef<MediaStream | undefined>();
-  const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
   const locationStateRef = useRef<InterviewProps | undefined>();
 
-  const { functions, db } = useFirebaseContext();
-  const { user } = useAuthContext();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const utteranceText = (event: LiveTranscriptionEvent) => {
+    const words = event.channel.alternatives[0].words;
+    return words
+      .map((word: any) => word.punctuated_word ?? word.word)
+      .join(" ");
+  };
 
   useEffect(() => {
     if (isInterviewProps(location.state)) {
@@ -117,9 +137,7 @@ function Chat() {
   };
 
   const updateAmplitude = useCallback(() => {
-    if (!analyserRef.current) return;
-
-    const analyser = analyserRef.current;
+    if (!analyser) return;
 
     const newAmplitude = calculateAmplitudeFromAnalyser(analyser);
     const smoothingFactor = 0.1;
@@ -130,52 +148,10 @@ function Chat() {
       return Math.max(Math.min(smoothedAmplitude, 3.8), 2.3);
     });
 
-    if (isRecordingRef.current) {
+    if (microphoneOpen) {
       requestAnimationFrame(updateAmplitude);
     }
-  }, []);
-
-  useEffect(() => {
-    async function fetchKey() {
-      const apiKey = await getAPIKey();
-      await initWebSocket(apiKey);
-
-      setIsSocketSetupLoading(false);
-    }
-
-    async function initWebSocket(apiKey?: string) {
-      socketRef.current = initVoiceWebSocket(
-        apiKey,
-        socketIntervalRef,
-        setTranscript,
-        setChat
-      );
-
-      const { mediaRecorder, stream: mediaStream } = await initMediaRecorder(
-        socketRef.current
-      );
-
-      mediaRecorderRef.current = mediaRecorder;
-
-      const audioContext = new AudioContext();
-
-      micAudioContextRef.current = audioContext;
-
-      streamRef.current = mediaStream;
-
-      const analyser = audioContext.createAnalyser();
-      sourceRef.current = audioContext.createMediaStreamSource(mediaStream);
-      sourceRef.current.connect(analyser);
-
-      analyserRef.current = analyser;
-    }
-
-    void fetchKey();
-
-    return () => {
-      void cleanup();
-    };
-  }, []);
+  }, [microphoneOpen, analyser]);
 
   useEffect(() => {
     const fetchResume = async () => {
@@ -191,21 +167,10 @@ function Chat() {
   }, [user, db]);
 
   useEffect(() => {
-    if (resume && !isSocketSetupLoading) {
+    if (resume) {
       setIsLoading(false);
     }
-  }, [resume, isSocketSetupLoading]);
-
-  useEffect(() => {
-    isRecordingRef.current = isRecording;
-
-    if (isRecording) {
-      mediaRecorderRef.current?.resume();
-      requestAnimationFrame(updateAmplitude);
-    } else {
-      mediaRecorderRef.current?.pause();
-    }
-  }, [isRecording, updateAmplitude]);
+  }, [resume]);
 
   useEffect(() => {
     if (seconds > 0) {
@@ -224,133 +189,202 @@ function Chat() {
     setConfirmedNavigation(true);
   }, [interviewEnded]);
 
-  async function handleResponse(text: string, done?: boolean) {
-    const data = await fetchAudioBuffer(text, functions);
-    const audioCtx = new AudioContext();
+  const startRecording = useCallback(() => {
+    startMicrophone();
 
-    audioContextRef.current = audioCtx;
+    setChat((history) => [...history, { sender: "user", content: "" }]);
 
-    setChat((history) => [...history, { sender: "gemini", content: "" }]);
-    await playbackGeminiResponse(data, setChat, audioContextRef.current);
-    await audioContextRef.current.close();
+    updateAmplitude();
+  }, [startMicrophone, updateAmplitude]);
 
-    if (!done) startRecording();
-  }
+  const [currentUtterance, setCurrentUtterance] = useState<string>();
 
-  const startRecording = () => {
-    try {
-      setTranscript("");
-      setChat((history) => [...history, { sender: "user", content: "" }]);
-      setIsRecording(true);
-      updateAmplitude();
-    } catch (error) {
-      console.error("Error accessing media devices.", error);
-    }
-  };
+  const requestTtsAudio = useCallback(
+    async (message: string) => {
+      const blob = await fetchAudio(message);
+      await startAudio(blob, "audio/mp3", message).then(() => {
+        addAudio({
+          id: "asd",
+          blob,
+        });
+      });
+    },
+    [addAudio, startAudio]
+  );
 
-  const stopRecording = async () => {
-    setIsRecording(false);
-    if (seconds === 0) {
-      await geminiRef.current.handleInterviewFinish(transcript);
-      await handleResponse(FINAL_INTERVIEW_RESPONSE, true);
-      setInterviewEnded(true);
-    } else {
-      await handleResponse(await geminiRef.current.prompt(transcript));
-    }
-  };
+  const stopRecording = useCallback(async () => {
+    if (!microphoneOpen) return;
+
+    stopMicrophone();
+
+    clearTranscriptParts();
+    setCurrentUtterance(undefined);
+
+    const geminiResponse = await geminiRef.current.prompt(
+      chat[chat.length - 1].content
+    );
+
+    setChat((history) => [
+      ...history,
+      { content: geminiResponse, sender: "gemini" },
+    ]);
+
+    await requestTtsAudio(geminiResponse);
+
+    if (player) player.onended = () => startRecording();
+    else console.log("wtf");
+  }, [
+    requestTtsAudio,
+    chat,
+    clearTranscriptParts,
+    microphoneOpen,
+    player,
+    startRecording,
+    stopMicrophone,
+  ]);
 
   const handleAlertContinue = () => {
     confirmNavigation();
   };
 
-  const handleAlertCancel = async () => {
+  const handleAlertCancel = () => {
     cancelNavigation();
-    await resumeInterview();
+
     setIsDialogOpen(false);
   };
 
-  const pauseInterview = useCallback(async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.pause();
-      await micAudioContextRef.current?.suspend();
-    } else {
-      await audioContextRef.current?.suspend();
-    }
-  }, [isRecording]);
-
   useEffect(() => {
     if (isDialogOpen) {
-      void pauseInterview();
+      pauseAudio && pauseAudio();
+      void stopRecording();
     }
-  }, [isDialogOpen, pauseInterview]);
-
-  const resumeInterview = async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.resume();
-      await micAudioContextRef.current?.resume();
-    } else {
-      await audioContextRef.current?.resume();
-    }
-  };
+  }, [isDialogOpen, pauseAudio, stopRecording]);
 
   const onXClicked = () => {
     setIsDialogOpen(true);
   };
 
-  const cleanup = async () => {
-    setIsRecording(false);
+  const startInterview = useCallback(async () => {
+    if (!initialLoad) return;
 
-    if (socketIntervalRef.current) {
-      clearInterval(socketIntervalRef.current);
-      socketIntervalRef.current = null;
-    }
-
-    if (socketRef.current?.readyState === 1) {
-      const closeMessage = JSON.stringify({ type: "CloseStream" });
-      socketRef.current.send(closeMessage);
-    }
-
-    socketRef.current?.close();
-    socketRef.current = null;
-
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current = null;
-
-    analyserRef.current?.disconnect();
-    analyserRef.current = null;
-
-    if (audioContextRef.current?.state !== "closed") {
-      await audioContextRef.current?.close();
-      audioContextRef.current = undefined;
-    }
-
-    if (micAudioContextRef.current?.state !== "closed") {
-      await micAudioContextRef.current?.close();
-      micAudioContextRef.current = undefined;
-    }
-
-    const tracks = streamRef.current?.getTracks();
-    tracks?.forEach((track) => {
-      track.stop();
-    });
-    streamRef.current = undefined;
-
-    sourceRef.current?.disconnect();
-    sourceRef.current = undefined;
-  };
-
-  const startInterview = async () => {
+    setInitialLoad(false);
     setHasInterviewStarted(true);
     setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
-    await handleResponse(
-      await geminiRef.current.initInterviewForJobD(
-        locationStateRef.current!.jobDescription ??
-          "No job description provided",
-        locationStateRef.current!.interviewType,
-        resume?.data ?? "No resume provided"
-      )
+
+    const greetingMessage = await geminiRef.current.initInterviewForJobD(
+      locationStateRef.current!.jobDescription ?? "No job description provided",
+      locationStateRef.current!.interviewType,
+      resume?.data ?? "No resume provided"
     );
-  };
+
+    setChat((history) => [
+      ...history,
+      { content: greetingMessage, sender: "gemini" },
+    ]);
+    await requestTtsAudio(greetingMessage);
+
+    if (player) player.onended = () => startRecording();
+  }, [player, requestTtsAudio, resume?.data, initialLoad, startRecording]);
+
+  useEffect(() => {
+    const onTranscript = (data: LiveTranscriptionEvent) => {
+      const content = utteranceText(data);
+
+      // i only want an empty transcript part if it is speech_final
+      if (content !== "" || data.speech_final) {
+        /**
+         * use an outbound message queue to build up the unsent utterance
+         */
+        addTranscriptPart({
+          is_final: data.is_final!,
+          speech_final: data.speech_final!,
+          text: content,
+        });
+      }
+    };
+    const onOpen = (connection: LiveClient) => {
+      connection.addListener(LiveTranscriptionEvents.Transcript, onTranscript);
+    };
+
+    if (connection) {
+      connection.addListener(LiveTranscriptionEvents.Open, onOpen);
+    }
+
+    return () => {
+      connection?.removeListener(LiveTranscriptionEvents.Open, onOpen);
+      connection?.removeListener(
+        LiveTranscriptionEvents.Transcript,
+        onTranscript
+      );
+    };
+  }, [addTranscriptPart, connection]);
+
+  const getCurrentUtterance = useCallback(() => {
+    return transcriptParts.filter(({ is_final, speech_final }, i, arr) => {
+      return is_final || speech_final || (!is_final && i === arr.length - 1);
+    });
+  }, [transcriptParts]);
+
+  useEffect(() => {
+    const parts = getCurrentUtterance();
+    const content = parts
+      .map(({ text }) => text)
+      .join(" ")
+      .trim();
+
+    if (!content) return;
+
+    setCurrentUtterance(content);
+  }, [getCurrentUtterance, clearTranscriptParts]);
+
+  useEffect(() => {
+    if (!currentUtterance) return;
+
+    setChat((history) => {
+      const newHistory = [...history];
+      const lastItem = newHistory[newHistory.length - 1];
+
+      newHistory[newHistory.length - 1] = {
+        ...lastItem,
+        content: currentUtterance,
+      };
+
+      return newHistory;
+    });
+  }, [currentUtterance]);
+
+  useEffect(() => {
+    const processQueue = () => {
+      if (microphoneQueueSize > 0 && !isProcessing) {
+        setProcessing(true);
+
+        if (connectionReady) {
+          const nextBlob = firstBlob;
+
+          if (nextBlob && nextBlob?.size > 0) {
+            connection?.send(nextBlob);
+          }
+
+          removeBlob();
+        }
+
+        const waiting = setTimeout(() => {
+          clearTimeout(waiting);
+          setProcessing(false);
+        }, 200);
+      }
+    };
+
+    processQueue();
+  }, [
+    connection,
+    microphoneQueue,
+    removeBlob,
+    firstBlob,
+    microphoneQueueSize,
+    isProcessing,
+    connectionReady,
+  ]);
 
   const loader = (
     <div className="flex h-full w-full justify-center items-center gap-8 flex-col text-2xl leading-none tracking-tight">
@@ -410,7 +444,7 @@ function Chat() {
 
           <div className="w-40 h-40 flex items-center justify-center">
             <AnimatedMic
-              isRecording={isRecording}
+              isRecording={microphoneOpen}
               amplitude={amplitude}
               stopRecording={stopRecording}
             />

@@ -1,27 +1,33 @@
-import { createClient } from "@deepgram/sdk";
+import { Readable } from 'stream';
 import https from "https";
 import "dotenv/config";
-
-import { getAudioBuffer } from "./utils";
+import axios from 'axios'
 
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
-const deepgram = createClient(DEEPGRAM_API_KEY);
+const DEEPGRAM_BASE_URL = 'https://api.deepgram.com'
 
 export const getTTS = async (text: string) => {
-  const response = await deepgram.speak.request(
-    { text },
-    {
-      model: "aura-helios-en",
-      encoding: "linear16",
-      container: "wav",
-    }
-  );
+  const model = "aura-asteria-en";
+  
+  try {
+    const response = await axios({
+      method: 'POST',
+      url: `${DEEPGRAM_BASE_URL}/v1/speak?model=${model}`,
+      data: JSON.stringify({ text }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `token ${DEEPGRAM_API_KEY}`,
+      },
+      responseType: 'stream', // Stream response
+    });
 
-  const stream = await response.getStream();
-  if (stream) {
-    return await getAudioBuffer(stream);
-  } else {
-    throw new Error("Error generating audio:");
+    if (!response.data) {
+      throw new Error('Unable to get response from API.');
+    }
+
+    return response.data as Readable;
+  } catch (error) {
+      throw new Error((error as Error).message || 'An error occurred.');
   }
 };
 

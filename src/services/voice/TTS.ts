@@ -31,6 +31,20 @@ export const fetchAudioBuffer = async (
   }
 };
 
+
+export const fetchAudio = async (text: string) => {
+  const response = await fetch(`${BASE_URL}/audio/tts`, {
+    cache: "no-store",
+    method: "POST",
+    body: JSON.stringify({ text }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  return await response.blob()
+}
+
 export const getAPIKey = async () => {
   const response = await fetch(`${BASE_URL}/audio/stt/key`, {
     method: "POST",
@@ -135,7 +149,7 @@ export const playbackGeminiResponse = async (
   }
 };
 
-const updateLatestChat = (
+export const updateLatestChat = (
   text: string,
   setChat: React.Dispatch<React.SetStateAction<ChatMessage[]>>
 ) => {
