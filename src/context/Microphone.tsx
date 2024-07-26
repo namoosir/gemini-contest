@@ -20,7 +20,7 @@ interface MicrophoneContext {
   queueSize: number;
   queue: Blob[];
   stream: MediaStream | undefined;
-  analyser: AnalyserNode | undefined
+  analyser: AnalyserNode | undefined;
 }
 
 interface MicrophoneContextInterface {
@@ -35,7 +35,7 @@ const MicrophoneContextProvider = ({
   const [microphone, setMicrophone] = useState<MediaRecorder>();
   const [stream, setStream] = useState<MediaStream>();
   const [microphoneOpen, setMicrophoneOpen] = useState(false);
-  const [analyser, setAnalyser] = useState<AnalyserNode>()
+  const [analyser, setAnalyser] = useState<AnalyserNode>();
 
   const {
     add: enqueueBlob, // addMicrophoneBlob,
@@ -64,7 +64,7 @@ const MicrophoneContextProvider = ({
       const analyserTemp = audioContext.createAnalyser();
       const connectedSource = audioContext.createMediaStreamSource(stream);
       connectedSource.connect(analyserTemp);
-      setAnalyser(analyserTemp)
+      setAnalyser(analyserTemp);
     }
 
     if (!microphone) {
@@ -125,7 +125,7 @@ const MicrophoneContextProvider = ({
         queueSize,
         queue,
         stream,
-        analyser
+        analyser,
       }}
     >
       {children}

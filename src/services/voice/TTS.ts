@@ -31,7 +31,6 @@ export const fetchAudioBuffer = async (
   }
 };
 
-
 export const fetchAudio = async (text: string) => {
   const response = await fetch(`${BASE_URL}/audio/tts`, {
     cache: "no-store",
@@ -42,8 +41,8 @@ export const fetchAudio = async (text: string) => {
     },
   });
 
-  return await response.blob()
-}
+  return await response.blob();
+};
 
 export const getAPIKey = async () => {
   const response = await fetch(`${BASE_URL}/audio/stt/key`, {
@@ -67,7 +66,7 @@ export const initVoiceWebSocket = (
   setChat: React.Dispatch<React.SetStateAction<ChatMessage[]>>
 ) => {
   const socket = new WebSocket(
-    "wss://api.deepgram.com/v1/listen?punctuate=true",
+    "wss://api.deepgram.com/v1/listen?smart_format=true",
     ["token", apiKey!]
   );
 
@@ -123,30 +122,28 @@ export const initMediaRecorder = async (socket: WebSocket | null) => {
 };
 
 export const playbackGeminiResponse = async (
-  data: { word: string; buffer: Uint8Array }[],
+  data: { word: string; buffer: ArrayBuffer },
   setChat: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
   audioCtx: AudioContext
 ) => {
-  for (const chunk of data) {
-    updateLatestChat(chunk.word, setChat);
+  updateLatestChat(data.word, setChat);
+  // await playAudio(data.buffer, audioCtx);
+  // const typedArray = new Uint8Array(Object.values(chunk.buffer)).buffer;
+  // const arrayBuffer = new Uint8Array(Object.values(chunk.buffer)).buffer;
+  const audioBuffer = await audioCtx.decodeAudioData(data.buffer);
 
-    // const typedArray = new Uint8Array(Object.values(chunk.buffer)).buffer;
-    const arrayBuffer = new Uint8Array(Object.values(chunk.buffer)).buffer;
-    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  // Create a buffer source and play the audio
+  const source = audioCtx.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(audioCtx.destination);
+  source.start();
 
-    // Create a buffer source and play the audio
-    const source = audioCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(audioCtx.destination);
-    source.start();
-
-    // Wait for the current chunk to finish playing
-    await new Promise<void>((resolve) => {
-      source.onended = () => {
-        resolve();
-      };
-    });
-  }
+  // Wait for the current chunk to finish playing
+  await new Promise<void>((resolve) => {
+    source.onended = () => {
+      resolve();
+    };
+  });
 };
 
 export const updateLatestChat = (
@@ -159,7 +156,7 @@ export const updateLatestChat = (
 
     newHistory[newHistory.length - 1] = {
       ...lastItem,
-      content: lastItem.content + " " + text,
+      content: lastItem.content + "" + text,
     };
 
     return newHistory;
