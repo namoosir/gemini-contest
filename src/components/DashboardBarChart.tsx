@@ -16,134 +16,83 @@ import {
 } from "./ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
 import { useEffect, useState } from "react";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
+import useAuthContext from "@/hooks/useAuthContext";
+import {
+  getUserInterviewHistory,
+  Interview,
+} from "@/services/firebase/saveInterviewSevice";
 
 export const DashboardBarChart = () => {
-  const [barChartData, setBarChartData] = useState<
-    Array<{ date: string; performance: number }>
-  >([]);
+  const [barChartData, setBarChartData] = useState<Interview[]>([]);
   const [avgPerformance, setAvgPerformance] = useState<number>();
   const [overallMonthScore, setOverallMonthScore] = useState<number>();
   const [percentageMonthIncrease, setPercentageMonthIncrease] =
     useState<number>();
-
-  const examplePrevMonthData = [
-    {
-      date: "2024-01-01",
-      performance: 2000,
-    },
-    {
-      date: "2024-01-02",
-      performance: 2100,
-    },
-    {
-      date: "2024-01-03",
-      performance: 2200,
-    },
-    {
-      date: "2024-01-04",
-      performance: 1300,
-    },
-    {
-      date: "2024-01-05",
-      performance: 1400,
-    },
-    {
-      date: "2024-01-06",
-      performance: 2500,
-    },
-    {
-      date: "2024-01-07",
-      performance: 1600,
-    },
-    {
-      date: "2024-01-08",
-      performance: 200,
-    },
-    {
-      date: "2024-01-09",
-      performance: 400,
-    },
-    {
-      date: "2024-01-10",
-      performance: 600,
-    },
-    {
-      date: "2024-01-10",
-      performance: 800,
-    },
-  ];
-
-  const exampleData = [
-    {
-      date: "2024-02-01",
-      performance: 3000,
-    },
-    {
-      date: "2024-02-02",
-      performance: 3100,
-    },
-    {
-      date: "2024-02-03",
-      performance: 3200,
-    },
-    {
-      date: "2024-02-04",
-      performance: 2300,
-    },
-    {
-      date: "2024-02-05",
-      performance: 2400,
-    },
-    {
-      date: "2024-02-06",
-      performance: 3500,
-    },
-    {
-      date: "2024-02-07",
-      performance: 2600,
-    },
-    {
-      date: "2024-02-08",
-      performance: 300,
-    },
-    {
-      date: "2024-02-09",
-      performance: 500,
-    },
-    {
-      date: "2024-02-10",
-      performance: 700,
-    },
-    {
-      date: "2024-02-10",
-      performance: 900,
-    },
-  ];
+  const { user } = useAuthContext();
+  const { db } = useFirebaseContext();
 
   useEffect(() => {
-    setBarChartData(() => {
-      const currMonth  = getPerformanceSum(exampleData);
-      const prevMonth = getPerformanceSum(examplePrevMonthData);
-      getAvgPerformance(currMonth); //Need to pull data from database, use query to gett current month and previous month
-      getOverallMonthScore(currMonth);
-      getPercentageMonthIncrease(currMonth, prevMonth);
+    const init = async () => {
+      const currDate = new Date();
+      const currMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth(),
+        1
+      ).toLocaleDateString();
 
-      return exampleData;
-    });
+      const nextMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth() + 1,
+        1
+      ).toLocaleDateString();
+
+      const prevMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth() - 1,
+        1
+      ).toLocaleDateString();
+
+      const currMonthData = await getUserInterviewHistory(
+        db,
+        user!,
+        currMonth,
+        nextMonth
+      );
+
+      const prevMonthData = await getUserInterviewHistory(
+        db,
+        user!,
+        prevMonth,
+        currMonth
+      );
+
+      const currMonthSum = getPerformanceSum(currMonthData);
+      const prevMonthSum = getPerformanceSum(prevMonthData);
+      getAvgPerformance(currMonthSum);
+      getOverallMonthScore(currMonthSum);
+      getPercentageMonthIncrease(currMonthSum, prevMonthSum);
+      setBarChartData(currMonthData!);
+    };
+
+    init();
   }, []);
 
-  const getPerformanceSum = (data: { date: string; performance: number }[]) => {
+  const getPerformanceSum = (data: Interview[] | null) => {
     let sum = 0;
-    for (let i = 0; i < data.length; i++) {
-      sum += data[i].performance;
-    }
-    let length = data.length
+    let length = 0;
+    if (data) {
+      for (let i = 0; i < data.length; i++) {
+        sum += data[i].score;
+      }
 
-    return {sum, length};
-  }
- 
- 
-  const getAvgPerformance = (currMonth: {sum: number, length: number}) => {
+      length = data.length;
+    }
+
+    return { sum, length };
+  };
+
+  const getAvgPerformance = (currMonth: { sum: number; length: number }) => {
     setAvgPerformance(Math.floor(currMonth.sum / currMonth.length));
   };
 
@@ -155,7 +104,6 @@ export const DashboardBarChart = () => {
     currMonth: { sum: number; length: number },
     prevMonth: { sum: number; length: number }
   ) => {
-
     const currSum = currMonth.sum;
     const prevSum = prevMonth.sum;
 
@@ -181,8 +129,8 @@ export const DashboardBarChart = () => {
       <CardContent>
         <ChartContainer
           config={{
-            performance: {
-              label: "Performance: ",
+            score: {
+              label: "Score: ",
               color: "hsl(var(--primary-foreground))",
             },
           }}
@@ -196,14 +144,14 @@ export const DashboardBarChart = () => {
             data={barChartData}
           >
             <Bar
-              dataKey="performance"
+              dataKey="score"
               fill="hsl(var(--primary))"
               radius={5}
               fillOpacity={0.6}
               activeBar={<Rectangle fillOpacity={0.8} />}
             />
             <XAxis
-              dataKey="date"
+              dataKey="dateCreated"
               tickLine={false}
               axisLine={false}
               tickMargin={4}
@@ -211,8 +159,8 @@ export const DashboardBarChart = () => {
                 return new Date(value).toLocaleDateString("en-US");
               }}
             />
+            (
             <ChartTooltip
-              defaultIndex={2}
               content={
                 <ChartTooltipContent
                   hideIndicator
@@ -227,6 +175,7 @@ export const DashboardBarChart = () => {
               }
               cursor={false}
             />
+            )
             <ReferenceLine
               y={avgPerformance}
               stroke="hsl(var(--muted-foreground))"

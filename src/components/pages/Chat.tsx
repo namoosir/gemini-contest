@@ -26,7 +26,21 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { useBeforeUnload, useBlocker } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import useAuthContext from "@/hooks/useAuthContext";
+import {
+  addInterview,
+  Interview,
+} from "@/services/firebase/saveInterviewSevice";
+import { db } from "@/FirebaseConfig";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -35,8 +49,11 @@ function Chat() {
   const [amplitude, setAmplitude] = useState<number>(2.3);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [lastLocation, setLastLocation] = useState<null | string>(null);
-  const [confirmedNavigation, setConfirmedNavigation] = useState<boolean>(false);
-  const [hasInterviewStarted, setHasInterviewStarted] = useState<boolean>(false)
+  const [confirmedNavigation, setConfirmedNavigation] =
+    useState<boolean>(false);
+  const [hasInterviewStarted, setHasInterviewStarted] =
+    useState<boolean>(false);
+  // const [data, setData] = useState<interviewHistory | undefined>();
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -50,6 +67,8 @@ function Chat() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { storage, db } = useFirebaseContext();
+  const { user } = useAuthContext();
 
   const gemini = new InterviewBot();
 
@@ -131,7 +150,7 @@ function Chat() {
   useEffect(() => {
     async function fetchKey() {
       const apiKey = await getAPIKey();
-      await initWebSocket(apiKey)
+      await initWebSocket(apiKey);
     }
 
     async function initWebSocket(apiKey?: string) {
@@ -245,6 +264,55 @@ function Chat() {
     setIsDialogOpen(true);
   };
 
+  const evaluateScore = async () => {
+    const randomIntFromInterval = (min: number, max: number) => {
+      // min and max included
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    };
+
+    //Get The Score and return a number to the handleAddChat function
+    return randomIntFromInterval(0, 100); //temp score
+  };
+
+  //TODO: In Chat.tsx Line 267-275, make sure you update the right score
+
+  const prepareData = async () => {
+    if (user) {
+      const interviewData: Interview = {
+        user: user.uid,
+        chat: chat,
+        score: await evaluateScore(),
+      };
+      console.log(interviewData);
+      // setData(interviewData);
+      return interviewData;
+    } else {
+      console.error("User is not authenticated");
+    }
+  };
+
+  const handleAddChat = async () => {
+    const data = await prepareData();
+    console.log("This is the data", data);
+
+    if (!data) {
+      console.error("Data is not set");
+      return;
+    }
+
+    try {
+      const result = await addInterview(db, data);
+      if (result) {
+        console.log("Interview history added successfully");
+        // await getUserInterviewHistory(db, user!);
+      } else {
+        console.error("Failed to add interview history");
+      }
+    } catch (error) {
+      console.error("Error adding interview history:", error);
+    }
+  };
+
   const cleanup = async () => {
     setIsRecording(false);
 
@@ -278,10 +346,16 @@ function Chat() {
       track.stop();
     });
     streamRef.current = undefined;
-    
+
     sourceRef.current?.disconnect();
     sourceRef.current = undefined;
-    
+
+    console.log("This interview has concluded. Here is your chat history: ");
+    console.log(chat);
+
+    if (chat.length > 0) {
+      await handleAddChat();
+    }
   };
 
   const startInterview = async () => {
@@ -289,38 +363,36 @@ function Chat() {
     await handleResponse(
       await gemini.initInterviewForJobD(location.state.jobDescription)
     );
-  }
+  };
 
   return (
     <div className="flex flex-col h-full">
-
-      {!hasInterviewStarted && 
+      {!hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>
             <CardHeader>
-              <CardTitle>
-                Your Interview
-              </CardTitle>
+              <CardTitle>Your Interview</CardTitle>
               <CardDescription>
-                Your { location.state.interviewDuration } minute { location.state.interviewType } Interview is about to start in { location.state.interviewMode } mode
+                Your {location.state.interviewDuration} minute{" "}
+                {location.state.interviewType} Interview is about to start in{" "}
+                {location.state.interviewMode} mode
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              {/* TODO: ADD A VIDEO PREVIEW OF THE  */}
-            </CardContent>
+            <CardContent>{/* TODO: ADD A VIDEO PREVIEW OF THE  */}</CardContent>
             <CardFooter>
-              <Button onClick={startInterview} className="w-full">Start Interview</Button>
+              <Button onClick={startInterview} className="w-full">
+                Start Interview
+              </Button>
             </CardFooter>
           </Card>
         </div>
-      }
+      )}
 
       <div className="overflow-hidden flex-1">
-        <Chats chats={chat} />
+        <Chats isFromDashboard={false} chats={chat} />
       </div>
 
-
-      {hasInterviewStarted &&
+      {hasInterviewStarted && (
         <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
           <Button
             variant={"secondary"}
@@ -345,14 +417,15 @@ function Chat() {
             <Icon path={mdiClose} className="h-6 w-6" />
           </Button>
         </div>
-      }
+      )}
 
       <AlertDialog open={isDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to quit this interview? None of your answers will be saved.
+              Are you sure you want to quit this interview? None of your answers
+              will be saved.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

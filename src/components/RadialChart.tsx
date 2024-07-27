@@ -6,21 +6,46 @@ import {
   ChartTooltipContent,
 } from "../components/ui/chart";
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
+import {
+  getUserInterviewHistoryWithinWeek,
+  Interview,
+} from "@/services/firebase/saveInterviewSevice";
+import { db } from "@/FirebaseConfig";
+import useAuthContext from "@/hooks/useAuthContext";
 
 export const RadialChart = () => {
   const [avgScore, setAvgScore] = useState<number>(0);
+
   const INNER_RADIUS = 90;
   const OUTER_RADIUS = INNER_RADIUS * 1.625;
   const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 100;
-  const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.345;
+  const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.32;
+
+  const { user } = useAuthContext();
 
   useEffect(() => {
-    setAvgScore(90); //Need to pull score from database over the week to calculate average score
+    const init = async () => {
+      const data = await getUserInterviewHistoryWithinWeek(db, user!);
+
+      setAvgScore(() => {
+        let avg = 0;
+        let sum = 0;
+        if (data) {
+          sum = 0;
+          for (let i = 0; i < data.length; i++) {
+            sum += data[i].score;
+          }
+
+          avg = Math.floor(sum / data.length);
+        }
+        return avg;
+      });
+    };
+
+    init();
   }, []);
 
-  const chartData = [
-    { month: "january", averageScore: avgScore, improvability: 100 - avgScore },
-  ]; 
+  const chartData = [{ averageScore: avgScore, improvability: 100 - avgScore }];
 
   const chartConfig = {
     averageScore: {
@@ -31,9 +56,9 @@ export const RadialChart = () => {
       label: "Improvability",
       color: "hsl(var(--primary-foregrund))",
     },
-  } satisfies ChartConfig; 
+  } satisfies ChartConfig;
 
-  const totalScore = chartData[0].averageScore; 
+  const totalScore = chartData[0].averageScore;
 
   return (
     <div
@@ -42,7 +67,7 @@ export const RadialChart = () => {
       style={{ width: RADIAL_GRAPH_WIDTH }}
     >
       <div
-        className="bg-primary z-50 h-[3px] absolute"
+        className="bg-primary z-50 h-[3px] absolute " //mt-[-5px] h-[5px]
         style={{ width: START_LINE }}
       ></div>
       <ChartContainer
