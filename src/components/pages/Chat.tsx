@@ -5,7 +5,7 @@ import {
   initVoiceWebSocket,
   initMediaRecorder,
   playbackGeminiResponse,
-  fetchAudioBuffer,
+  fetchAudio,
 } from "@/services/voice/TTS";
 import { useRef, useState, useEffect, useCallback } from "react";
 import Chats from "../Chats";
@@ -75,7 +75,7 @@ function Chat() {
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
   const locationStateRef = useRef<InterviewProps | undefined>();
 
-  const { functions, db } = useFirebaseContext();
+  const { db } = useFirebaseContext();
   const { user } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
@@ -226,13 +226,17 @@ function Chat() {
   }, [interviewEnded]);
 
   async function handleResponse(text: string, done?: boolean) {
-    const data = await fetchAudioBuffer(text, functions);
+    const buffer = await fetchAudio(text);
     const audioCtx = new AudioContext();
 
     audioContextRef.current = audioCtx;
 
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
-    await playbackGeminiResponse(data, setChat, audioContextRef.current);
+    await playbackGeminiResponse(
+      { word: text, buffer: await buffer.arrayBuffer() },
+      setChat,
+      audioContextRef.current
+    );
     await audioContextRef.current.close();
 
     if (!done) startRecording();
@@ -346,7 +350,7 @@ function Chat() {
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
-          "No job description provided",
+        "No job description provided",
         locationStateRef.current!.interviewType,
         resume?.data ?? "No resume provided"
       )

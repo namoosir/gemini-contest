@@ -10,8 +10,9 @@ import Chat from "./components/pages/Chat.tsx";
 import Interview from "./components/pages/Interview.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
-import useAuthContext from "./hooks/useAuthContext.tsx";
+import useAuthContext from "./hooks/useAuthContext.ts";
 import PageNotFound from "./components/pages/PageNotFound.tsx";
+import { NowPlayingContextProvider } from "react-nowplaying";
 
 const AppRouter = () => {
   const { user } = useAuthContext();
@@ -35,7 +36,9 @@ const AppRouter = () => {
             path="/chat"
             element={
               <ProtectedRoute>
-                <Chat />
+                    <NowPlayingContextProvider>
+                          <Chat />
+                    </NowPlayingContextProvider>
               </ProtectedRoute>
             }
           />
@@ -49,7 +52,6 @@ const AppRouter = () => {
           />
           <Route path="*" element={<PageNotFound />} />
         </Route>
-        
       </>
     )
   );

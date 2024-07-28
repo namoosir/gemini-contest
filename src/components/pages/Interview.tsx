@@ -114,8 +114,8 @@ const Interview: React.FC = () => {
     setCurrentPage((prevPage: Page): Page => (prevPage - 1) as Page);
   };
 
-  const handleFinish = () => {
-    void uploadResumeToStorage();
+  const handleFinish = async () => {
+    await uploadResumeToStorage();
 
     const params: InterviewProps = {
       jobDescription: jobDescription,

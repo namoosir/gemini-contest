@@ -1,49 +1,68 @@
-import https from "https";
-const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
+export const chunkTextDynamically = (text: string): string[] => {
+  const CLAUSE_BOUNDARIES = /\.|\?|!|;|, (and|but|or|nor|for|yet|so)/;
+  const MAX_CHUNK_LENGTH = 100;
 
-export function segmentTextBySentence(text: string) {
-  return text.match(/[^.!?]+[.!?]/g)?.map((sentence) => sentence.trim());
-}
+  const clauseBoundaries = [
+    ...text.matchAll(new RegExp(CLAUSE_BOUNDARIES, "g")),
+  ];
+  const boundariesIndices = clauseBoundaries.map((boundary) => boundary.index);
 
-export function getDeepgramKey(uid: string) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      method: "POST",
-      hostname: "api.deepgram.com",
-      port: null,
-      path: "/v1/projects/45b47ea9-1093-4586-b289-6ca18b43edf8/keys",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        Authorization: `Token ${DEEPGRAM_API_KEY}`,
-      },
-    };
+  const chunks: string[] = [];
+  let start = 0;
 
-    const req = https.request(options, function (res) {
-      const chunks: Buffer[] = [];
+  for (const boundaryIndex of boundariesIndices) {
+    const chunk = text.slice(start, boundaryIndex! + 1).trim();
+    if (chunk.length <= MAX_CHUNK_LENGTH) {
+      chunks.push(chunk);
+    } else {
+      const subchunks = chunk.split(",");
+      let tempChunk = "";
+      for (const subchunk of subchunks) {
+        if (tempChunk.length + subchunk.length <= MAX_CHUNK_LENGTH) {
+          tempChunk += subchunk + ",";
+        } else {
+          if (tempChunk.split(" ").length >= 3) {
+            chunks.push(tempChunk.trim());
+          }
+          tempChunk = subchunk + ",";
+        }
+      }
+      if (tempChunk) {
+        if (tempChunk.split(" ").length >= 3) {
+          chunks.push(tempChunk.trim());
+        }
+      }
+    }
+    start = boundaryIndex! + 1;
+  }
 
-      res.on("data", function (chunk: Buffer) {
-        chunks.push(chunk);
-      });
+  const remainingText = text.slice(start).trim();
+  if (remainingText) {
+    const remainingSubchunks = [];
+    for (let i = 0; i < remainingText.length; i += MAX_CHUNK_LENGTH) {
+      remainingSubchunks.push(remainingText.slice(i, i + MAX_CHUNK_LENGTH));
+    }
+    chunks.push(...remainingSubchunks);
+  }
 
-      res.on("end", function () {
-        const body = Buffer.concat(chunks);
-        console.log(body.toString());
-        resolve(body.toString());
-      });
-    });
+  return chunks;
+};
 
-    req.on("error", function (error: any) {
-      reject(error);
-    });
+export const getAudioBuffer = async (response: ReadableStream<Uint8Array>) => {
+  const reader = response.getReader();
+  const chunks = [];
 
-    req.write(
-      JSON.stringify({
-        time_to_live_in_seconds: 60,
-        comment: uid,
-        scopes: ["usage:write"],
-      })
-    );
-    req.end();
-  });
-}
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    chunks.push(value);
+  }
+
+  const dataArray = chunks.reduce(
+    (acc, chunk) => Uint8Array.from([...acc, ...chunk]),
+    new Uint8Array(0)
+  );
+
+  return Buffer.from(dataArray.buffer);
+};
