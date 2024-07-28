@@ -8,7 +8,7 @@ const DEEPGRAM_BASE_URL = 'https://api.deepgram.com'
 
 export const getTTS = async (text: string) => {
   const model = "aura-asteria-en";
-  
+
   try {
     const response = await axios({
       method: 'POST',
@@ -27,7 +27,7 @@ export const getTTS = async (text: string) => {
 
     return response.data as Readable;
   } catch (error) {
-      throw new Error((error as Error).message || 'An error occurred.');
+    throw new Error((error as Error).message || 'An error occurred.');
   }
 };
 

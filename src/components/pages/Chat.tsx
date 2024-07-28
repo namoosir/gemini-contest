@@ -350,7 +350,7 @@ function Chat() {
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
-          "No job description provided",
+        "No job description provided",
         locationStateRef.current!.interviewType,
         resume?.data ?? "No resume provided"
       )

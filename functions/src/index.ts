@@ -26,20 +26,20 @@ app.post("/audio/tts", async (req, res) => {
     let { text } = req.body
 
     text = text
-    .replaceAll("¡", "")
-    .replaceAll("https://", "")
-    .replaceAll("http://", "")
-    .replaceAll(".com", " dot com")
-    .replaceAll(".org", " dot org")
-    .replaceAll(".co.uk", " dot co dot UK")
-    .replaceAll(/```[\s\S]*?```/g, "\nAs shown on the app.\n")
-    .replaceAll(
-      /([a-zA-Z0-9])\/([a-zA-Z0-9])/g,
-      (_: any, precedingText: string, followingText: string) => {
-        return precedingText + " forward slash " + followingText;
-      }
-    );
-  
+      .replaceAll("¡", "")
+      .replaceAll("https://", "")
+      .replaceAll("http://", "")
+      .replaceAll(".com", " dot com")
+      .replaceAll(".org", " dot org")
+      .replaceAll(".co.uk", " dot co dot UK")
+      .replaceAll(/```[\s\S]*?```/g, "\nAs shown on the app.\n")
+      .replaceAll(
+        /([a-zA-Z0-9])\/([a-zA-Z0-9])/g,
+        (_: any, precedingText: string, followingText: string) => {
+          return precedingText + " forward slash " + followingText;
+        }
+      );
+
     const responseBody = await getTTS(text)
     res.setHeader('Content-Type', 'audio/mp3')
 

@@ -127,9 +127,6 @@ export const playbackGeminiResponse = async (
   audioCtx: AudioContext
 ) => {
   updateLatestChat(data.word, setChat);
-  // await playAudio(data.buffer, audioCtx);
-  // const typedArray = new Uint8Array(Object.values(chunk.buffer)).buffer;
-  // const arrayBuffer = new Uint8Array(Object.values(chunk.buffer)).buffer;
   const audioBuffer = await audioCtx.decodeAudioData(data.buffer);
 
   // Create a buffer source and play the audio
