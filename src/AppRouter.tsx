@@ -12,9 +12,6 @@ import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.ts";
 import PageNotFound from "./components/pages/PageNotFound.tsx";
-import { AudioStoreContextProvider } from "./context/AudioStore.tsx";
-import { DeepgramContextProvider } from "./context/Deepgram.tsx";
-import { MicrophoneContextProvider } from "./context/Microphone.tsx";
 import { NowPlayingContextProvider } from "react-nowplaying";
 
 const AppRouter = () => {
@@ -39,15 +36,9 @@ const AppRouter = () => {
             path="/chat"
             element={
               <ProtectedRoute>
-                <MicrophoneContextProvider>
-                  <AudioStoreContextProvider>
                     <NowPlayingContextProvider>
-                        <DeepgramContextProvider>
                           <Chat />
-                        </DeepgramContextProvider>
                     </NowPlayingContextProvider>
-                  </AudioStoreContextProvider>
-                </MicrophoneContextProvider>
               </ProtectedRoute>
             }
           />
