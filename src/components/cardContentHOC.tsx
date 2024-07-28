@@ -36,7 +36,11 @@ const CardHOC = (props: Props) => {
           Previous
         </Button>
         {currentPage === 0 && (
-          <Button className="ml-auto" variant="default" type="submit">
+          <Button
+            className="ml-auto"
+            variant="default"
+            onClick={handleNextPage}
+          >
             Next
             <Icon className="h4 w-4 ml-2" path={mdiArrowRight} />
           </Button>

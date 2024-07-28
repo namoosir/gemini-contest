@@ -39,11 +39,11 @@ import { getUserResumes, Resume } from "@/services/firebase/resumeService";
 import {
   calculateAmplitudeFromAnalyser,
   FINAL_INTERVIEW_RESPONSE,
-  // formatTime,
+  formatTime,
 } from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
-// import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -376,9 +376,9 @@ function Chat() {
       {isLoading && loader}
       {hasInterviewStarted && (
         <div className="mt-4 text-center">
-          {/* <Badge className=" text-md cursor-default font-bold">
+          <Badge className=" text-md cursor-default font-bold">
             {formatTime(seconds)}
-          </Badge> */}
+          </Badge>
         </div>
       )}
       {!isLoading && !hasInterviewStarted && (
