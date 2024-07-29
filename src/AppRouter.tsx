@@ -14,7 +14,6 @@ import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.ts";
 import PageNotFound from "./components/pages/PageNotFound.tsx";
 import { NowPlayingContextProvider } from "react-nowplaying";
-import ResumeForm from "./components/ResumeForm.tsx";
 
 const AppRouter = () => {
   const { user } = useAuthContext();
@@ -49,14 +48,6 @@ const AppRouter = () => {
             element={
               <ProtectedRoute>
                 <Interview />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/resume-form"
-            element={
-              <ProtectedRoute>
-                <ResumeForm />
               </ProtectedRoute>
             }
           />
