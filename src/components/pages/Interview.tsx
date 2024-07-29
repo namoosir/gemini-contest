@@ -10,6 +10,7 @@ import {
   getUserResumes,
   getResumeObject,
   Resume,
+  uploadResume,
 } from "@/services/firebase/resumeService";
 import useAuthContext from "@/hooks/useAuthContext";
 import useFirebaseContext from "@/hooks/useFirebaseContext";
@@ -19,8 +20,8 @@ import JobDescriptionCard from "../JobDescriptionCard";
 import ResumeCard from "../ResumeCard";
 import InterviewSettingsCard from "../InterviewSettingsCard";
 import CardHOC from "../cardContentHOC";
-import { Form } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
+import { InterviewProps } from "./types";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -41,9 +42,7 @@ const Interview: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState<Page>(0);
   const previousPage = usePrevious(currentPage);
-  const [jobDescription, setJobDescription] = useState<string | undefined>(
-    undefined
-  );
+  const [jobDescription, setJobDescription] = useState<string | undefined>();
 
   const [files, setFiles] = useState<File[] | null>([]);
   const [resume, setResume] = useState<Resume | null>(null);
@@ -57,6 +56,9 @@ const Interview: React.FC = () => {
   const [interviewMode, setInterviewMode] = useState<string>("normal");
 
   const [resumeError, setResumeError] = useState<string | undefined>(undefined);
+  const [jobDescriptionError, setJobDescriptionError] = useState<
+    string | undefined
+  >(undefined);
 
   const navigate = useNavigate();
 
@@ -79,7 +81,7 @@ const Interview: React.FC = () => {
     const fetchPDF = async () => {
       if (!resume) return;
 
-      const url = await getResumeObject(storage, resume.url); // Assuming gcsUrl is the direct HTTP link to the PDF file
+      const url = await getResumeObject(storage, resume.url);
 
       setResumeURL(url);
     };
@@ -99,6 +101,11 @@ const Interview: React.FC = () => {
     }
   }, [resumeURL]);
 
+  const uploadResumeToStorage = async () => {
+    if (files?.length === 1 && user)
+      await uploadResume(storage, files[0], user.uid);
+  };
+
   const handleNextPage = () => {
     setCurrentPage((prevPage: Page): Page => (prevPage + 1) as Page);
   };
@@ -107,14 +114,11 @@ const Interview: React.FC = () => {
     setCurrentPage((prevPage: Page): Page => (prevPage - 1) as Page);
   };
 
-  const handleFinish = () => {
-    // todo
-    console.log("jobDescription", jobDescription);
-    console.log("resume", resume);
-    console.log("settings", interviewDuration, interviewType, interviewMode);
-    const params = {
+  const handleFinish = async () => {
+    await uploadResumeToStorage();
+
+    const params: InterviewProps = {
       jobDescription: jobDescription,
-      resume: resume,
       interviewDuration: interviewDuration,
       interviewType: interviewType,
       interviewMode: interviewMode,
@@ -129,9 +133,10 @@ const Interview: React.FC = () => {
     },
   });
 
-  function interviewOnSubmit(data: z.infer<typeof InterviewFormSchema>) {
-    setJobDescription(data.text);
-    handleNextPage();
+  function interviewNextPageHandler() {
+    if (jobDescription === undefined || jobDescription === "") {
+      setJobDescriptionError("Please enter a job description");
+    } else handleNextPage();
   }
 
   const resumeNextPageHandler = () => {
@@ -147,20 +152,18 @@ const Interview: React.FC = () => {
     switch (currentPage) {
       case 0:
         return (
-          <Form {...interviewForm}>
-            <form
-              className="h-full w-full"
-              onSubmit={interviewForm.handleSubmit(interviewOnSubmit)}
-            >
-              <CardHOC
-                handlePreviousPage={handlePreviousPage}
-                handleNextPage={handleNextPage}
-                currentPage={currentPage}
-              >
-                <JobDescriptionCard form={interviewForm} />
-              </CardHOC>
-            </form>
-          </Form>
+          <CardHOC
+            handlePreviousPage={handlePreviousPage}
+            handleNextPage={interviewNextPageHandler}
+            currentPage={currentPage}
+          >
+            <JobDescriptionCard
+              text={jobDescription}
+              setText={setJobDescription}
+              error={jobDescriptionError}
+              setError={setJobDescriptionError}
+            />
+          </CardHOC>
         );
       case 1:
         return (

@@ -24,7 +24,6 @@ const AnimatedMic: React.FC<Props> = (props: Props) => {
         variant={props.isRecording ? "destructive" : "secondary"}
         disabled={!props.isRecording}
         onClick={() => {
-          console.log("clicked", props.isRecording);
           if (props.isRecording) props.stopRecording();
         }}
       >

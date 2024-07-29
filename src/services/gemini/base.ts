@@ -1,16 +1,37 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_APP_GEMENI_API_KEY ?? '');
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const chat = model.startChat({
-  history: [],
-  generationConfig: {
-    maxOutputTokens: 100,
-  },
-});
+import {
+  getVertexAI,
+  getGenerativeModel,
+  Content,
+  ChatSession,
+} from "firebase/vertexai-preview";
+import { app } from "../../FirebaseConfig";
 
+const vertexAI = getVertexAI(app);
 
-async function prompt(msg: string): Promise<string> {
+const model = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash-001" });
+function initalizeChat(setStr: string): ChatSession {
+  const history = [
+    {
+      role: "user",
+      parts: [{ text: setStr }],
+    },
+    {
+      role: "model",
+      parts: [{ text: "OK" }],
+    },
+  ] as Content[];
+
+  return model.startChat({
+    history: history,
+    generationConfig: {
+      maxOutputTokens: 100,
+    },
+  });
+}
+
+async function prompt(chat: ChatSession, msg: string): Promise<string> {
   try {
+    console.log(chat, msg)
     const result = await chat.sendMessage(msg);
     const response = result.response;
     const text = response.text();
@@ -21,5 +42,16 @@ async function prompt(msg: string): Promise<string> {
   }
 }
 
+async function* promptStream(
+  chat: ChatSession,
+  msg: string
+): AsyncIterable<string> {
+  const result = await chat.sendMessageStream(msg);
 
-export { prompt }
+  for await (const chunk of result.stream) {
+    const chunkText = chunk.text();
+    yield chunkText;
+  }
+}
+
+export { initalizeChat, prompt, promptStream };

@@ -1,47 +1,35 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import https = require("https");
+import { Readable } from 'stream';
+import https from "https";
 import "dotenv/config";
+import axios from 'axios'
 
-const DEEPGRAM_URL =
-  "https://api.deepgram.com/v1/speak?model=aura-athena-en&encoding=linear16&container=wav";
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
+const DEEPGRAM_BASE_URL = 'https://api.deepgram.com'
 
-export function segmentTextBySentence(text: string) {
-  return text.match(/[^.!?]+[.!?]/g)?.map((sentence) => sentence.trim());
-}
+export const getTTS = async (text: string) => {
+  const model = "aura-asteria-en";
 
-export function synthesizeAudio(text: string): Promise<Uint8Array> {
-  return new Promise((resolve, reject) => {
-    const payload = JSON.stringify({ text });
-    const options = {
-      method: "POST",
+  try {
+    const response = await axios({
+      method: 'POST',
+      url: `${DEEPGRAM_BASE_URL}/v1/speak?model=${model}`,
+      data: JSON.stringify({ text }),
       headers: {
-        Authorization: `Token ${DEEPGRAM_API_KEY}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
+        'Authorization': `token ${DEEPGRAM_API_KEY}`,
       },
-    };
-
-    const req = https.request(DEEPGRAM_URL, options, (res) => {
-      const data: any = [];
-
-      res.on("data", (chunk) => {
-        data.push(chunk);
-      });
-
-      res.on("end", () => {
-        const buffer = Buffer.concat(data);
-        resolve(new Uint8Array(buffer));
-      });
+      responseType: 'stream', // Stream response
     });
 
-    req.on("error", (error) => {
-      reject(error);
-    });
+    if (!response.data) {
+      throw new Error('Unable to get response from API.');
+    }
 
-    req.write(payload);
-    req.end();
-  });
-}
+    return response.data as Readable;
+  } catch (error) {
+    throw new Error((error as Error).message || 'An error occurred.');
+  }
+};
 
 export function getDeepgramKey(uid: string) {
   return new Promise((resolve, reject) => {
