@@ -89,7 +89,6 @@ function Chat() {
     if (isInterviewProps(location.state)) {
       locationStateRef.current = location.state;
     } else {
-      // navigate out
       navigate("/404");
     }
   }, [location, navigate]);
@@ -308,7 +307,6 @@ function Chat() {
 
   const evaluateScore = async () => {
     const randomIntFromInterval = (min: number, max: number) => {
-      // min and max included
       return Math.floor(Math.random() * (max - min + 1) + min);
     };
 
@@ -346,7 +344,6 @@ function Chat() {
       const result = await addInterview(db, data);
       if (result) {
         console.log("Interview history added successfully");
-        // await getUserInterviewHistory(db, user!);
       } else {
         console.error("Failed to add interview history");
       }

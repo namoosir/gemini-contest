@@ -14,12 +14,12 @@ interface Props {
 export const PreviousResultsRadialChart: React.FC<Props> = ({ data }) => {
   const [avgScore, setAvgScore] = useState<number>(0);
   const INNER_RADIUS = 17;
-  const OUTER_RADIUS = INNER_RADIUS * 1.625; //Properly Calculated
+  const OUTER_RADIUS = INNER_RADIUS * 1.625;
   const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 20;
   const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.5;
 
   useEffect(() => {
-    setAvgScore(data); //Need to pull score from database over the week to calculate average score
+    setAvgScore(data);
   }, []);
 
   const chartData = [{ averageScore: avgScore, improvability: 100 - avgScore }];

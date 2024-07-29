@@ -1,24 +1,12 @@
 import {
-  Timestamp,
   getDocs,
   addDoc,
   collection,
   query,
   where,
   Firestore,
-  doc,
-  getDoc,
-  setDoc,
-  DocumentData,
-  or,
-  and,
 } from "firebase/firestore";
-import {
-  FirebaseStorage,
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from "firebase/storage";
+
 import { ChatMessage } from "../voice/TTS";
 import { User } from "firebase/auth";
 
@@ -49,9 +37,7 @@ export const getUserInterviewHistory = async (
   db: Firestore,
   user: User,
   currMonth?: String,
-  endMonth?: String,
-  weekStart?: String,
-  weekEnd?: String
+  endMonth?: String
 ) => {
   try {
     let q = query(collection(db, "interviews"), where("user", "==", user.uid));
@@ -62,13 +48,6 @@ export const getUserInterviewHistory = async (
         where("user", "==", user.uid),
         where("dateCreated", ">=", currMonth),
         where("dateCreated", "<", endMonth)
-      );
-    } else if (weekStart && weekEnd) {
-      q = query(
-        collection(db, "interviews"),
-        where("user", "==", user.uid),
-        where("dateCreated", ">=", weekStart),
-        where("dateCreated", "<=", weekEnd)
       );
     }
 
@@ -99,21 +78,10 @@ export const getUserInterviewHistoryWithinWeek = async (
     const currDate = new Date();
     const weekStart = new Date(
       currDate.getFullYear(),
-      currDate.getMonth(),
+      currDate.getMonth() + 1,
       currDate.getDay() - 7
     ).toLocaleDateString();
-    const weekEnd = new Date(
-      currDate.getFullYear(),
-      currDate.getMonth(),
-      currDate.getDay()
-    ).toLocaleDateString();
-
-    // let currentDate = new Date();
-    // let currentDateTimestamp = Timestamp.fromDate(currentDate);
-
-    // const weekAgo = new Date();
-    // weekAgo.setDate(currentDate.getDate() - 7);
-    // let weekAgoDateTimestamp = Timestamp.fromDate(currentDate);
+    const weekEnd = currDate.toLocaleDateString();
 
     const q = query(
       collection(db, "interviews"),

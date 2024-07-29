@@ -6,10 +6,7 @@ import {
   ChartTooltipContent,
 } from "../components/ui/chart";
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
-import {
-  getUserInterviewHistoryWithinWeek,
-  Interview,
-} from "@/services/firebase/saveInterviewSevice";
+import { getUserInterviewHistoryWithinWeek } from "@/services/firebase/saveInterviewSevice";
 import { db } from "@/FirebaseConfig";
 import useAuthContext from "@/hooks/useAuthContext";
 
