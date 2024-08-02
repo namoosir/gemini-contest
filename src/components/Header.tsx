@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import useAuthContext from "@/hooks/useAuthContext";
 
-type Page = "dashboard" | "interview" | "learning" | "";
+type Page = "interview" | "learning" | "dashboard";
 interface Menu {
   name: string;
   path: Page;

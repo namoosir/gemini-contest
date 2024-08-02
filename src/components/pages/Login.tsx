@@ -11,9 +11,9 @@ function App() {
   const { login } = useAuthContext();
 
   const handleLogin = async () => {
-    await login()
-    navigate('/')
-  }
+    await login();
+    navigate("/");
+  };
 
   return (
     <div className="flex items-center justify-center min-h-full">
@@ -21,11 +21,7 @@ function App() {
         <CardHeader></CardHeader>
         <CardContent className="flex flex-col items-center justify-center gap-8">
           <Logo />
-          <Button
-            variant="secondary"
-            className="w-full"
-            onClick={handleLogin}
-          >
+          <Button variant="secondary" className="w-full" onClick={handleLogin}>
             <Google className="mr-2 h-5 w-5" />
             <span>Continue with Google</span>
           </Button>
