@@ -3,7 +3,7 @@ import * as THREE from "three";
 import vertexShader from "../../shaders/sphereVertexShader.glsl";
 import fragmentShader from "../../shaders/sphereFragmentShader.glsl";
 import { useMemo, useRef } from "react";
-import { calculateAmplitudeFromAnalyser } from "@/utils";
+import { calculateAverageFrequency } from "@/utils";
 
 interface Props {
   audioContext?: AudioContext
@@ -20,6 +20,7 @@ const Sphere = (props: Props) => {
       u_time: { value: 0 },
       u_intensity: { value: 0.3 },
       u_color: { value: customColor },
+      u_frequency: { value: 0.0 }
     };
   }, []);
 
@@ -36,15 +37,15 @@ const Sphere = (props: Props) => {
     if (!props.analyser) return;
 
     if (props.audioContext?.state === 'closed') {
-      mesh.current.material.uniforms.u_intensity.value = amplitude.current = 0
+      mesh.current.material.uniforms.u_frequency.value = amplitude.current = 0
     } else {
-      const newAmplitude = (calculateAmplitudeFromAnalyser(props.analyser) - 1.5) / 3.5
+      const newFrequency = calculateAverageFrequency(props.analyser);
+      // console.log(newFrequency)
       const smoothingFactor = 0.1
-  
-      amplitude.current = amplitude.current + smoothingFactor * (newAmplitude - amplitude.current);
-  
+      amplitude.current = amplitude.current + smoothingFactor * (newFrequency - amplitude.current);
+      // console.log(amplitude.current)
       // mesh.current.material.uniforms.u_intensity.value = amplitude * 10
-      mesh.current.material.uniforms.u_intensity.value = amplitude.current
+      mesh.current.material.uniforms.u_frequency.value = amplitude.current
     }
   });
 

@@ -1,5 +1,6 @@
 uniform float u_intensity;
 uniform float u_time;
+uniform float u_frequency;
 
 varying vec2 vUv;
 varying float vDisplacement;
@@ -95,7 +96,7 @@ void main() {
 
     vDisplacement = cnoise(position + vec3(2.0 * u_time));
   
-    vec3 newPosition = position + normal * (u_intensity * vDisplacement);
+    vec3 newPosition = position + normal * (u_intensity * u_frequency * vDisplacement);
   
     vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
