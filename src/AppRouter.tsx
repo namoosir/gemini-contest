@@ -13,7 +13,6 @@ import { RootLayout } from "./components/layout/RootLayout.tsx";
 import useAuthContext from "./hooks/useAuthContext.ts";
 import PageNotFound from "./components/pages/PageNotFound.tsx";
 import { NowPlayingContextProvider } from "react-nowplaying";
-import Scene from "./components/3D/scene.tsx";
 
 const AppRouter = () => {
   const { user } = useAuthContext();
@@ -52,14 +51,6 @@ const AppRouter = () => {
             }
           />
           <Route path="*" element={<PageNotFound />} />
-          <Route
-            path="/sphere"
-            element={
-              <ProtectedRoute>
-                <Scene />
-              </ProtectedRoute>
-            }
-          />
         </Route>
       </>
     )
