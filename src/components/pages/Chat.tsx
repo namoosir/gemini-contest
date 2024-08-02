@@ -46,6 +46,7 @@ import { ChatSession } from "firebase/vertexai-preview";
 import { Badge } from "@/components/ui/badge";
 import Scene from "../3D/scene";
 import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
+import FocusedInterviewDemo from "@/assets/media/FocusedInterviewDemo.gif";
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 function Chat() {
@@ -411,7 +412,11 @@ function Chat() {
             <CardContent>
               <div className="w-full">
                 <AspectRatio ratio={16 / 9}>
+                {locationStateRef.current?.interviewMode === 'normal' ? 
+                  <img src={FocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
+                  :
                   <img src={UnfocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
+                }
                 </AspectRatio>
               </div>
             </CardContent>
