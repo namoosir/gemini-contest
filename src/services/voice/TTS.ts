@@ -116,7 +116,7 @@ export const initMediaRecorder = async (socket: WebSocket | null) => {
     }
   });
 
-  mediaRecorder.start(250); // Start recording, gather data every second
+  mediaRecorder.start(250); // Start recording, gather data every 250 ms
   mediaRecorder.pause();
   return { mediaRecorder, stream };
 };
@@ -128,19 +128,17 @@ export const playbackGeminiResponse = async (
 ) => {
   updateLatestChat(data.word, setChat);
   const audioBuffer = await audioCtx.decodeAudioData(data.buffer);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
 
   // Create a buffer source and play the audio
   const source = audioCtx.createBufferSource();
   source.buffer = audioBuffer;
   source.connect(audioCtx.destination);
+  analyser.connect(audioCtx.destination);
   source.start();
 
-  // Wait for the current chunk to finish playing
-  await new Promise<void>((resolve) => {
-    source.onended = () => {
-      resolve();
-    };
-  });
+  return { source, analyser }
 };
 
 export const updateLatestChat = (

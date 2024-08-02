@@ -44,6 +44,7 @@ import {
 import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
 import { Badge } from "@/components/ui/badge";
+import Scene from "../3D/scene";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -74,6 +75,7 @@ function Chat() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
   const locationStateRef = useRef<InterviewProps | undefined>();
+  const geminiAnalyserRef = useRef<AnalyserNode>()
 
   const { db } = useFirebaseContext();
   const { user } = useAuthContext();
@@ -232,11 +234,21 @@ function Chat() {
     audioContextRef.current = audioCtx;
 
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
-    await playbackGeminiResponse(
+    
+    const { source, analyser } = await playbackGeminiResponse(
       { word: text, buffer: await buffer.arrayBuffer() },
       setChat,
       audioContextRef.current
     );
+
+    geminiAnalyserRef.current = analyser
+
+    await new Promise<void>((resolve) => {
+      source.onended = () => {
+        resolve()
+      }
+    })
+
     await audioContextRef.current.close();
 
     if (!done) startRecording();
@@ -401,10 +413,17 @@ function Chat() {
           </Card>
         </div>
       )}
-
-      <div className="overflow-hidden flex-1">
-        <Chats chats={chat} />
-      </div>
+      
+      {locationStateRef.current?.interviewMode === 'normal' ? 
+        <div className="overflow-hidden flex-1">
+          <Chats chats={chat} />
+        </div>
+        :
+        <div className="overflow-hidden flex-1">
+          <Scene audioContext={audioContextRef.current} analyser={geminiAnalyserRef.current} />
+        </div>
+      }
+      
 
       {hasInterviewStarted && (
         <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">

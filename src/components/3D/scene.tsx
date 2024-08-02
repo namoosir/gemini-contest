@@ -2,13 +2,17 @@ import { Canvas } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import Sphere from './sphere'
 
-const Scene = () => {
+interface Props {
+  audioContext?: AudioContext
+  analyser?: AnalyserNode;
+}
+
+const Scene = (props: Props) => {
   return (
     <div className='h-full'>
       <Canvas>
-        <PerspectiveCamera makeDefault fov={30} position={[0, 0, 20]}>
-        </PerspectiveCamera>
-        <Sphere />
+        <PerspectiveCamera makeDefault fov={30} position={[0, 0, 20]} />
+        <Sphere {...props} />
       </Canvas>
     </div>
   )
