@@ -45,6 +45,8 @@ import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
 import { Badge } from "@/components/ui/badge";
 import Scene from "../3D/scene";
+import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -389,7 +391,7 @@ function Chat() {
     <div className="flex flex-col h-full">
       {isLoading && loader}
       {hasInterviewStarted && (
-        <div className="mt-4 text-center">
+        <div className="mt-10 text-center">
           <Badge className=" text-md cursor-default font-bold">
             {formatTime(seconds)}
           </Badge>
@@ -406,7 +408,13 @@ function Chat() {
                 start in {locationStateRef.current!.interviewMode} mode
               </CardDescription>
             </CardHeader>
-            <CardContent>{/* TODO: ADD A VIDEO PREVIEW OF THE  */}</CardContent>
+            <CardContent>
+              <div className="w-full">
+                <AspectRatio ratio={16 / 9}>
+                  <img src={UnfocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
+                </AspectRatio>
+              </div>
+            </CardContent>
             <CardFooter>
               <Button onClick={startInterview} className="w-full">
                 Start Interview
