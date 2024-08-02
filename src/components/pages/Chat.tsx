@@ -63,6 +63,8 @@ function Chat() {
   const [seconds, setSeconds] = useState(0);
   const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
   const [isDoneDialogOpen, setIsDoneDialogOpen] = useState<boolean>(false);
+  const [geminiAnalyser, setGeminiAnalyser] = useState<AnalyserNode>()
+  const [geminiAudioContext, setGeminiAudioContext] = useState<AudioContext>()
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -75,7 +77,6 @@ function Chat() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
   const locationStateRef = useRef<InterviewProps | undefined>();
-  const geminiAnalyserRef = useRef<AnalyserNode>()
 
   const { db } = useFirebaseContext();
   const { user } = useAuthContext();
@@ -241,7 +242,8 @@ function Chat() {
       audioContextRef.current
     );
 
-    geminiAnalyserRef.current = analyser
+    setGeminiAudioContext(audioCtx)
+    setGeminiAnalyser(analyser)
 
     await new Promise<void>((resolve) => {
       source.onended = () => {
@@ -252,7 +254,7 @@ function Chat() {
     await audioContextRef.current.close();
 
     if (!done) startRecording();
-  }
+  };
 
   const startRecording = () => {
     try {
@@ -420,7 +422,7 @@ function Chat() {
         </div>
         :
         <div className="overflow-hidden flex-1">
-          <Scene audioContext={audioContextRef.current} analyser={geminiAnalyserRef.current} />
+          <Scene audioContext={geminiAudioContext} analyser={geminiAnalyser} />
         </div>
       }
       

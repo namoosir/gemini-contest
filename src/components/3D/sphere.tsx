@@ -11,7 +11,7 @@ interface Props {
 }
 
 const Sphere = (props: Props) => {
-  const amplitude = useRef<number>(0)
+  const amplitude = useRef<number>(1)
   const mesh = useRef<THREE.Mesh>();
 
   const uniforms = useMemo(() => {
@@ -20,7 +20,7 @@ const Sphere = (props: Props) => {
       u_time: { value: 0 },
       u_intensity: { value: 0.3 },
       u_color: { value: customColor },
-      u_frequency: { value: 0.0 }
+      u_frequency: { value: 1 }
     };
   }, []);
 
@@ -31,22 +31,21 @@ const Sphere = (props: Props) => {
     mesh.current.material.uniforms.u_time.value =
       0.4 * clock.getElapsedTime();
 
-    mesh.current.rotation.x += 0.001;
-    mesh.current.rotation.z += 0.001;
+    mesh.current.rotation.x += 0.0001;
+    mesh.current.rotation.z += 0.0001;
+    
+    const smoothingFactor = 0.1
+    let newFrequency;
 
-    if (!props.analyser) return;
-
-    if (props.audioContext?.state === 'closed') {
-      mesh.current.material.uniforms.u_frequency.value = amplitude.current = 0
+    if (!props.analyser || !props.audioContext || props.audioContext.state === 'closed') {
+      newFrequency = 1
     } else {
-      const newFrequency = calculateAverageFrequency(props.analyser);
-      // console.log(newFrequency)
-      const smoothingFactor = 0.1
-      amplitude.current = amplitude.current + smoothingFactor * (newFrequency - amplitude.current);
-      // console.log(amplitude.current)
-      // mesh.current.material.uniforms.u_intensity.value = amplitude * 10
-      mesh.current.material.uniforms.u_frequency.value = amplitude.current
+      newFrequency = calculateAverageFrequency(props.analyser);
     }
+
+    amplitude.current = amplitude.current + smoothingFactor * (newFrequency - amplitude.current);
+
+    mesh.current.material.uniforms.u_frequency.value = amplitude.current / 5
   });
 
   return (

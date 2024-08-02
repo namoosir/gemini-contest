@@ -129,12 +129,12 @@ export const playbackGeminiResponse = async (
   updateLatestChat(data.word, setChat);
   const audioBuffer = await audioCtx.decodeAudioData(data.buffer);
   const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 256;
+  analyser.fftSize = 2048;
 
   // Create a buffer source and play the audio
   const source = audioCtx.createBufferSource();
   source.buffer = audioBuffer;
-  source.connect(audioCtx.destination);
+  source.connect(analyser);
   analyser.connect(audioCtx.destination);
   source.start();
 
@@ -148,10 +148,11 @@ export const updateLatestChat = (
   setChat((history) => {
     const newHistory = [...history];
     const lastItem = newHistory[newHistory.length - 1];
+    const regex = /\.{3,}/g;
 
     newHistory[newHistory.length - 1] = {
       ...lastItem,
-      content: lastItem.content + " " + text.replace('......', '').replace('.....', ''),
+      content: lastItem.content + " " + text.replace(regex, ''),
     };
 
     return newHistory;
