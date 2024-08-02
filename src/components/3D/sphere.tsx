@@ -6,10 +6,14 @@ import { useMemo, useRef } from 'react';
 
 const Sphere = () => {
   const mesh = useRef<THREE.Mesh>();
+
+  const customColor = new THREE.Color(0.13, 0.77, 0.36)
+
   const uniforms = useMemo(() => {
     return {
       u_time: { value: 0 },
       u_intensity: { value: 0.3 },
+      u_color: { value: customColor }
     };
   }, []);
 
@@ -28,7 +32,12 @@ const Sphere = () => {
   return (
     <mesh ref={mesh}>
       <icosahedronGeometry args={[4, 30]} />
-      <shaderMaterial vertexShader={vertexShader} fragmentShader={fragmentShader} uniforms={uniforms} wireframe />
+      <shaderMaterial
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+        uniforms={uniforms}
+        wireframe
+      />
     </mesh>
   )
 }
