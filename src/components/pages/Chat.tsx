@@ -49,6 +49,10 @@ import {
 import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
 import { Badge } from "@/components/ui/badge";
+import Scene from "../3D/scene";
+import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
+import FocusedInterviewDemo from "@/assets/media/FocusedInterviewDemo.gif";
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -67,6 +71,8 @@ function Chat() {
   const [seconds, setSeconds] = useState(0);
   const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
   const [isDoneDialogOpen, setIsDoneDialogOpen] = useState<boolean>(false);
+  const [geminiAnalyser, setGeminiAnalyser] = useState<AnalyserNode>()
+  const [geminiAudioContext, setGeminiAudioContext] = useState<AudioContext>()
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -235,15 +241,26 @@ function Chat() {
     audioContextRef.current = audioCtx;
 
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
-    await playbackGeminiResponse(
+    
+    const { source, analyser } = await playbackGeminiResponse(
       { word: text, buffer: await buffer.arrayBuffer() },
       setChat,
       audioContextRef.current
     );
+
+    setGeminiAudioContext(audioCtx)
+    setGeminiAnalyser(analyser)
+
+    await new Promise<void>((resolve) => {
+      source.onended = () => {
+        resolve()
+      }
+    })
+
     await audioContextRef.current.close();
 
     if (!done) startRecording();
-  }
+  };
 
   const startRecording = () => {
     try {
@@ -432,7 +449,7 @@ function Chat() {
     <div className="flex flex-col h-full">
       {isLoading && loader}
       {hasInterviewStarted && (
-        <div className="mt-4 text-center">
+        <div className="mt-10 text-center">
           <Badge className=" text-md cursor-default font-bold">
             {formatTime(seconds)}
           </Badge>
@@ -449,7 +466,17 @@ function Chat() {
                 start in {locationStateRef.current!.interviewMode} mode
               </CardDescription>
             </CardHeader>
-            <CardContent>{/* TODO: ADD A VIDEO PREVIEW OF THE  */}</CardContent>
+            <CardContent>
+              <div className="w-full">
+                <AspectRatio ratio={16 / 9}>
+                {locationStateRef.current?.interviewMode === 'normal' ? 
+                  <img src={FocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
+                  :
+                  <img src={UnfocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
+                }
+                </AspectRatio>
+              </div>
+            </CardContent>
             <CardFooter>
               <Button onClick={startInterview} className="w-full">
                 Start Interview
@@ -458,10 +485,17 @@ function Chat() {
           </Card>
         </div>
       )}
-
-      <div className="overflow-hidden flex-1">
-        <Chats isFromDashboard={false} chats={chat} />
-      </div>
+      
+      {locationStateRef.current?.interviewMode === 'normal' ? 
+        <div className="overflow-hidden flex-1">
+          <Chats chats={chat} />
+        </div>
+        :
+        <div className="overflow-hidden flex-1">
+          <Scene audioContext={geminiAudioContext} analyser={geminiAnalyser} />
+        </div>
+      }
+      
 
       {hasInterviewStarted && (
         <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">

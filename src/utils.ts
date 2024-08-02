@@ -26,3 +26,11 @@ export function calculateAmplitudeFromAnalyser(analyser: AnalyserNode) {
 
   return scaledAmplitude;
 }
+
+export const calculateAverageFrequency = (analyser: AnalyserNode): number => {
+  const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(frequencyData);
+
+  const total = frequencyData.reduce((sum, value) => sum + value, 0);
+  return total / frequencyData.length;
+};
