@@ -4,11 +4,12 @@ import { useWindowScroll } from "@uidotdev/usehooks";
 import { ChatMessage } from "@/services/voice/TTS";
 
 interface Props {
+  isFromDashboard?: boolean;
   chats: ChatMessage[];
 }
 
 const Chats: React.FC<Props> = (props: Props) => {
-  const { chats } = props;
+  const { chats, isFromDashboard } = props;
   const scroller = useWindowScroll();
   const scrollTo = scroller[1];
   const textContainerRef = useRef<HTMLDivElement | null>(null);
@@ -31,14 +32,19 @@ const Chats: React.FC<Props> = (props: Props) => {
         return (
           <Card
             key={index}
-            className="w-max max-w-[75%] bg-primary text-primary-foreground ml-auto"
+            className={`${
+              !isFromDashboard && "w-max"
+            } max-w-[75%] bg-primary text-primary-foreground ml-auto`}
           >
             <CardContent className="p-4">{chat.content}</CardContent>
           </Card>
         );
       } else {
         return (
-          <Card key={index} className="w-max max-w-[75%] bg-muted">
+          <Card
+            key={index}
+            className={`${!isFromDashboard && "w-max"} max-w-[75%] bg-muted`}
+          >
             <CardContent className="p-4">{chat.content}</CardContent>
           </Card>
         );

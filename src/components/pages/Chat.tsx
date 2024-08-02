@@ -33,6 +33,11 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import {
+  addInterview,
+  Interview,
+} from "@/services/firebase/saveInterviewSevice";
+
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import useAuthContext from "@/hooks/useAuthContext";
 import { getUserResumes, Resume } from "@/services/firebase/resumeService";
@@ -90,7 +95,6 @@ function Chat() {
     if (isInterviewProps(location.state)) {
       locationStateRef.current = location.state;
     } else {
-      // navigate out
       navigate("/404");
     }
   }, [location, navigate]);
@@ -146,7 +150,6 @@ function Chat() {
     async function fetchKey() {
       const apiKey = await getAPIKey();
       await initWebSocket(apiKey);
-
       setIsSocketSetupLoading(false);
     }
 
@@ -319,6 +322,53 @@ function Chat() {
     setIsDialogOpen(true);
   };
 
+  const evaluateScore = async () => {
+    const randomIntFromInterval = (min: number, max: number) => {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    };
+
+    //Get The Score and return a number to the handleAddChat function
+    return randomIntFromInterval(0, 100); //temp score
+  };
+
+  //TODO: In Chat.tsx Line 267-275, make sure you update the right score
+
+  const prepareData = async () => {
+    if (user) {
+      const interviewData: Interview = {
+        user: user.uid,
+        chat: chat,
+        score: await evaluateScore(),
+      };
+      console.log(interviewData);
+      // setData(interviewData);
+      return interviewData;
+    } else {
+      console.error("User is not authenticated");
+    }
+  };
+
+  const handleAddChat = async () => {
+    const data = await prepareData();
+    console.log("This is the data", data);
+
+    if (!data) {
+      console.error("Data is not set");
+      return;
+    }
+
+    try {
+      const result = await addInterview(db, data);
+      if (result) {
+        console.log("Interview history added successfully");
+      } else {
+        console.error("Failed to add interview history");
+      }
+    } catch (error) {
+      console.error("Error adding interview history:", error);
+    }
+  };
+
   const cleanup = async () => {
     setIsRecording(false);
 
@@ -359,6 +409,13 @@ function Chat() {
 
     sourceRef.current?.disconnect();
     sourceRef.current = undefined;
+
+    console.log("This interview has concluded. Here is your chat history: ");
+    console.log(chat);
+
+    if (chat.length > 0) {
+      await handleAddChat();
+    }
   };
 
   const startInterview = async () => {
@@ -367,7 +424,7 @@ function Chat() {
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
-        "No job description provided",
+          "No job description provided",
         locationStateRef.current!.interviewType,
         resume?.data ?? "No resume provided"
       )

@@ -7,6 +7,7 @@ import {
 import Login from "./components/pages/Login.tsx";
 import Home from "./components/pages/Home.tsx";
 import Chat from "./components/pages/Chat.tsx";
+import Dashboard from "./components/pages/Dashboard.tsx";
 import Interview from "./components/pages/Interview.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { RootLayout } from "./components/layout/RootLayout.tsx";
@@ -36,9 +37,9 @@ const AppRouter = () => {
             path="/chat"
             element={
               <ProtectedRoute>
-                    <NowPlayingContextProvider>
-                          <Chat />
-                    </NowPlayingContextProvider>
+                <NowPlayingContextProvider>
+                  <Chat />
+                </NowPlayingContextProvider>
               </ProtectedRoute>
             }
           />
@@ -47,6 +48,14 @@ const AppRouter = () => {
             element={
               <ProtectedRoute>
                 <Interview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
               </ProtectedRoute>
             }
           />
