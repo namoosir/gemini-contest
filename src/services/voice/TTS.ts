@@ -153,7 +153,7 @@ export const updateLatestChat = (
 
     newHistory[newHistory.length - 1] = {
       ...lastItem,
-      content: lastItem.content + "" + text,
+      content: lastItem.content + " " + text.replace('......', '').replace('.....', ''),
     };
 
     return newHistory;
