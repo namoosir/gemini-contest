@@ -31,7 +31,6 @@ function initalizeChat(setStr: string): ChatSession {
 
 async function prompt(chat: ChatSession, msg: string): Promise<string> {
   try {
-    console.log(chat, msg)
     const result = await chat.sendMessage(msg);
     const response = result.response;
     const text = response.text();
