@@ -1,4 +1,4 @@
-import { Content } from "firebase/vertexai-preview";
+import { Interview } from "@/services/firebase/interviewService";
 
 export interface InterviewProps {
   jobDescription: string | undefined;
@@ -8,7 +8,7 @@ export interface InterviewProps {
 }
 
 export interface ResultProps {
-  history: Content[]
+  result: Interview
 }
 
 export function isInterviewProps(obj: unknown): obj is InterviewProps {
@@ -31,7 +31,7 @@ export function isResultProps(obj: unknown): obj is ResultProps {
   return (
     typeof obj === "object" &&
     obj !== null &&
-    "history" in obj &&
-    typeof (obj as ResultProps).history === "object"
+    "result" in obj &&
+    typeof (obj as ResultProps).result === "object"
   )
 }

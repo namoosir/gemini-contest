@@ -10,11 +10,23 @@ import {
 import { ChatMessage } from "../voice/TTS";
 import { User } from "firebase/auth";
 
+export interface Score {
+  technicalScore: number;
+  behavioralScore: number;
+  jobFitScore: number;
+  overallScore: number;
+}
+
 export interface Interview {
-  user: string;
+  uid: string;
   chat: ChatMessage[];
-  score: number;
-  dateCreated?: String;
+  overallScore: Score;
+  feedback: {
+    score: Score;
+    text: string
+  }[];
+  recommendation: string;
+  dateCreated?: string;
 }
 
 //TODO: In Chat.tsx Line 267-275, make sure you update the right score

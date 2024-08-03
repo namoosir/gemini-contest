@@ -4,7 +4,7 @@ import { RadialChart } from "../RadialChart";
 
 import { useEffect, useState } from "react";
 import { ChatMessage } from "@/services/voice/TTS";
-import { getUserInterviewHistory } from "@/services/firebase/saveInterviewSevice";
+import { getUserInterviewHistory } from "@/services/firebase/interviewService";
 import { db } from "@/FirebaseConfig";
 import useAuthContext from "@/hooks/useAuthContext";
 

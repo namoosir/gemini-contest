@@ -36,7 +36,8 @@ import {
 import {
   addInterview,
   Interview,
-} from "@/services/firebase/saveInterviewSevice";
+  Score,
+} from "@/services/firebase/interviewService";
 
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import useAuthContext from "@/hooks/useAuthContext";
@@ -47,12 +48,13 @@ import {
   formatTime,
 } from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
-import { ChatSession } from "firebase/vertexai-preview";
+import { ChatSession, Part } from "firebase/vertexai-preview";
 import { Badge } from "@/components/ui/badge";
 import Scene from "../3D/scene";
 import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
 import FocusedInterviewDemo from "@/assets/media/FocusedInterviewDemo.gif";
 import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { Loader2 } from "lucide-react"
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -73,6 +75,7 @@ function Chat() {
   const [isDoneDialogOpen, setIsDoneDialogOpen] = useState<boolean>(false);
   const [geminiAnalyser, setGeminiAnalyser] = useState<AnalyserNode>()
   const [geminiAudioContext, setGeminiAudioContext] = useState<AudioContext>()
+  const [resultsLoading, setResultsLoading] = useState<boolean>(true)
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -85,6 +88,7 @@ function Chat() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
   const locationStateRef = useRef<InterviewProps | undefined>();
+  const interviewResultRef = useRef<Interview>();
 
   const { db } = useFirebaseContext();
   const { user } = useAuthContext();
@@ -241,7 +245,7 @@ function Chat() {
     audioContextRef.current = audioCtx;
 
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
-    
+
     const { source, analyser } = await playbackGeminiResponse(
       { word: text, buffer: await buffer.arrayBuffer() },
       setChat,
@@ -278,7 +282,11 @@ function Chat() {
     if (seconds === 0) {
       await geminiRef.current.handleInterviewFinish(transcript);
       await handleResponse(FINAL_INTERVIEW_RESPONSE, true);
+
       setInterviewEnded(true);
+      await geminiRef.current.evaluateInterview();
+      await handleAddChat();
+      setResultsLoading(false);
     } else {
       await handleResponse(await geminiRef.current.prompt(transcript));
     }
@@ -322,26 +330,96 @@ function Chat() {
     setIsDialogOpen(true);
   };
 
-  const evaluateScore = async () => {
-    const randomIntFromInterval = (min: number, max: number) => {
-      return Math.floor(Math.random() * (max - min + 1) + min);
+  const evaluateScore = (feedback: { score: Score, text: string }[]): Score => {
+    const initialResult: Score = {
+      technicalScore: 0,
+      behavioralScore: 0,
+      jobFitScore: 0,
+      overallScore: 0,
     };
+  
+    if (feedback.length === 0) return initialResult;
+  
+    const totalScores = feedback.reduce((acc, fb) => {
+      acc.technicalScore += fb.score.technicalScore;
+      acc.behavioralScore += fb.score.behavioralScore;
+      acc.jobFitScore += fb.score.jobFitScore;
+      acc.overallScore += fb.score.overallScore;
+      return acc;
+    }, initialResult);
 
-    //Get The Score and return a number to the handleAddChat function
-    return randomIntFromInterval(0, 100); //temp score
+    const result: Score = {
+      technicalScore: totalScores.technicalScore / feedback.length,
+      behavioralScore: totalScores.behavioralScore / feedback.length,
+      jobFitScore: totalScores.jobFitScore / feedback.length,
+      overallScore: totalScores.overallScore / feedback.length,
+    };
+  
+    return result;
+  };
+
+  const processFeedback = (text: string): { score: Score, text: string }[] => {
+    const result: { score: Score, text: string }[] = [];
+  
+    const scoreRegex = /(\d+)\/100/g;
+    const feedbackRegex = /\*\*Question \d+:\*\* "([^"]+)"|\*\*Overall Interview Performance:\*\*/g;
+    const scores = [];
+    let match;
+  
+    while ((match = scoreRegex.exec(text)) !== null) {
+      scores.push(parseInt(match[1], 10));
+    }
+  
+    const feedbackTexts: string[] = [];
+    while ((match = feedbackRegex.exec(text)) !== null) {
+      feedbackTexts.push(match[1] || "Overall Interview Performance");
+    }
+  
+    const numScoresPerFeedback = 4;
+  
+    for (let i = 0; i < feedbackTexts.length; i++) {
+      const feedback = {
+        score: {
+          technicalScore: scores[i * numScoresPerFeedback],
+          behavioralScore: scores[i * numScoresPerFeedback + 1],
+          jobFitScore: scores[i * numScoresPerFeedback + 2],
+          overallScore: scores[i * numScoresPerFeedback + 3],
+        },
+        text: feedbackTexts[i],
+      };
+  
+      result.push(feedback);
+    }
+  
+    return result;
+  };
+
+  const getRecommendation = (text: string): string => {
+    const recommendationRegex = /\*\*Recommendation:\*\* ([^]*)$/;
+    const match = recommendationRegex.exec(text);
+    return match ? match[1].trim() : '';
   };
 
   //TODO: In Chat.tsx Line 267-275, make sure you update the right score
 
   const prepareData = async () => {
     if (user) {
+      const chatSession = geminiRef.current.chat as ChatSession;
+      const history = await chatSession.getHistory();
+      const feedback = history[history.length - 1].parts.map((f) => f.text).join(' ')
+      const processedFeedback = processFeedback(feedback)
+      const recommendation = getRecommendation(feedback)
+      const overallScore = evaluateScore(processedFeedback)
+
       const interviewData: Interview = {
-        user: user.uid,
+        uid: user.uid,
         chat: chat,
-        score: await evaluateScore(),
+        feedback: processedFeedback,
+        recommendation,
+        overallScore,
+        dateCreated: Date.now().toString(),
       };
-      console.log(interviewData);
-      // setData(interviewData);
+
       return interviewData;
     } else {
       console.error("User is not authenticated");
@@ -357,6 +435,8 @@ function Chat() {
       return;
     }
 
+    interviewResultRef.current = data;
+    
     try {
       const result = await addInterview(db, data);
       if (result) {
@@ -412,19 +492,16 @@ function Chat() {
 
     console.log("This interview has concluded. Here is your chat history: ");
     console.log(chat);
-
-    if (chat.length > 0) {
-      await handleAddChat();
-    }
   };
 
   const startInterview = async () => {
     setHasInterviewStarted(true);
-    setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
+    // setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
+    setSeconds(30)
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
-          "No job description provided",
+        "No job description provided",
         locationStateRef.current!.interviewType,
         resume?.data ?? "No resume provided"
       )
@@ -439,10 +516,7 @@ function Chat() {
   );
 
   const handleResultsClick = async () => {
-    const chat = geminiRef.current.chat as ChatSession;
-    const history = await chat.getHistory();
-
-    navigate("/results", { state: { history } });
+    navigate("/results", { state: { result: interviewResultRef.current } });
   };
 
   return (
@@ -469,11 +543,11 @@ function Chat() {
             <CardContent>
               <div className="w-full">
                 <AspectRatio ratio={16 / 9}>
-                {locationStateRef.current?.interviewMode === 'normal' ? 
-                  <img src={FocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
-                  :
-                  <img src={UnfocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
-                }
+                  {locationStateRef.current?.interviewMode === 'normal' ?
+                    <img src={FocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
+                    :
+                    <img src={UnfocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
+                  }
                 </AspectRatio>
               </div>
             </CardContent>
@@ -485,17 +559,17 @@ function Chat() {
           </Card>
         </div>
       )}
-      
-      {locationStateRef.current?.interviewMode === 'normal' ? 
+
+      {locationStateRef.current?.interviewMode === 'normal' ?
         <div className="overflow-hidden flex-1">
-          <Chats chats={chat} />
+          <Chats chats={chat} scroll />
         </div>
         :
         <div className="overflow-hidden flex-1">
           <Scene audioContext={geminiAudioContext} analyser={geminiAnalyser} />
         </div>
       }
-      
+
 
       {hasInterviewStarted && (
         <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
@@ -556,21 +630,34 @@ function Chat() {
           <AlertDialogHeader>
             <AlertDialogTitle>Your interview is done!</AlertDialogTitle>
             <AlertDialogDescription>
-              Proceed to view your results or go back home.
+              {
+                resultsLoading ? 
+                'Please wait while we calculate your results.'
+                  : 
+                'Proceed to view your results or go back home.'
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="secondary" asChild>
-                <Link to="/">Home</Link>
-              </Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button variant="default" onClick={handleResultsClick}>
-                Results
-              </Button>
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          {
+            resultsLoading ? 
+            <AlertDialogFooter>
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </AlertDialogFooter>
+              :
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <Button disabled={resultsLoading} variant="secondary" asChild>
+                  <Link to="/">Home</Link>
+                </Button>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Button disabled={resultsLoading} variant="default" onClick={handleResultsClick}>
+                  Results
+                </Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          }
+          
         </AlertDialogContent>
       </AlertDialog>
     </div>

@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isResultProps, ResultProps } from "./types";
-import { Content } from "firebase/vertexai-preview";
-import ResultChat from "../ResultChat";
+import Chats from "../Chats";
+import { cleanGeminiChat, ChatMessage as OriginalChatMessage } from "@/services/voice/TTS";
+import { Interview } from "@/services/firebase/interviewService";
 
-export interface convoT { question: string, answer: string, score: number }
+type ChatMessage = OriginalChatMessage & {
+  score?: number;
+  feedback?: string;
+};
 
 export default function Result() {
   const [resultsData, setResultsData] = useState<ResultProps | undefined>();
@@ -20,29 +24,35 @@ export default function Result() {
   }, [location, navigate]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getConvo = ([_, ...history]: Content[]) => {
+  const getConversation = (result: Interview) => {
     // Ignore _ beause its the initial prompt
 
-    const convo: convoT[] = []
+    const conversation: ChatMessage[] = []
 
-    // Statring from 2 cuz thats when the actual Interview starts
-    for (let i = 2; i < history.length / 2; i += 2) {
-      const [question] = history[i].parts
-      const [answer] = history[i + 1].parts
-      convo.push({
-        question: question.text ?? "No response",
-        answer: answer.text ?? "No response",
-        score: Math.round(Math.random() * 100)
-      })
+    for (let i = 2; i < result.chat.length; i++) {
+      const [message] = result.chat[i].content
+      if (result.chat[i].sender === 'gemini') {
+        conversation.push({
+          sender: 'gemini',
+          content: cleanGeminiChat(message ?? 'No Question')
+        })
+      } else if(result.chat[i].sender === 'user')  {
+        conversation.push({
+          sender: 'user',
+          content: message ?? 'No Response',
+          score: result.feedback[i - 2].score.overallScore, // ???
+          feedback: result.feedback[i - 2].text
+        })
+      }
     }
 
-    return convo
+    return conversation
   }
 
   return (
-    <div>
-      <h1>Results Page</h1>
-      {resultsData ? <ResultChat props={getConvo(resultsData.history)} /> : ""}
-    </div>
+    <>
+      {resultsData?.result.overallScore}
+      {resultsData && <Chats chats={getConversation(resultsData.result)} results />}
+    </>
   );
 }

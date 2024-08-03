@@ -1,20 +1,28 @@
 import { useLayoutEffect, useRef } from "react";
-import { Card, CardContent } from "./ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { useWindowScroll } from "@uidotdev/usehooks";
-import { ChatMessage } from "@/services/voice/TTS";
+import { ChatMessage as OriginalChatMessage } from "@/services/voice/TTS";
+import { PreviousResultsRadialChart } from "./PreviousResultsRadialChart";
+
+type ChatMessage = OriginalChatMessage & {
+  score?: number;
+  feedback?: string;
+};
 
 interface Props {
-  isFromDashboard?: boolean;
   chats: ChatMessage[];
+  results?: boolean;
+  scroll?: boolean;
 }
 
 const Chats: React.FC<Props> = (props: Props) => {
-  const { chats, isFromDashboard } = props;
+  const { chats } = props;
   const scroller = useWindowScroll();
   const scrollTo = scroller[1];
   const textContainerRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
+    if (!props.scroll) return;
     if (!textContainerRef.current) return;
 
     scrollTo({
@@ -30,20 +38,32 @@ const Chats: React.FC<Props> = (props: Props) => {
 
       if (chat.sender === "user") {
         return (
-          <Card
-            key={index}
-            className={`${
-              !isFromDashboard && "w-max"
-            } max-w-[75%] bg-primary text-primary-foreground ml-auto`}
-          >
-            <CardContent className="p-4">{chat.content}</CardContent>
-          </Card>
+          <div className="flex flex-col gap-4">
+            <Card
+              key={index}
+              className={`max-w-[75%] bg-primary text-primary-foreground ml-auto ${props.results ? 'opacity-50' : ''}`}
+            >
+              <CardContent className="p-4">{chat.content}</CardContent>
+            </Card>
+            {chat.score && chat.feedback &&
+              <div className="max-w-[75%] flex flex-row gap-4 ml-auto items-center">
+                <Card className="flex flex row">
+                  <CardContent className="p-4">
+                    { chat.feedback }
+                  </CardContent>
+                  <CardFooter className="flex justify-center p-0 pr-4">
+                    <PreviousResultsRadialChart data={Number(chat.score.toFixed(0))} />
+                  </CardFooter>
+                </Card>
+              </div>
+            }
+          </div>
         );
       } else {
         return (
           <Card
             key={index}
-            className={`${!isFromDashboard && "w-max"} max-w-[75%] bg-muted`}
+            className={`max-w-[75%] bg-muted ${props.results ? 'opacity-50' : ''}`}
           >
             <CardContent className="p-4">{chat.content}</CardContent>
           </Card>

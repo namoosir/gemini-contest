@@ -24,7 +24,7 @@ function initalizeChat(setStr: string): ChatSession {
   return model.startChat({
     history: history,
     generationConfig: {
-      maxOutputTokens: 100,
+      maxOutputTokens: 1000,
     },
   });
 }

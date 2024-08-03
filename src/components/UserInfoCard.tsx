@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import {
   getUserInterviewHistory,
   Interview,
-} from "@/services/firebase/saveInterviewSevice";
+} from "@/services/firebase/interviewService";
 import { db } from "@/FirebaseConfig";
 import {
   Dialog,

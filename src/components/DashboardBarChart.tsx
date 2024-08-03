@@ -21,7 +21,7 @@ import useAuthContext from "@/hooks/useAuthContext";
 import {
   getUserInterviewHistory,
   Interview,
-} from "@/services/firebase/saveInterviewSevice";
+} from "@/services/firebase/interviewService";
 
 export const DashboardBarChart = () => {
   const [barChartData, setBarChartData] = useState<Interview[]>([]);

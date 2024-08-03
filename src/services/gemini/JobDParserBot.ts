@@ -36,9 +36,11 @@ Additional parameters: \
 `;
 
 const evalString = `
-  Give 4 scores (each out of 100 points) with detailed feedback all at once and do not stagger the scores. Make sure to give specific evaluation for each question and response pair. \
+  For each question and answer pair: give an overall score for how well the question was answered.
+  
+  For the entire interview Give 4 scores (each out of 100 points) with detailed feedback all at once and do not stagger the scores. Make sure to give specific evaluation for each question and response pair. \
   The score categories are below, make sure you do not skip a single category: \
-  1. Technical Knowledge score: This score is based on how well the interviewee performed in the techincal interviews. \
+  1. Technical score: This score is based on how well the interviewee performed in the techincal interviews. \
   2. Behaviorial Score: This score is based on the analysis of the structure of the answers and the answers to behaviorial specific questions. \
   3. Job Fit Score: this score should highlight how well the answers given by the interviewee fits the job role. \
   4. Overall score: using the combination between Technical Knowlege Score, Behaviorial Score, and Job Fit Score. \

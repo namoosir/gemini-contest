@@ -1,4 +1,5 @@
 import { Functions, httpsCallable } from "firebase/functions";
+
 export interface ChatMessage {
   sender: "user" | "gemini";
   content: string;
@@ -148,13 +149,18 @@ export const updateLatestChat = (
   setChat((history) => {
     const newHistory = [...history];
     const lastItem = newHistory[newHistory.length - 1];
-    const regex = /\.{3,}/g;
 
     newHistory[newHistory.length - 1] = {
       ...lastItem,
-      content: lastItem.content + " " + text.replace(regex, ''),
+      content: lastItem.content + " " + cleanGeminiChat(text),
     };
 
     return newHistory;
   });
 };
+
+export const cleanGeminiChat = (text: string) => {
+  const regex = /\.{3,}/g;
+
+  return text.replace(regex, '')
+}
