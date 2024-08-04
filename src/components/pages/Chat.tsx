@@ -36,7 +36,6 @@ import {
 import {
   addInterview,
   Interview,
-  Score,
 } from "@/services/firebase/interviewService";
 
 import useFirebaseContext from "@/hooks/useFirebaseContext";
@@ -48,13 +47,12 @@ import {
   formatTime,
 } from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
-import { ChatSession, Part } from "firebase/vertexai-preview";
+import { ChatSession } from "firebase/vertexai-preview";
 import { Badge } from "@/components/ui/badge";
 import Scene from "../3D/scene";
 import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
 import FocusedInterviewDemo from "@/assets/media/FocusedInterviewDemo.gif";
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Loader2 } from "lucide-react"
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -330,75 +328,12 @@ function Chat() {
     setIsDialogOpen(true);
   };
 
-  const evaluateScore = (feedback: { score: Score, text: string }[]): Score => {
-    const initialResult: Score = {
-      technicalScore: 0,
-      behavioralScore: 0,
-      jobFitScore: 0,
-      overallScore: 0,
-    };
-  
-    if (feedback.length === 0) return initialResult;
-  
-    const totalScores = feedback.reduce((acc, fb) => {
-      acc.technicalScore += fb.score.technicalScore;
-      acc.behavioralScore += fb.score.behavioralScore;
-      acc.jobFitScore += fb.score.jobFitScore;
-      acc.overallScore += fb.score.overallScore;
-      return acc;
-    }, initialResult);
+  const getInterviewObject = (text: string): Interview | null => {
+    const regex = /```json([\s\S]*?)```/;
+    const match = text.match(regex);
 
-    const result: Score = {
-      technicalScore: totalScores.technicalScore / feedback.length,
-      behavioralScore: totalScores.behavioralScore / feedback.length,
-      jobFitScore: totalScores.jobFitScore / feedback.length,
-      overallScore: totalScores.overallScore / feedback.length,
-    };
-  
-    return result;
-  };
-
-  const processFeedback = (text: string): { score: Score, text: string }[] => {
-    const result: { score: Score, text: string }[] = [];
-  
-    const scoreRegex = /(\d+)\/100/g;
-    const feedbackRegex = /\*\*Question \d+:\*\* "([^"]+)"|\*\*Overall Interview Performance:\*\*/g;
-    const scores = [];
-    let match;
-  
-    while ((match = scoreRegex.exec(text)) !== null) {
-      scores.push(parseInt(match[1], 10));
-    }
-  
-    const feedbackTexts: string[] = [];
-    while ((match = feedbackRegex.exec(text)) !== null) {
-      feedbackTexts.push(match[1] || "Overall Interview Performance");
-    }
-  
-    const numScoresPerFeedback = 4;
-  
-    for (let i = 0; i < feedbackTexts.length; i++) {
-      const feedback = {
-        score: {
-          technicalScore: scores[i * numScoresPerFeedback],
-          behavioralScore: scores[i * numScoresPerFeedback + 1],
-          jobFitScore: scores[i * numScoresPerFeedback + 2],
-          overallScore: scores[i * numScoresPerFeedback + 3],
-        },
-        text: feedbackTexts[i],
-      };
-  
-      result.push(feedback);
-    }
-  
-    return result;
-  };
-
-  const getRecommendation = (text: string): string => {
-    const recommendationRegex = /\*\*Recommendation:\*\* ([^]*)$/;
-    const match = recommendationRegex.exec(text);
-    return match ? match[1].trim() : '';
-  };
+    return match ? JSON.parse(match[1]) as Interview : null;
+  }
 
   //TODO: In Chat.tsx Line 267-275, make sure you update the right score
 
@@ -407,18 +342,15 @@ function Chat() {
       const chatSession = geminiRef.current.chat as ChatSession;
       const history = await chatSession.getHistory();
       const feedback = history[history.length - 1].parts.map((f) => f.text).join(' ')
-      const processedFeedback = processFeedback(feedback)
-      const recommendation = getRecommendation(feedback)
-      const overallScore = evaluateScore(processedFeedback)
 
-      const interviewData: Interview = {
-        uid: user.uid,
-        chat: chat,
-        feedback: processedFeedback,
-        recommendation,
-        overallScore,
-        dateCreated: Date.now().toString(),
-      };
+      console.log(feedback)
+
+      const interviewData = getInterviewObject(feedback)
+      if (!interviewData) return
+
+      interviewData.chat = chat
+      interviewData.uid = user.uid
+      interviewData.dateCreated = Date.now().toString()
 
       return interviewData;
     } else {
@@ -515,7 +447,7 @@ function Chat() {
     </div>
   );
 
-  const handleResultsClick = async () => {
+  const handleResultsClick = () => {
     navigate("/results", { state: { result: interviewResultRef.current } });
   };
 
@@ -641,7 +573,7 @@ function Chat() {
           {
             resultsLoading ? 
             <AlertDialogFooter>
-              <Loader2 className="h-8 w-8 animate-spin" />
+              <Icon className="h-8 w-8 animate-spin" path={mdiLoading} />
             </AlertDialogFooter>
               :
             <AlertDialogFooter>

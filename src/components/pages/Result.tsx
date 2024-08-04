@@ -11,7 +11,7 @@ type ChatMessage = OriginalChatMessage & {
 };
 
 export default function Result() {
-  const [resultsData, setResultsData] = useState<ResultProps | undefined>();
+  const [resultsData, setResultsData] = useState<ResultProps>();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -23,25 +23,24 @@ export default function Result() {
     }
   }, [location, navigate]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getConversation = (result: Interview) => {
-    // Ignore _ beause its the initial prompt
-
     const conversation: ChatMessage[] = []
 
-    for (let i = 2; i < result.chat.length; i++) {
-      const [message] = result.chat[i].content
+    for (let i = 0; i < result.chat.length; i++) {
+      const message = result.chat[i].content
       if (result.chat[i].sender === 'gemini') {
         conversation.push({
           sender: 'gemini',
           content: cleanGeminiChat(message ?? 'No Question')
         })
       } else if(result.chat[i].sender === 'user')  {
+        const feedbackIndex = Math.floor(i / 2)
+        console.log(feedbackIndex)
         conversation.push({
           sender: 'user',
           content: message ?? 'No Response',
-          score: result.feedback[i - 2].score.overallScore, // ???
-          feedback: result.feedback[i - 2].text
+          score: result.feedback[feedbackIndex].score.overallScore, // ???
+          feedback: result.feedback[feedbackIndex].text
         })
       }
     }
@@ -50,9 +49,9 @@ export default function Result() {
   }
 
   return (
-    <>
-      {resultsData?.result.overallScore}
+    <div>
+      <p>{resultsData?.result.overallScore.overallScore}</p>
       {resultsData && <Chats chats={getConversation(resultsData.result)} results />}
-    </>
+    </div>
   );
 }
