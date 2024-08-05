@@ -4,17 +4,19 @@ import { RadialChart } from "../RadialChart";
 import WelcomeCard from "../WelcomeCard";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChatMessage } from "@/services/voice/TTS";
 import { getUserInterviewHistory, Interview } from "@/services/firebase/interviewService";
-import { db } from "@/FirebaseConfig";
 import useAuthContext from "@/hooks/useAuthContext";
 import { useNavigate } from "react-router-dom";
-
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 
 function Dashboard() {
   const { user } = useAuthContext();
+  const { db } = useFirebaseContext();
   const navigate = useNavigate();
-  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [interviews, setInterviews] = useState<Interview[]>([])
+  const [currMonthData, setCurrMonthData] = useState<Interview[]>([])
+  const [prevMonthData, setPrevMonthData] = useState<Interview[]>([])
+
 
   useEffect(() => {
     const init = async () => {
@@ -23,6 +25,39 @@ function Dashboard() {
         return
       }
       setInterviews(await getUserInterviewHistory(db, user) || []);
+
+      const currDate = new Date();
+      const currMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth(),
+        1
+      ).toLocaleDateString();
+
+      const nextMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth() + 1,
+        1
+      ).toLocaleDateString();
+
+      const prevMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth() - 1,
+        1
+      ).toLocaleDateString();
+
+      setCurrMonthData(await getUserInterviewHistory(
+        db,
+        user!,
+        currMonth,
+        nextMonth
+      ) ?? [])
+
+      setPrevMonthData(await getUserInterviewHistory(
+        db,
+        user!,
+        prevMonth,
+        currMonth
+      ) ?? [])
     };
 
     init();
@@ -56,16 +91,17 @@ function Dashboard() {
 
 
   return (
-    <div className="grid grid-cols-4 gap-8 py-12">
-      <div className="flex flex-row gap-8 col-span-4">
-        <WelcomeCard {...getInterviewMetrics()} userName={user!.displayName!} />
-        <div>
-          <RadialChart />
-        </div>
+    <div className="grid grid-cols-12 gap-8 py-12">
+      <div className="col-span-8 grid gap-8">
+        <WelcomeCard className="h-fit" {...getInterviewMetrics()} userName={user!.displayName!} />
+        <DashboardBarChart currMonthData={currMonthData} prevMonthData={prevMonthData} className="h-fit" />
+      </div>
+      <div className="col-span-4 grid gap-8">
+        <RadialChart className="h-fit" size={246} />
+        <RadialChart className="h-fit" size={246} />
       </div>
 
-      <DashboardBarChart className="col-span-2" />
-      <UserInfoCard className="col-span-2" />
+      <UserInfoCard className="col-span-12" />
     </div>
   );
 }

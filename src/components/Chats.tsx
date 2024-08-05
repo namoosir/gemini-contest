@@ -38,16 +38,15 @@ const Chats: React.FC<Props> = (props: Props) => {
 
       if (chat.sender === "user") {
         return (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4" key={index}>
             <Card
-              key={index}
               className={`max-w-[75%] bg-primary text-primary-foreground ml-auto ${props.results ? 'opacity-50' : ''}`}
             >
               <CardContent className="p-4">{chat.content}</CardContent>
             </Card>
             {chat.score && chat.feedback &&
               <div className="max-w-[75%] flex flex-row gap-4 ml-auto items-center">
-                <Card className="flex flex row">
+                <Card className="flex flex-row">
                   <CardContent className="p-4">
                     { chat.feedback }
                   </CardContent>

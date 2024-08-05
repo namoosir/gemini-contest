@@ -2,14 +2,11 @@ import useAuthContext from "@/hooks/useAuthContext";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "./ui/card";
 import { PreviousResultsRadialChart } from "./PreviousResultsRadialChart";
 import { useEffect, useState } from "react";
-import { Button } from "./ui/button";
 import {
   getUserInterviewHistory,
   Interview,
@@ -102,7 +99,7 @@ export const UserInfoCard = (props:Props) => {
         <CardContent>
           <div
             id="Multiple cards of feedback"
-            className="overflow-y-auto max-h-32"
+            className="overflow-y-auto max-h-70 flex flex-col gap-2"
           >
             {interviewData?.map((previousInterviews, index) => (
               <div
