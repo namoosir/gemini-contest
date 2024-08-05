@@ -39,7 +39,7 @@ export default function Result() {
         conversation.push({
           sender: 'user',
           content: message ?? 'No Response',
-          score: result.feedback[feedbackIndex].score.overallScore, // ???
+          score: result.feedback[feedbackIndex].score.overallScore,
           feedback: result.feedback[feedbackIndex].text
         })
       }

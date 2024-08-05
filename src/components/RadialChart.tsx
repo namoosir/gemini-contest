@@ -9,13 +9,20 @@ import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 import { getUserInterviewHistoryWithinWeek } from "@/services/firebase/interviewService";
 import { db } from "@/FirebaseConfig";
 import useAuthContext from "@/hooks/useAuthContext";
+interface Props {
+  className?: string
+}
 
-export const RadialChart = () => {
+export const RadialChart = (props: Props) => {
+  const {
+    className,
+  } = props
+
   const [avgScore, setAvgScore] = useState<number>(0);
 
-  const INNER_RADIUS = 90;
+  const INNER_RADIUS = 70;
   const OUTER_RADIUS = INNER_RADIUS * 1.625;
-  const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 100;
+  const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 65;
   const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.32;
 
   const { user } = useAuthContext();
@@ -30,7 +37,7 @@ export const RadialChart = () => {
         if (data) {
           sum = 0;
           for (let i = 0; i < data.length; i++) {
-            sum += data[i].score;
+            sum += data[i].overallScore.overallScore;
           }
 
           avg = Math.floor(sum / data.length);
@@ -60,7 +67,7 @@ export const RadialChart = () => {
   return (
     <div
       id="Circle Graph"
-      className="flex rounded-full border-solid border-2 overflow-hidden relative items-center"
+      className={`flex rounded-full border-solid border-2 overflow-hidden relative items-center ${className}`}
       style={{ width: RADIAL_GRAPH_WIDTH }}
     >
       <div
@@ -89,17 +96,17 @@ export const RadialChart = () => {
                     <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
                       <tspan
                         x={viewBox.cx}
-                        y={(viewBox.cy || 0) - 16}
+                        y={(viewBox.cy || 0)}
                         className="fill-foreground text-2xl font-bold"
                       >
                         {totalScore.toLocaleString() + "%"}
                       </tspan>
                       <tspan
                         x={viewBox.cx}
-                        y={(viewBox.cy || 0) + 4}
+                        y={(viewBox.cy || 0) + 16}
                         className="fill-muted-foreground"
                       >
-                        Average Weekly Score
+                        Weekly Average
                       </tspan>
                     </text>
                   );

@@ -23,7 +23,15 @@ import {
   Interview,
 } from "@/services/firebase/interviewService";
 
-export const DashboardBarChart = () => {
+interface Props {
+  className?: string
+}
+
+export const DashboardBarChart = (props: Props) => {
+  const {
+    className,
+  } = props
+
   const [barChartData, setBarChartData] = useState<Interview[]>([]);
   const [avgPerformance, setAvgPerformance] = useState<number>();
   const [overallMonthScore, setOverallMonthScore] = useState<number>();
@@ -67,6 +75,8 @@ export const DashboardBarChart = () => {
         currMonth
       );
 
+      console.log(currMonthData, prevMonthData)
+
       const currMonthSum = getPerformanceSum(currMonthData);
       const prevMonthSum = getPerformanceSum(prevMonthData);
       getAvgPerformance(currMonthSum);
@@ -83,7 +93,7 @@ export const DashboardBarChart = () => {
     let length = 0;
     if (data) {
       for (let i = 0; i < data.length; i++) {
-        sum += data[i].score;
+        sum += data[i].overallScore.overallScore;
       }
 
       length = data.length;
@@ -113,7 +123,7 @@ export const DashboardBarChart = () => {
   };
 
   return (
-    <Card className="mt-20">
+    <Card className={`mt-20 ${className}`}>
       <CardHeader>
         <CardTitle className="mb-5">Performance Over Time</CardTitle>
         <CardDescription className="text-3xl text-white font-semibold">

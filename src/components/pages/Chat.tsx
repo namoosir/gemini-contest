@@ -350,7 +350,7 @@ function Chat() {
 
       interviewData.chat = chat
       interviewData.uid = user.uid
-      interviewData.dateCreated = Date.now().toString()
+      interviewData.duration = Number(locationStateRef.current!.interviewDuration)
 
       return interviewData;
     } else {
