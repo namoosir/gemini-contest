@@ -40,29 +40,33 @@ const Chats: React.FC<Props> = (props: Props) => {
         return (
           <div className="flex flex-col gap-4" key={index}>
             <Card
-              className={`max-w-[75%] bg-primary text-primary-foreground ml-auto ${props.results ? 'opacity-50' : ''}`}
+              className={`max-w-[75%] w-fit-content bg-primary text-primary-foreground ml-auto ${
+                props.results ? "opacity-50" : ""
+              }`}
             >
               <CardContent className="p-4">{chat.content}</CardContent>
             </Card>
-            {chat.score && chat.feedback &&
+            {chat.score && chat.feedback && (
               <div className="max-w-[75%] flex flex-row gap-4 ml-auto items-center">
                 <Card className="flex flex-row">
-                  <CardContent className="p-4">
-                    { chat.feedback }
-                  </CardContent>
+                  <CardContent className="p-4">{chat.feedback}</CardContent>
                   <CardFooter className="flex justify-center p-0 pr-4">
-                    <PreviousResultsRadialChart data={Number(chat.score.toFixed(0))} />
+                    <PreviousResultsRadialChart
+                      data={Number(chat.score.toFixed(0))}
+                    />
                   </CardFooter>
                 </Card>
               </div>
-            }
+            )}
           </div>
         );
       } else {
         return (
           <Card
             key={index}
-            className={`max-w-[75%] bg-muted ${props.results ? 'opacity-50' : ''}`}
+            className={`max-w-[75%] w-fit-content bg-muted ${
+              props.results ? "opacity-50" : ""
+            }`}
           >
             <CardContent className="p-4">{chat.content}</CardContent>
           </Card>
