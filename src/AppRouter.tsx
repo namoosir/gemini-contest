@@ -29,7 +29,7 @@ const AppRouter = () => {
               index
               element={
                 <ProtectedRoute>
-                  <Home />
+                  <Dashboard />
                 </ProtectedRoute>
               }
             />
@@ -49,14 +49,6 @@ const AppRouter = () => {
             element={
               <ProtectedRoute>
                 <Interview />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
               </ProtectedRoute>
             }
           />

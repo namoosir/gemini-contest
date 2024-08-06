@@ -46,7 +46,7 @@ const Header = () => {
   const menu: Menu[] = [
     {
       name: "Dashboard",
-      path: "dashboard",
+      path: "",
       icon: <Icon className="h-4 w-4 mr-2" path={mdiHomeAnalytics} />,
     },
     {

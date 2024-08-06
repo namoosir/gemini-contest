@@ -34,7 +34,7 @@ function WelcomeCard(props: Props) {
     },
     {
       name: 'Average Score',
-      value: averageScore,
+      value: averageScore.toFixed(0),
       icon: <Icon path={mdiLightbulb} className="h-10 w-10 text-[hsl(var(--chart-3))]" />,
       color: 'bg-[hsl(var(--chart-3))]/20',
     },
