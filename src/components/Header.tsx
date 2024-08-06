@@ -46,7 +46,7 @@ const Header = () => {
   const menu: Menu[] = [
     {
       name: "Dashboard",
-      path: "dashboard",
+      path: "",
       icon: <Icon className="h-4 w-4 mr-2" path={mdiHomeAnalytics} />,
     },
     {
@@ -83,7 +83,7 @@ const Header = () => {
   return (
     <header className="w-full fixed z-50 top-0 bg-background lg:backdrop-blur-md border-b border-border/40 lg:bg-background/40 flex justify-center">
       <div className="hidden lg:flex p-3 flex-row justify-between items-center w-[1120px]">
-        <div onClick={() => goToPage("dashboard")}>
+        <div onClick={() => goToPage("")}>
           <Logo className="h-8 w-[340px] cursor-pointer" />
         </div>
         <div className="flex gap-2 justify-center items-center">
