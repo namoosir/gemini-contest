@@ -275,7 +275,9 @@ function Chat() {
   const stopRecording = async () => {
     setIsRecording(false);
     if (seconds === 0) {
-      await geminiRef.current.handleInterviewFinish(transcript);
+      await geminiRef.current.handleInterviewFinish(
+        transcript || "no response"
+      );
       await handleResponse(FINAL_INTERVIEW_RESPONSE, true);
 
       setInterviewEnded(true);
@@ -283,6 +285,7 @@ function Chat() {
       await handleAddChat();
       setResultsLoading(false);
     } else {
+      console.log(transcript || "no response");
       await handleResponse(
         await geminiRef.current.prompt(transcript || "no response")
       );
@@ -432,7 +435,7 @@ function Chat() {
   const startInterview = async () => {
     setHasInterviewStarted(true);
     // setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
-    setSeconds(60);
+    setSeconds(10);
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
