@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import {
   ChartConfig,
   ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
 } from "./ui/chart";
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
@@ -57,10 +55,6 @@ export const PreviousResultsRadialChart: React.FC<Props> = ({ data }) => {
           innerRadius={INNER_RADIUS}
           outerRadius={OUTER_RADIUS}
         >
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent hideLabel />}
-          />
           <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
             <Label
               content={({ viewBox }) => {

@@ -1,33 +1,107 @@
 import { DashboardBarChart } from "../DashboardBarChart";
 import { UserInfoCard } from "../UserInfoCard";
 import { RadialChart } from "../RadialChart";
+import WelcomeCard from "../WelcomeCard";
 
-import { useEffect, useState } from "react";
-import { ChatMessage } from "@/services/voice/TTS";
-import { getUserInterviewHistory } from "@/services/firebase/interviewService";
-import { db } from "@/FirebaseConfig";
+import { useCallback, useEffect, useState } from "react";
+import { getUserInterviewHistory, Interview } from "@/services/firebase/interviewService";
 import useAuthContext from "@/hooks/useAuthContext";
+import { useNavigate } from "react-router-dom";
+import useFirebaseContext from "@/hooks/useFirebaseContext";
 
 function Dashboard() {
-  // const { user } = useAuthContext();
+  const { user } = useAuthContext();
+  const { db } = useFirebaseContext();
+  const navigate = useNavigate();
+  const [interviews, setInterviews] = useState<Interview[]>([])
+  const [currMonthData, setCurrMonthData] = useState<Interview[]>([])
+  const [prevMonthData, setPrevMonthData] = useState<Interview[]>([])
 
-  // useEffect(() => {
-  //   const init = async () => {
-  //     await getUserInterviewHistory(db, user!);
-  //   };
 
-  //   init();
-  // }, []);
+  useEffect(() => {
+    const init = async () => {
+      if (!user) {
+        navigate('/404')
+        return
+      }
+      setInterviews(await getUserInterviewHistory(db, user) || []);
+
+      const currDate = new Date();
+      const currMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth(),
+        1
+      ).toLocaleDateString();
+
+      const nextMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth() + 1,
+        1
+      ).toLocaleDateString();
+
+      const prevMonth = new Date(
+        currDate.getFullYear(),
+        currDate.getMonth() - 1,
+        1
+      ).toLocaleDateString();
+
+      setCurrMonthData(await getUserInterviewHistory(
+        db,
+        user!,
+        currMonth,
+        nextMonth
+      ) ?? [])
+
+      setPrevMonthData(await getUserInterviewHistory(
+        db,
+        user!,
+        prevMonth,
+        currMonth
+      ) ?? [])
+    };
+
+    init();
+  }, []);
+
+  const getInterviewMetrics = useCallback((): {
+    numberOfInterviews: number
+    averageScore: number
+    timeSpent: number
+  } => {
+    const initialData = {
+      numberOfInterviews: 0,
+      averageScore: 0,
+      timeSpent: 0,
+    }
+
+    const data = interviews.reduce((accumulator, currentValue) => {
+      accumulator.numberOfInterviews += 1;
+      accumulator.averageScore += currentValue.overallScore.overallScore;
+      accumulator.timeSpent += currentValue.duration;
+
+      return accumulator
+    },
+      initialData,
+    )
+
+    data.averageScore /= data.numberOfInterviews
+
+    return data;
+  }, [interviews])
+
 
   return (
-    <div className="flex flex-col m-10">
-      <div className="flex flex-row">
-        <div className="pr-20">
-          <RadialChart />
-        </div>
-        <UserInfoCard />
+    <div className="grid grid-cols-12 gap-8 py-12">
+      <div className="col-span-8 grid gap-8">
+        <WelcomeCard className="h-fit" {...getInterviewMetrics()} userName={user!.displayName!} />
+        <DashboardBarChart currMonthData={currMonthData} prevMonthData={prevMonthData} className="h-fit" />
       </div>
-      <DashboardBarChart />
+      <div className="col-span-4 grid gap-8">
+        <RadialChart className="h-fit" size={246} />
+        <RadialChart className="h-fit" size={246} />
+      </div>
+
+      <UserInfoCard className="col-span-12" />
     </div>
   );
 }

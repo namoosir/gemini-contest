@@ -88,11 +88,11 @@ export default function Result() {
         const feedbackIndex = Math.floor(i / 2);
         //console.log(feedbackIndex);
         conversation.push({
-          sender: "user",
-          content: message ?? "No Response",
-          score: result.feedback[feedbackIndex].score.overallScore, // ???
-          feedback: result.feedback[feedbackIndex].text,
-        });
+          sender: 'user',
+          content: message ?? 'No Response',
+          score: result.feedback[feedbackIndex].score.overallScore,
+          feedback: result.feedback[feedbackIndex].text
+        })
       }
     }
 

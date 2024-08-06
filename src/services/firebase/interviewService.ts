@@ -26,6 +26,7 @@ export interface Interview {
     text: string
   }[];
   recommendation: string;
+  duration: number;
   dateCreated?: string;
 }
 
@@ -52,12 +53,12 @@ export const getUserInterviewHistory = async (
   endMonth?: String
 ) => {
   try {
-    let q = query(collection(db, "interviews"), where("user", "==", user.uid));
+    let q = query(collection(db, "interviews"), where("uid", "==", user.uid));
 
     if (currMonth && endMonth) {
       q = query(
         collection(db, "interviews"),
-        where("user", "==", user.uid),
+        where("uid", "==", user.uid),
         where("dateCreated", ">=", currMonth),
         where("dateCreated", "<", endMonth)
       );
@@ -97,7 +98,7 @@ export const getUserInterviewHistoryWithinWeek = async (
 
     const q = query(
       collection(db, "interviews"),
-      where("user", "==", user.uid),
+      where("uid", "==", user.uid),
       where("dateCreated", ">=", weekStart),
       where("dateCreated", "<=", weekEnd)
     );
