@@ -47,6 +47,7 @@ const evalString = `
   4. Overall score: using the combination between Technical Knowlege Score, Behaviorial Score, and Job Fit Score. \
 
   Return your full feedback in Interview format based on the Interview interface below. YOU MUST NOT FORGET ANY ITEM FROM THE INTERFACE.
+  Make sure you add a feedback object in the feedback array in interview for each question and answer pair.
 
   interface Score {
     technicalScore: number;
