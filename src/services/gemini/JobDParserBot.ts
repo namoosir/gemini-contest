@@ -46,16 +46,16 @@ const evalString = `
   3. Job Fit Score: this score should highlight how well the answers given by the interviewee fits the job role. \
   4. Overall score: using the combination between Technical Knowlege Score, Behaviorial Score, and Job Fit Score. \
 
-  Return your full feedback in Interview format based on the Interview interface below.
+  Return your full feedback in Interview format based on the Interview interface below. YOU MUST NOT FORGET ANY ITEM FROM THE INTERFACE.
 
-  export interface Score {
+  interface Score {
     technicalScore: number;
     behavioralScore: number;
     jobFitScore: number;
     overallScore: number;
   }
 
-  export interface Interview {
+  interface Interview {
     overallScore: Score;
     feedback: {
       score: Score;

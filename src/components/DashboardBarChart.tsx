@@ -37,10 +37,10 @@ export const DashboardBarChart = (props: Props) => {
   const [avgPerformance, setAvgPerformance] = useState<number>();
   const [overallMonthScore, setOverallMonthScore] = useState<number>();
   const [percentageMonthIncrease, setPercentageMonthIncrease] =
-    useState<number>();
+    useState<number>(0);
 
   useEffect(() => {
-    const init = async () => {
+    const init = () => {
       console.log(currMonthData, prevMonthData)
 
       const currMonthSum = getPerformanceSum(currMonthData);
@@ -48,10 +48,10 @@ export const DashboardBarChart = (props: Props) => {
       getAvgPerformance(currMonthSum);
       getOverallMonthScore(currMonthSum);
       getPercentageMonthIncrease(currMonthSum, prevMonthSum);
-      setBarChartData(currMonthData!);
+      setBarChartData(currMonthData);
     };
 
-    init();
+    void init();
   }, [currMonthData, prevMonthData]);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export const DashboardBarChart = (props: Props) => {
   };
 
   const getAvgPerformance = (currMonth: { sum: number; length: number }) => {
-    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length));
+    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length === 0 ? 1 : currMonth.length));
     console.log(avgPerformance);
   };
 
@@ -90,7 +90,7 @@ export const DashboardBarChart = (props: Props) => {
     const prevSum = prevMonth.sum;
 
     setPercentageMonthIncrease(
-      ((currSum - prevSum) / ((currSum + prevSum) / 2)) * 100
+      ((currSum - prevSum) / ((currSum + prevSum) / 2) === 0 ? 1 : (currSum + prevSum)) * 100
     );
   };
 

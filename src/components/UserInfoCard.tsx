@@ -49,7 +49,7 @@ export const UserInfoCard = (props:Props) => {
       setInterviewData(data);
     };
 
-    init();
+    void init();
   }, []);
 
   const getConversation = (result: Interview) => {
@@ -104,7 +104,7 @@ export const UserInfoCard = (props:Props) => {
             {interviewData?.map((previousInterviews, index) => (
               <div
                 key={index}
-                className="flex w-full p-4 overflow-hidden bg-muted rounded-lg cursor-pointer hover:bg-secondary"
+                className="flex items-center justify-center rounded-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 cursor-pointer"
                 onClick={() => goResultsPage(index)}
               >
                 <div
@@ -112,7 +112,7 @@ export const UserInfoCard = (props:Props) => {
                 >
                   <div className="flex flex-row justify-between items-center">
                     <span>Interview #{index + 1}</span>
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       Date: {previousInterviews.dateCreated}
                     </span>
                     <span>
@@ -124,8 +124,8 @@ export const UserInfoCard = (props:Props) => {
                 </div>
               </div>
             ))}
-            {!interviewData && (
-              <p>You have no interview history to display...</p>
+            {interviewData?.length === 0 && (
+              <p className="text-sm text-muted-foreground">You have no interview history to display</p>
             )}
           </div>
         </CardContent>

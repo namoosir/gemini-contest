@@ -24,7 +24,7 @@ function Dashboard() {
         navigate('/404')
         return
       }
-      setInterviews(await getUserInterviewHistory(db, user) || []);
+      setInterviews(await getUserInterviewHistory(db, user) ?? []);
 
       const currDate = new Date();
       const currMonth = new Date(
@@ -47,20 +47,20 @@ function Dashboard() {
 
       setCurrMonthData(await getUserInterviewHistory(
         db,
-        user!,
+        user,
         currMonth,
         nextMonth
       ) ?? [])
 
       setPrevMonthData(await getUserInterviewHistory(
         db,
-        user!,
+        user,
         prevMonth,
         currMonth
       ) ?? [])
     };
 
-    init();
+    void init();
   }, []);
 
   const getInterviewMetrics = useCallback((): {
@@ -84,7 +84,7 @@ function Dashboard() {
       initialData,
     )
 
-    data.averageScore /= data.numberOfInterviews
+    data.averageScore /= data.numberOfInterviews === 0 ? 1 : data.numberOfInterviews
 
     return data;
   }, [interviews])

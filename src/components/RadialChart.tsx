@@ -41,7 +41,7 @@ export const RadialChart = (props: Props) => {
             sum += data[i].overallScore.overallScore;
           }
 
-          avg = Math.floor(sum / data.length);
+          avg = Math.floor(sum / data.length === 0 ? 1 : data.length);
         }
         return avg;
       });

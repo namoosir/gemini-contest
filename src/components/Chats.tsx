@@ -30,7 +30,7 @@ const Chats: React.FC<Props> = (props: Props) => {
       top: textContainerRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [chats, scrollTo]);
+  }, [chats, scrollTo, props.scroll]);
 
   const renderChats = () => {
     return chats.map((chat, index) => {
@@ -62,7 +62,7 @@ const Chats: React.FC<Props> = (props: Props) => {
         return (
           <Card
             key={index}
-            className={`max-w-[75%] bg-muted ${props.results ? 'opacity-50' : ''}`}
+            className={`max-w-[75%] bg-muted w-fit ${props.results ? 'opacity-50' : ''}`}
           >
             <CardContent className="p-4">{chat.content}</CardContent>
           </Card>
