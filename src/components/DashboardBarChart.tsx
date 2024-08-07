@@ -84,9 +84,9 @@ export const DashboardBarChart = (props: Props) => {
     const prevSum = prevMonth.sum;
 
     setPercentageMonthIncrease(
-      ((currSum - prevSum) / ((currSum + prevSum) / 2) === 0
-        ? 1
-        : (currSum + prevSum) / 2) * 100
+      (currSum - prevSum) / ((currSum + prevSum) / 2) === 0
+        ? 0
+        : ((currSum - prevSum) / ((currSum + prevSum) / 2)) * 100
     );
   };
 

@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  ChartConfig,
-  ChartContainer,
-} from "./ui/chart";
+import { ChartConfig, ChartContainer } from "./ui/chart";
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
 interface Props {
