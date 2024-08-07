@@ -15,38 +15,33 @@ import {
 } from "./ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
 import { useEffect, useState } from "react";
-import {
-  Interview,
-} from "@/services/firebase/interviewService";
+import { Interview } from "@/services/firebase/interviewService";
 
 interface Props {
-  currMonthData: Interview[]
-  prevMonthData: Interview[]
-  className?: string
+  currMonthData: Interview[];
+  prevMonthData: Interview[];
+  className?: string;
 }
 
 export const DashboardBarChart = (props: Props) => {
-  const {
-    className,
-    currMonthData,
-    prevMonthData,
-  } = props
+  const { className, currMonthData, prevMonthData } = props;
 
-  const [barChartData, setBarChartData] = useState<{ score: number, date: string }[]>([]);
+  const [barChartData, setBarChartData] = useState<
+    { score: number; date: string }[]
+  >([]);
   const [avgPerformance, setAvgPerformance] = useState<number>();
   const [overallMonthScore, setOverallMonthScore] = useState<number>();
   const [percentageMonthIncrease, setPercentageMonthIncrease] =
     useState<number>(0);
 
-  
   const getAvgPerformance = (currMonth: { sum: number; length: number }) => {
-    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length === 0 ? 1 : currMonth.length));
-    console.log(avgPerformance);
+    setAvgPerformance(
+      Math.floor(currMonth.sum / currMonth.length === 0 ? 1 : currMonth.length)
+    );
   };
 
   const getOverallMonthScore = (currMonth: { sum: number; length: number }) => {
     setOverallMonthScore(currMonth.sum);
-    console.log(overallMonthScore);
   };
 
   useEffect(() => {
@@ -56,24 +51,25 @@ export const DashboardBarChart = (props: Props) => {
       getAvgPerformance(currMonthSum);
       getOverallMonthScore(currMonthSum);
       getPercentageMonthIncrease(currMonthSum, prevMonthSum);
-      setBarChartData(currMonthData.map((d) => {
-        return { score: d.overallScore.overallScore, date: new Date(d.dateCreated!).toString() }
-      }));
+      setBarChartData(
+        currMonthData.map((d) => {
+          return {
+            score: d.overallScore.overallScore,
+            date: new Date(d.dateCreated!).toString(),
+          };
+        })
+      );
     };
 
     void init();
   }, [currMonthData, prevMonthData]);
 
-  useEffect(() => {
-    console.log(currMonthData)
-  }, [currMonthData])
-
   const getPerformanceSum = (data: Interview[] | null) => {
     let sum = 0;
     let length = 0;
     if (data) {
-      data.forEach((d) => sum += d.overallScore.overallScore)
-      
+      data.forEach((d) => (sum += d.overallScore.overallScore));
+
       length = data.length;
     }
 
@@ -88,7 +84,9 @@ export const DashboardBarChart = (props: Props) => {
     const prevSum = prevMonth.sum;
 
     setPercentageMonthIncrease(
-      ((currSum - prevSum) / ((currSum + prevSum) / 2) === 0 ? 1 : (currSum + prevSum) / 2) * 100
+      ((currSum - prevSum) / ((currSum + prevSum) / 2) === 0
+        ? 1
+        : (currSum + prevSum) / 2) * 100
     );
   };
 
@@ -96,13 +94,14 @@ export const DashboardBarChart = (props: Props) => {
     <Card className={`${className}`}>
       <CardHeader>
         <CardTitle className="mb-4">Performance Over Time</CardTitle>
-        <CardDescription className='flex flex-col'>
+        <CardDescription className="flex flex-col">
           <span className="text-3xl text-white font-semibold">
             +{overallMonthScore}
           </span>
 
           <span className="text-primary">
-            {percentageMonthIncrease !== undefined && percentageMonthIncrease > 0
+            {percentageMonthIncrease !== undefined &&
+            percentageMonthIncrease > 0
               ? "+"
               : ""}
             {percentageMonthIncrease?.toFixed(2)}% from last month
@@ -147,6 +146,13 @@ export const DashboardBarChart = (props: Props) => {
               content={
                 <ChartTooltipContent
                   hideIndicator
+                  labelFormatter={(value) => {
+                    return new Date(value).toLocaleDateString("en-US", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    });
+                  }}
                 />
               }
               cursor={false}
