@@ -36,7 +36,9 @@ export const DashboardBarChart = (props: Props) => {
 
   const getAvgPerformance = (currMonth: { sum: number; length: number }) => {
     setAvgPerformance(
-      Math.floor(currMonth.sum / currMonth.length === 0 ? 1 : currMonth.length)
+      Math.floor(
+        currMonth.sum / (currMonth.length === 0 ? 1 : currMonth.length)
+      )
     );
   };
 
