@@ -87,12 +87,12 @@ export const getUserInterviewHistoryWithinWeek = async (
 ) => {
   try {
     const currDate = new Date();
-    const weekStart = new Date(
+    const weekStart = Number(new Date(
       currDate.getFullYear(),
-      currDate.getMonth() + 1,
+      currDate.getMonth(),
       currDate.getDay() - 7
-    ).toLocaleDateString();
-    const weekEnd = currDate.toLocaleDateString();
+    ));
+    const weekEnd = Number(currDate);
 
     const q = query(
       collection(db, "interviews"),

@@ -32,7 +32,7 @@ export const DashboardBarChart = (props: Props) => {
     prevMonthData,
   } = props
 
-  const [barChartData, setBarChartData] = useState<Interview[]>([]);
+  const [barChartData, setBarChartData] = useState<{ score: number, date: string }[]>([]);
   const [avgPerformance, setAvgPerformance] = useState<number>();
   const [overallMonthScore, setOverallMonthScore] = useState<number>();
   const [percentageMonthIncrease, setPercentageMonthIncrease] =
@@ -51,14 +51,14 @@ export const DashboardBarChart = (props: Props) => {
 
   useEffect(() => {
     const init = () => {
-      console.log(currMonthData, prevMonthData)
-
       const currMonthSum = getPerformanceSum(currMonthData);
       const prevMonthSum = getPerformanceSum(prevMonthData);
       getAvgPerformance(currMonthSum);
       getOverallMonthScore(currMonthSum);
       getPercentageMonthIncrease(currMonthSum, prevMonthSum);
-      setBarChartData(currMonthData);
+      setBarChartData(currMonthData.map((d) => {
+        return { score: d.overallScore.overallScore, date: new Date(d.dateCreated!).toString() }
+      }));
     };
 
     void init();
@@ -127,19 +127,18 @@ export const DashboardBarChart = (props: Props) => {
             data={barChartData}
           >
             <Bar
-              dataKey="overallScore.overallScore"
+              dataKey="score"
               fill="hsl(var(--primary))"
               radius={5}
               fillOpacity={0.6}
               activeBar={<Rectangle fillOpacity={0.8} />}
             />
             <XAxis
-              dataKey="dateCreated"
+              dataKey="date"
               tickLine={false}
               axisLine={false}
               tickMargin={4}
               tickFormatter={(value) => {
-                console.log(value)
                 return new Date(value).toLocaleDateString("en-US");
               }}
             />
@@ -148,10 +147,6 @@ export const DashboardBarChart = (props: Props) => {
               content={
                 <ChartTooltipContent
                   hideIndicator
-                  labelFormatter={(value) => {
-                    console.log(value)
-                    return new Date(value).toLocaleDateString("en-US");
-                  }}
                 />
               }
               cursor={false}

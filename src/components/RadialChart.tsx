@@ -30,7 +30,7 @@ export const RadialChart = (props: Props) => {
   useEffect(() => {
     const init = async () => {
       const data = await getUserInterviewHistoryWithinWeek(db, user!);
-
+      
       setAvgScore(() => {
         let avg = 0;
         let sum = 0;
@@ -39,7 +39,8 @@ export const RadialChart = (props: Props) => {
 
           data.forEach((s) => sum += s.overallScore.overallScore)
 
-          avg = Math.floor(sum / data.length === 0 ? 1 : data.length);
+          const denom = data.length === 0 ? 1 : data.length;
+          avg = Math.floor(sum / denom);
         }
         return avg;
       });
