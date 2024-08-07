@@ -27,18 +27,16 @@ export interface Interview {
   }[];
   recommendation: string;
   duration: number;
-  dateCreated?: string;
+  dateCreated?: number;
 }
-
-//TODO: In Chat.tsx Line 267-275, make sure you update the right score
 
 export const addInterview = async (db: Firestore, data: Interview) => {
   try {
     await addDoc(collection(db, "interviews"), {
       ...data,
-      dateCreated: new Date().toLocaleDateString(),
+      dateCreated: Date.now(),
     });
-    console.log("Interview history added successfully");
+
     return true;
   } catch (error) {
     console.error("Error adding interview history:", error);
@@ -49,8 +47,8 @@ export const addInterview = async (db: Firestore, data: Interview) => {
 export const getUserInterviewHistory = async (
   db: Firestore,
   user: User,
-  currMonth?: String,
-  endMonth?: String
+  currMonth?: number,
+  endMonth?: number
 ) => {
   try {
     let q = query(collection(db, "interviews"), where("uid", "==", user.uid));
@@ -69,7 +67,7 @@ export const getUserInterviewHistory = async (
     const userInterviewHistory: Interview[] = [];
 
     docSnap.forEach((doc) => {
-      let data = doc.data();
+      const data = doc.data();
       userInterviewHistory.push(data as Interview);
     });
 

@@ -435,7 +435,7 @@ function Chat() {
   const startInterview = async () => {
     setHasInterviewStarted(true);
     // setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
-    setSeconds(10);
+    setSeconds(30);
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??

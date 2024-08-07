@@ -7,8 +7,7 @@ import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 import { getUserInterviewHistoryWithinWeek } from "@/services/firebase/interviewService";
 import { db } from "@/FirebaseConfig";
 import useAuthContext from "@/hooks/useAuthContext";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { TrendingUp } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 interface Props {
   className?: string
   size: number,
@@ -37,9 +36,8 @@ export const RadialChart = (props: Props) => {
         let sum = 0;
         if (data) {
           sum = 0;
-          for (let i = 0; i < data.length; i++) {
-            sum += data[i].overallScore.overallScore;
-          }
+
+          data.forEach((s) => sum += s.overallScore.overallScore)
 
           avg = Math.floor(sum / data.length === 0 ? 1 : data.length);
         }
@@ -47,7 +45,7 @@ export const RadialChart = (props: Props) => {
       });
     };
 
-    init();
+    void init();
   }, []);
 
   const chartData = [{ averageScore: avgScore, improvability: 100 - avgScore }];
@@ -116,14 +114,14 @@ export const RadialChart = (props: Props) => {
                         <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
                           <tspan
                             x={viewBox.cx}
-                            y={(viewBox.cy || 0)}
+                            y={(viewBox.cy ?? 0)}
                             className="fill-foreground text-4xl font-bold"
                           >
                             {totalScore.toLocaleString() + "%"}
                           </tspan>
                           <tspan
                             x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 24}
+                            y={(viewBox.cy ?? 0) + 24}
                             className="fill-muted-foreground"
                           >
                             Overall Score
@@ -139,14 +137,6 @@ export const RadialChart = (props: Props) => {
         </div>
 
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card >
   );
 };

@@ -27,23 +27,23 @@ function Dashboard() {
       setInterviews(await getUserInterviewHistory(db, user) ?? []);
 
       const currDate = new Date();
-      const currMonth = new Date(
+      const currMonth = Number(new Date(
         currDate.getFullYear(),
         currDate.getMonth(),
         1
-      ).toLocaleDateString();
+      ));
 
-      const nextMonth = new Date(
+      const nextMonth = Number(new Date(
         currDate.getFullYear(),
         currDate.getMonth() + 1,
         1
-      ).toLocaleDateString();
+      ));
 
-      const prevMonth = new Date(
+      const prevMonth = Number(new Date(
         currDate.getFullYear(),
         currDate.getMonth() - 1,
         1
-      ).toLocaleDateString();
+      ));
 
       setCurrMonthData(await getUserInterviewHistory(
         db,
@@ -97,8 +97,8 @@ function Dashboard() {
         <DashboardBarChart currMonthData={currMonthData} prevMonthData={prevMonthData} className="h-fit" />
       </div>
       <div className="col-span-4 grid gap-8">
-        <RadialChart className="h-fit" size={246} />
-        <RadialChart className="h-fit" size={246} />
+        <RadialChart className="h-fit" size={295} />
+        <RadialChart className="h-fit" size={295} />
       </div>
 
       <UserInfoCard className="col-span-12" />

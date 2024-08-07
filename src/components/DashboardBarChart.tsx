@@ -10,7 +10,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "./ui/card";
@@ -39,6 +38,17 @@ export const DashboardBarChart = (props: Props) => {
   const [percentageMonthIncrease, setPercentageMonthIncrease] =
     useState<number>(0);
 
+  
+  const getAvgPerformance = (currMonth: { sum: number; length: number }) => {
+    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length === 0 ? 1 : currMonth.length));
+    console.log(avgPerformance);
+  };
+
+  const getOverallMonthScore = (currMonth: { sum: number; length: number }) => {
+    setOverallMonthScore(currMonth.sum);
+    console.log(overallMonthScore);
+  };
+
   useEffect(() => {
     const init = () => {
       console.log(currMonthData, prevMonthData)
@@ -62,24 +72,12 @@ export const DashboardBarChart = (props: Props) => {
     let sum = 0;
     let length = 0;
     if (data) {
-      for (let i = 0; i < data.length; i++) {
-        sum += data[i].overallScore.overallScore;
-      }
-
+      data.forEach((d) => sum += d.overallScore.overallScore)
+      
       length = data.length;
     }
 
     return { sum, length };
-  };
-
-  const getAvgPerformance = (currMonth: { sum: number; length: number }) => {
-    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length === 0 ? 1 : currMonth.length));
-    console.log(avgPerformance);
-  };
-
-  const getOverallMonthScore = (currMonth: { sum: number; length: number }) => {
-    setOverallMonthScore(currMonth.sum);
-    console.log(overallMonthScore);
   };
 
   const getPercentageMonthIncrease = (
@@ -90,7 +88,7 @@ export const DashboardBarChart = (props: Props) => {
     const prevSum = prevMonth.sum;
 
     setPercentageMonthIncrease(
-      ((currSum - prevSum) / ((currSum + prevSum) / 2) === 0 ? 1 : (currSum + prevSum)) * 100
+      ((currSum - prevSum) / ((currSum + prevSum) / 2) === 0 ? 1 : (currSum + prevSum) / 2) * 100
     );
   };
 
@@ -141,6 +139,7 @@ export const DashboardBarChart = (props: Props) => {
               axisLine={false}
               tickMargin={4}
               tickFormatter={(value) => {
+                console.log(value)
                 return new Date(value).toLocaleDateString("en-US");
               }}
             />
@@ -150,11 +149,8 @@ export const DashboardBarChart = (props: Props) => {
                 <ChartTooltipContent
                   hideIndicator
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    });
+                    console.log(value)
+                    return new Date(value).toLocaleDateString("en-US");
                   }}
                 />
               }
@@ -185,7 +181,6 @@ export const DashboardBarChart = (props: Props) => {
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter></CardFooter>
     </Card>
   );
 };
