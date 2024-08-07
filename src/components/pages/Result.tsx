@@ -17,19 +17,15 @@ import {
   RadialBarChart,
 } from "recharts";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+
 import ScoreBarChart from "../ScoreBarChart";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@radix-ui/react-dialog";
-import { DialogHeader } from "../ui/dialog";
+} from "../ui/dialog";
+import { DialogHeader, DialogTrigger } from "../ui/dialog";
 import { PreviousResultsRadialChart } from "../PreviousResultsRadialChart";
 import { Button } from "../ui/button";
 
@@ -49,7 +45,6 @@ export default function Result() {
   const [resultsData, setResultsData] = useState<ResultProps>();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (isResultProps(location.state)) {
@@ -71,7 +66,6 @@ export default function Result() {
         });
       } else if (result.chat[i].sender === "user") {
         const feedbackIndex = Math.floor(i / 2);
-        //console.log(feedbackIndex);
         conversation.push({
           sender: "user",
           content: message ?? "No Response",
@@ -89,14 +83,6 @@ export default function Result() {
       overallScore: resultsData?.result.overallScore.overallScore,
     },
   ];
-
-  const openDialog = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeDialog = () => {
-    setIsModalOpen(false);
-  };
 
   return (
     <div className="grid grid-cols-12 gap-8 py-12">
@@ -179,40 +165,30 @@ export default function Result() {
               </div>
             </CardContent>
           </Card>
-
-          <Button onClick={openDialog} className="w-fit">
-            Click Here to see Chat History
-          </Button>
-
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="col-span-12">
+                View Detailed Chat Logs
+              </Button>
+            </DialogTrigger>
             <DialogContent className="p-0 max-h-[80vh] min-w-[40vw] overflow-hidden">
-              {/* <DialogContent> */}
               <div className="overflow-y-scroll max-h-[80vh] min-w-[40vw]">
-                {/* {interviewData![currentIndex!] && ( */}
                 <DialogHeader className="flex flex-row justify-between sticky top-[-1px] bg-background w-full p-6 pb-4 z-[100]">
                   <div>
                     <DialogTitle>Chat History</DialogTitle>
-                    {/* <DialogDescription className="whitespace-pre-wrap" asChild>
-                      <span>
-                          Here is your previous interview from{" "}
-                          {interviewData![
-                            currentIndex!
-                          ].dateCreated?.toString()}
-                          .
-                        </span>
-                    </DialogDescription> */}
+                    <DialogDescription className="whitespace-pre-wrap" asChild>
+                      hi
+                    </DialogDescription>
                   </div>
                   <div className="mr-10 absolute top-2 right-0">
                     <PreviousResultsRadialChart
                       data={
                         resultsData?.result.overallScore.overallScore
-                        // interviewData![currentIndex!].overallScore
-                        //   .overallScore
                       }
                     />
                   </div>
                 </DialogHeader>
-                {/* )} */}
                 <div className="px-6 pb-6">
                   {getConversation(resultsData.result) && (
                     <Chats chats={getConversation(resultsData.result)} />
@@ -221,15 +197,6 @@ export default function Result() {
               </div>
             </DialogContent>
           </Dialog>
-
-          {/* <Collapsible className="col-span-12">
-            <CollapsibleTrigger>
-              <h1>Click Here to see Chat history</h1>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <Chats chats={getConversation(resultsData.result)} results />
-            </CollapsibleContent>
-          </Collapsible> */}
         </>
       )}
     </div>
