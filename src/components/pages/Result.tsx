@@ -7,16 +7,8 @@ import {
   ChatMessage as OriginalChatMessage,
 } from "@/services/voice/TTS";
 import { Interview } from "@/services/firebase/interviewService";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-} from "@/components/ui/chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import {
   Label,
   PolarGrid,
@@ -31,6 +23,15 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import ScoreBarChart from "../ScoreBarChart";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@radix-ui/react-dialog";
+import { DialogHeader } from "../ui/dialog";
+import { PreviousResultsRadialChart } from "../PreviousResultsRadialChart";
+import { Button } from "../ui/button";
 
 type ChatMessage = OriginalChatMessage & {
   score?: number;
@@ -48,6 +49,7 @@ export default function Result() {
   const [resultsData, setResultsData] = useState<ResultProps>();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (isResultProps(location.state)) {
@@ -71,11 +73,11 @@ export default function Result() {
         const feedbackIndex = Math.floor(i / 2);
         //console.log(feedbackIndex);
         conversation.push({
-          sender: 'user',
-          content: message ?? 'No Response',
+          sender: "user",
+          content: message ?? "No Response",
           score: result.feedback[feedbackIndex].score.overallScore,
-          feedback: result.feedback[feedbackIndex].text
-        })
+          feedback: result.feedback[feedbackIndex].text,
+        });
       }
     }
 
@@ -87,6 +89,14 @@ export default function Result() {
       overallScore: resultsData?.result.overallScore.overallScore,
     },
   ];
+
+  const openDialog = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="grid grid-cols-12 gap-8 py-12">
@@ -104,7 +114,7 @@ export default function Result() {
                 <RadialBarChart
                   data={chartData}
                   startAngle={0}
-                  endAngle={chartData[0].overallScore / 100 * 360}
+                  endAngle={(chartData[0].overallScore! / 100) * 360}
                   innerRadius={80}
                   outerRadius={110}
                 >
@@ -141,7 +151,7 @@ export default function Result() {
                                 y={viewBox.cy}
                                 className="fill-foreground text-4xl font-bold"
                               >
-                                {chartData?.[0]?.overallScore.toLocaleString()}
+                                {chartData?.[0]?.overallScore!.toLocaleString()}
                               </tspan>
                             </text>
                           );
@@ -154,7 +164,10 @@ export default function Result() {
             </CardContent>
           </Card>
 
-          <ScoreBarChart className="col-span-8 h-fit" result={resultsData.result} />
+          <ScoreBarChart
+            className="col-span-8 h-fit"
+            result={resultsData.result}
+          />
 
           <Card className="col-span-12">
             <CardHeader>
@@ -166,15 +179,57 @@ export default function Result() {
               </div>
             </CardContent>
           </Card>
-          
-          <Collapsible className="col-span-12">
+
+          <Button onClick={openDialog} className="w-fit">
+            Click Here to see Chat History
+          </Button>
+
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogContent className="p-0 max-h-[80vh] min-w-[40vw] overflow-hidden">
+              {/* <DialogContent> */}
+              <div className="overflow-y-scroll max-h-[80vh] min-w-[40vw]">
+                {/* {interviewData![currentIndex!] && ( */}
+                <DialogHeader className="flex flex-row justify-between sticky top-[-1px] bg-background w-full p-6 pb-4 z-[100]">
+                  <div>
+                    <DialogTitle>Chat History</DialogTitle>
+                    {/* <DialogDescription className="whitespace-pre-wrap" asChild>
+                      <span>
+                          Here is your previous interview from{" "}
+                          {interviewData![
+                            currentIndex!
+                          ].dateCreated?.toString()}
+                          .
+                        </span>
+                    </DialogDescription> */}
+                  </div>
+                  <div className="mr-10 absolute top-2 right-0">
+                    <PreviousResultsRadialChart
+                      data={
+                        resultsData?.result.overallScore.overallScore
+                        // interviewData![currentIndex!].overallScore
+                        //   .overallScore
+                      }
+                    />
+                  </div>
+                </DialogHeader>
+                {/* )} */}
+                <div className="px-6 pb-6">
+                  {getConversation(resultsData.result) && (
+                    <Chats chats={getConversation(resultsData.result)} />
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* <Collapsible className="col-span-12">
             <CollapsibleTrigger>
               <h1>Click Here to see Chat history</h1>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <Chats chats={getConversation(resultsData.result)} results />
             </CollapsibleContent>
-          </Collapsible>
+          </Collapsible> */}
         </>
       )}
     </div>
