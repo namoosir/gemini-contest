@@ -68,7 +68,7 @@ export const getUserInterviewHistory = async (
 
     docSnap.forEach((doc) => {
       const data = doc.data();
-      let tempDate = new Date(data.dateCreated).toLocaleDateString("en-US");
+      const tempDate = new Date(data.dateCreated).toLocaleDateString("en-US");
       data.dateCreated = tempDate;
       userInterviewHistory.push(data as Interview);
     });

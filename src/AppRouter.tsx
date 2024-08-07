@@ -5,7 +5,6 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Login from "./components/pages/Login.tsx";
-import Home from "./components/pages/Home.tsx";
 import Chat from "./components/pages/Chat.tsx";
 import Dashboard from "./components/pages/Dashboard.tsx";
 import Interview from "./components/pages/Interview.tsx";
