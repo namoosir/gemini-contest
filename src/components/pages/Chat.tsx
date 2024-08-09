@@ -33,10 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import {
-  addInterview,
-  Interview,
-} from "@/services/firebase/saveInterviewSevice";
+import { addInterview, Interview } from "@/services/firebase/interviewService";
 
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import useAuthContext from "@/hooks/useAuthContext";
@@ -52,7 +49,7 @@ import { Badge } from "@/components/ui/badge";
 import Scene from "../3D/scene";
 import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
 import FocusedInterviewDemo from "@/assets/media/FocusedInterviewDemo.gif";
-import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -71,8 +68,9 @@ function Chat() {
   const [seconds, setSeconds] = useState(0);
   const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
   const [isDoneDialogOpen, setIsDoneDialogOpen] = useState<boolean>(false);
-  const [geminiAnalyser, setGeminiAnalyser] = useState<AnalyserNode>()
-  const [geminiAudioContext, setGeminiAudioContext] = useState<AudioContext>()
+  const [geminiAnalyser, setGeminiAnalyser] = useState<AnalyserNode>();
+  const [geminiAudioContext, setGeminiAudioContext] = useState<AudioContext>();
+  const [resultsLoading, setResultsLoading] = useState<boolean>(true);
 
   const socketRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -85,6 +83,7 @@ function Chat() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | undefined>();
   const geminiRef = useRef<InterviewBot>(new InterviewBot());
   const locationStateRef = useRef<InterviewProps | undefined>();
+  const interviewResultRef = useRef<Interview>();
 
   const { db } = useFirebaseContext();
   const { user } = useAuthContext();
@@ -241,26 +240,26 @@ function Chat() {
     audioContextRef.current = audioCtx;
 
     setChat((history) => [...history, { sender: "gemini", content: "" }]);
-    
+
     const { source, analyser } = await playbackGeminiResponse(
       { word: text, buffer: await buffer.arrayBuffer() },
       setChat,
       audioContextRef.current
     );
 
-    setGeminiAudioContext(audioCtx)
-    setGeminiAnalyser(analyser)
+    setGeminiAudioContext(audioCtx);
+    setGeminiAnalyser(analyser);
 
     await new Promise<void>((resolve) => {
       source.onended = () => {
-        resolve()
-      }
-    })
+        resolve();
+      };
+    });
 
     await audioContextRef.current.close();
 
     if (!done) startRecording();
-  };
+  }
 
   const startRecording = () => {
     try {
@@ -276,11 +275,20 @@ function Chat() {
   const stopRecording = async () => {
     setIsRecording(false);
     if (seconds === 0) {
-      await geminiRef.current.handleInterviewFinish(transcript);
+      await geminiRef.current.handleInterviewFinish(
+        transcript || "no response"
+      );
       await handleResponse(FINAL_INTERVIEW_RESPONSE, true);
+
       setInterviewEnded(true);
+      await geminiRef.current.evaluateInterview();
+      await handleAddChat();
+      setResultsLoading(false);
     } else {
-      await handleResponse(await geminiRef.current.prompt(transcript));
+      console.log(transcript || "no response");
+      await handleResponse(
+        await geminiRef.current.prompt(transcript || "no response")
+      );
     }
   };
 
@@ -322,26 +330,34 @@ function Chat() {
     setIsDialogOpen(true);
   };
 
-  const evaluateScore = async () => {
-    const randomIntFromInterval = (min: number, max: number) => {
-      return Math.floor(Math.random() * (max - min + 1) + min);
-    };
+  const getInterviewObject = (text: string): Interview | null => {
+    const regex = /```json([\s\S]*?)```/;
+    const match = text.match(regex);
 
-    //Get The Score and return a number to the handleAddChat function
-    return randomIntFromInterval(0, 100); //temp score
+    return match ? (JSON.parse(match[1]) as Interview) : null;
   };
 
   //TODO: In Chat.tsx Line 267-275, make sure you update the right score
 
   const prepareData = async () => {
     if (user) {
-      const interviewData: Interview = {
-        user: user.uid,
-        chat: chat,
-        score: await evaluateScore(),
-      };
-      console.log(interviewData);
-      // setData(interviewData);
+      const chatSession = geminiRef.current.chat as ChatSession;
+      const history = await chatSession.getHistory();
+      const feedback = history[history.length - 1].parts
+        .map((f) => f.text)
+        .join(" ");
+
+      console.log(feedback);
+
+      const interviewData = getInterviewObject(feedback);
+      if (!interviewData) return;
+
+      interviewData.chat = chat;
+      interviewData.uid = user.uid;
+      interviewData.duration = Number(
+        locationStateRef.current!.interviewDuration
+      );
+
       return interviewData;
     } else {
       console.error("User is not authenticated");
@@ -356,6 +372,8 @@ function Chat() {
       console.error("Data is not set");
       return;
     }
+
+    interviewResultRef.current = data;
 
     try {
       const result = await addInterview(db, data);
@@ -412,15 +430,12 @@ function Chat() {
 
     console.log("This interview has concluded. Here is your chat history: ");
     console.log(chat);
-
-    if (chat.length > 0) {
-      await handleAddChat();
-    }
   };
 
   const startInterview = async () => {
     setHasInterviewStarted(true);
-    setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
+    // setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
+    setSeconds(10);
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
@@ -438,11 +453,8 @@ function Chat() {
     </div>
   );
 
-  const handleResultsClick = async () => {
-    const chat = geminiRef.current.chat as ChatSession;
-    const history = await chat.getHistory();
-
-    navigate("/results", { state: { history } });
+  const handleResultsClick = () => {
+    navigate("/results", { state: { result: interviewResultRef.current } });
   };
 
   return (
@@ -469,11 +481,19 @@ function Chat() {
             <CardContent>
               <div className="w-full">
                 <AspectRatio ratio={16 / 9}>
-                {locationStateRef.current?.interviewMode === 'normal' ? 
-                  <img src={FocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
-                  :
-                  <img src={UnfocusedInterviewDemo} alt="Image" className="rounded-md object-cover" />
-                }
+                  {locationStateRef.current?.interviewMode === "normal" ? (
+                    <img
+                      src={FocusedInterviewDemo}
+                      alt="Image"
+                      className="rounded-md object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={UnfocusedInterviewDemo}
+                      alt="Image"
+                      className="rounded-md object-cover"
+                    />
+                  )}
                 </AspectRatio>
               </div>
             </CardContent>
@@ -485,17 +505,16 @@ function Chat() {
           </Card>
         </div>
       )}
-      
-      {locationStateRef.current?.interviewMode === 'normal' ? 
+
+      {locationStateRef.current?.interviewMode === "normal" ? (
         <div className="overflow-hidden flex-1">
-          <Chats chats={chat} />
+          <Chats chats={chat} scroll />
         </div>
-        :
+      ) : (
         <div className="overflow-hidden flex-1">
           <Scene audioContext={geminiAudioContext} analyser={geminiAnalyser} />
         </div>
-      }
-      
+      )}
 
       {hasInterviewStarted && (
         <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
@@ -556,21 +575,33 @@ function Chat() {
           <AlertDialogHeader>
             <AlertDialogTitle>Your interview is done!</AlertDialogTitle>
             <AlertDialogDescription>
-              Proceed to view your results or go back home.
+              {resultsLoading
+                ? "Please wait while we calculate your results."
+                : "Proceed to view your results or go back home."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="secondary" asChild>
-                <Link to="/">Home</Link>
-              </Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button variant="default" onClick={handleResultsClick}>
-                Results
-              </Button>
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          {resultsLoading ? (
+            <AlertDialogFooter>
+              <Icon className="h-8 w-8 animate-spin" path={mdiLoading} />
+            </AlertDialogFooter>
+          ) : (
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <Button disabled={resultsLoading} variant="secondary" asChild>
+                  <Link to="/">Home</Link>
+                </Button>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Button
+                  disabled={resultsLoading}
+                  variant="default"
+                  onClick={handleResultsClick}
+                >
+                  Results
+                </Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </div>

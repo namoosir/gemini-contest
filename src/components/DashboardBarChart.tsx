@@ -16,74 +16,54 @@ import {
 } from "./ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "./ui/chart";
 import { useEffect, useState } from "react";
-import useFirebaseContext from "@/hooks/useFirebaseContext";
-import useAuthContext from "@/hooks/useAuthContext";
 import {
-  getUserInterviewHistory,
   Interview,
-} from "@/services/firebase/saveInterviewSevice";
+} from "@/services/firebase/interviewService";
 
-export const DashboardBarChart = () => {
+interface Props {
+  currMonthData: Interview[]
+  prevMonthData: Interview[]
+  className?: string
+}
+
+export const DashboardBarChart = (props: Props) => {
+  const {
+    className,
+    currMonthData,
+    prevMonthData,
+  } = props
+
   const [barChartData, setBarChartData] = useState<Interview[]>([]);
   const [avgPerformance, setAvgPerformance] = useState<number>();
   const [overallMonthScore, setOverallMonthScore] = useState<number>();
   const [percentageMonthIncrease, setPercentageMonthIncrease] =
-    useState<number>();
-  const { user } = useAuthContext();
-  const { db } = useFirebaseContext();
+    useState<number>(0);
 
   useEffect(() => {
-    const init = async () => {
-      const currDate = new Date();
-      const currMonth = new Date(
-        currDate.getFullYear(),
-        currDate.getMonth(),
-        1
-      ).toLocaleDateString();
-
-      const nextMonth = new Date(
-        currDate.getFullYear(),
-        currDate.getMonth() + 1,
-        1
-      ).toLocaleDateString();
-
-      const prevMonth = new Date(
-        currDate.getFullYear(),
-        currDate.getMonth() - 1,
-        1
-      ).toLocaleDateString();
-
-      const currMonthData = await getUserInterviewHistory(
-        db,
-        user!,
-        currMonth,
-        nextMonth
-      );
-
-      const prevMonthData = await getUserInterviewHistory(
-        db,
-        user!,
-        prevMonth,
-        currMonth
-      );
+    const init = () => {
+      console.log(currMonthData, prevMonthData)
 
       const currMonthSum = getPerformanceSum(currMonthData);
       const prevMonthSum = getPerformanceSum(prevMonthData);
       getAvgPerformance(currMonthSum);
       getOverallMonthScore(currMonthSum);
       getPercentageMonthIncrease(currMonthSum, prevMonthSum);
-      setBarChartData(currMonthData!);
+      setBarChartData(currMonthData);
     };
 
-    init();
-  }, []);
+    void init();
+  }, [currMonthData, prevMonthData]);
+
+  useEffect(() => {
+    console.log(currMonthData)
+  }, [currMonthData])
 
   const getPerformanceSum = (data: Interview[] | null) => {
     let sum = 0;
     let length = 0;
     if (data) {
       for (let i = 0; i < data.length; i++) {
-        sum += data[i].score;
+        sum += data[i].overallScore.overallScore;
       }
 
       length = data.length;
@@ -93,11 +73,13 @@ export const DashboardBarChart = () => {
   };
 
   const getAvgPerformance = (currMonth: { sum: number; length: number }) => {
-    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length));
+    setAvgPerformance(Math.floor(currMonth.sum / currMonth.length === 0 ? 1 : currMonth.length));
+    console.log(avgPerformance);
   };
 
   const getOverallMonthScore = (currMonth: { sum: number; length: number }) => {
     setOverallMonthScore(currMonth.sum);
+    console.log(overallMonthScore);
   };
 
   const getPercentageMonthIncrease = (
@@ -108,22 +90,25 @@ export const DashboardBarChart = () => {
     const prevSum = prevMonth.sum;
 
     setPercentageMonthIncrease(
-      ((currSum - prevSum) / ((currSum + prevSum) / 2)) * 100
+      ((currSum - prevSum) / ((currSum + prevSum) / 2) === 0 ? 1 : (currSum + prevSum)) * 100
     );
   };
 
   return (
-    <Card className="mt-20">
+    <Card className={`${className}`}>
       <CardHeader>
-        <CardTitle className="mb-5">Performance Over Time</CardTitle>
-        <CardDescription className="text-3xl text-white font-semibold">
-          +{overallMonthScore}
-        </CardDescription>
-        <CardDescription>
-          {percentageMonthIncrease !== undefined && percentageMonthIncrease > 0
-            ? "+"
-            : ""}
-          {percentageMonthIncrease?.toFixed(2)}% from last month
+        <CardTitle className="mb-4">Performance Over Time</CardTitle>
+        <CardDescription className='flex flex-col'>
+          <span className="text-3xl text-white font-semibold">
+            +{overallMonthScore}
+          </span>
+
+          <span className="text-primary">
+            {percentageMonthIncrease !== undefined && percentageMonthIncrease > 0
+              ? "+"
+              : ""}
+            {percentageMonthIncrease?.toFixed(2)}% from last month
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -144,7 +129,7 @@ export const DashboardBarChart = () => {
             data={barChartData}
           >
             <Bar
-              dataKey="score"
+              dataKey="overallScore.overallScore"
               fill="hsl(var(--primary))"
               radius={5}
               fillOpacity={0.6}

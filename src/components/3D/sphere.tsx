@@ -18,7 +18,7 @@ const Sphere = (props: Props) => {
     const customColor = new THREE.Color(0.13, 0.77, 0.36);
     return {
       u_time: { value: 0 },
-      u_intensity: { value: 0.3 },
+      u_intensity: { value: 0.2 },
       u_color: { value: customColor },
       u_frequency: { value: 1 }
     };

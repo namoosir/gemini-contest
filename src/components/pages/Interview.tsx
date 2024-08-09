@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Page, pdfjs } from "react-pdf";
 import { motion, AnimatePresence } from "framer-motion";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { usePrevious } from "@uidotdev/usehooks";
-import { useForm } from "react-hook-form";
 
 import {
   getUserResumes,
@@ -29,12 +26,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 export type Page = 0 | 1 | 2;
-
-const InterviewFormSchema = z.object({
-  text: z.string().min(2, {
-    message: "Job Description must be at least 50 characters",
-  }),
-});
 
 const Interview: React.FC = () => {
   const { storage, db } = useFirebaseContext();
@@ -125,13 +116,6 @@ const Interview: React.FC = () => {
     };
     navigate("/chat", { state: params });
   };
-
-  const interviewForm = useForm<z.infer<typeof InterviewFormSchema>>({
-    resolver: zodResolver(InterviewFormSchema),
-    defaultValues: {
-      text: "",
-    },
-  });
 
   function interviewNextPageHandler() {
     if (jobDescription === undefined || jobDescription === "") {
