@@ -2,7 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100;
+  src: url('@/assets/fonts/Inter-Thin.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 200;
+  src: url('@/assets/fonts/Inter-ExtraLight.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 300;
+  src: url('@/assets/fonts/Inter-Light.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 400;
+  src: url('@/assets/fonts/Inter-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 500;
+  src: url('@/assets/fonts/Inter-Medium.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 600;
+  src: url('@/assets/fonts/Inter-SemiBold.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  src: url('@/assets/fonts/Inter-Bold.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 800;
+  src: url('@/assets/fonts/Inter-ExtraBold.ttf');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 900;
+  src: url('@/assets/fonts/Inter-Black.ttf');
+}
+
 @layer base {
+  html {
+    font-family: Inter;
+  }
+
   :root {
     --background: 20 14.3% 4.1%;
     --foreground: 0 0% 95%;
@@ -24,6 +82,11 @@
     --input: 240 3.7% 15.9%;
     --ring: 142.4 71.8% 29.2%;
     --radius: 0.5rem;
+    --chart-1: 220 70% 50%;
+    --chart-5: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-2: 340 75% 55%;
   }
 }
 
@@ -35,4 +98,44 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* custom scrollbar */
+::-webkit-scrollbar {
+  width: 15px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground));
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--primary));
+}
+
+/* custom scrollbar for WebKit browsers */
+::-webkit-scrollbar {
+  width: 15px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground));
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--primary));
 }
