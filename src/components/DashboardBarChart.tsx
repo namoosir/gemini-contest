@@ -103,10 +103,13 @@ export const DashboardBarChart = (props: Props) => {
 
           <span className="text-primary">
             {percentageMonthIncrease !== undefined &&
-              percentageMonthIncrease > 0
+            percentageMonthIncrease > 0
               ? "+"
               : ""}
-            {isNaN(percentageMonthIncrease) ? 0 : percentageMonthIncrease?.toFixed(2)}% from last month
+            {isNaN(percentageMonthIncrease)
+              ? 0
+              : percentageMonthIncrease?.toFixed(2)}
+            % from last month
           </span>
         </CardDescription>
       </CardHeader>

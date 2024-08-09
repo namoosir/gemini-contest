@@ -17,7 +17,6 @@ import {
   RadialBarChart,
 } from "recharts";
 
-
 import ScoreBarChart from "../ScoreBarChart";
 import {
   Dialog,
@@ -165,27 +164,23 @@ export default function Result() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="col-span-12">
-                View Detailed Chat Logs
-              </Button>
+              <Button className="col-span-12">View Detailed Chat Logs</Button>
             </DialogTrigger>
             <DialogContent className="p-0 max-h-[80vh] min-w-[40vw] overflow-hidden">
               <div className="overflow-y-scroll max-h-[80vh] min-w-[40vw]">
-                <DialogHeader className="flex flex-row justify-between sticky top-[-1px] bg-background w-full p-6 pb-4 z-[100]">
+                <DialogHeader className="flex flex-row justify-between sticky top-[-1px] bg-background mx-6 py-4 z-[100]">
                   <div>
                     <DialogTitle>Chat History</DialogTitle>
                     <DialogDescription className="whitespace-pre-wrap" asChild>
                       hi
                     </DialogDescription>
                   </div>
-                  <div className="mr-10 absolute top-2 right-0">
+                  <div className="ml-auto">
                     <PreviousResultsRadialChart
-                      data={
-                        resultsData?.result.overallScore.overallScore
-                      }
+                      data={resultsData?.result.overallScore.overallScore}
                     />
                   </div>
                 </DialogHeader>
