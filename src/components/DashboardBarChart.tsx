@@ -56,7 +56,7 @@ export const DashboardBarChart = (props: Props) => {
       setBarChartData(
         currMonthData.map((d) => {
           return {
-            score: d.overallScore.overallScore,
+            score: d.overallScore.overallScore ?? 0,
             date: new Date(d.dateCreated!).toString(),
           };
         })
@@ -70,7 +70,7 @@ export const DashboardBarChart = (props: Props) => {
     let sum = 0;
     let length = 0;
     if (data) {
-      data.forEach((d) => (sum += d.overallScore.overallScore));
+      data.forEach((d) => (sum += d.overallScore.overallScore ?? 0));
 
       length = data.length;
     }
@@ -143,7 +143,7 @@ export const DashboardBarChart = (props: Props) => {
               axisLine={false}
               tickMargin={4}
               tickFormatter={(value) => {
-                return new Date(value).toLocaleDateString("en-US");
+                return new Date(value as string).toLocaleDateString("en-US");
               }}
             />
             (
@@ -152,7 +152,7 @@ export const DashboardBarChart = (props: Props) => {
                 <ChartTooltipContent
                   hideIndicator
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    return new Date(value as string).toLocaleDateString("en-US", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",

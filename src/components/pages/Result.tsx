@@ -180,7 +180,7 @@ export default function Result() {
                   </div>
                   <div className="ml-auto">
                     <PreviousResultsRadialChart
-                      data={resultsData?.result.overallScore.overallScore}
+                      data={resultsData?.result.overallScore.overallScore ?? 0}
                     />
                   </div>
                 </DialogHeader>

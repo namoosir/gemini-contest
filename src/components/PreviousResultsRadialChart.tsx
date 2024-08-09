@@ -6,12 +6,11 @@ interface Props {
   data: number;
 }
 
-export const PreviousResultsRadialChart: React.FC<Props> = ({ data }) => {
+export const PreviousResultsRadialChart: React.FC<Props> = ({ data }: Props) => {
   const [avgScore, setAvgScore] = useState<number>(0);
   const INNER_RADIUS = 17;
   const OUTER_RADIUS = INNER_RADIUS * 1.625;
   const RADIAL_GRAPH_WIDTH = OUTER_RADIUS + 20;
-  const START_LINE = (OUTER_RADIUS - INNER_RADIUS) / 1.5;
 
   useEffect(() => {
     setAvgScore(data);

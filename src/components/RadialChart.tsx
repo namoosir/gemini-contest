@@ -37,7 +37,7 @@ export const RadialChart = (props: Props) => {
         if (data) {
           sum = 0;
 
-          data.forEach((s) => sum += s.overallScore.overallScore)
+          data.forEach((s) => sum += s.overallScore.overallScore ?? 0)
 
           const denom = data.length === 0 ? 1 : data.length;
           avg = Math.floor(sum / denom);

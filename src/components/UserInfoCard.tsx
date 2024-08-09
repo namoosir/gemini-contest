@@ -111,7 +111,7 @@ export const UserInfoCard = (props: Props) => {
                     </span>
                     <span>
                       <PreviousResultsRadialChart
-                        data={previousInterviews.overallScore.overallScore}
+                        data={previousInterviews.overallScore.overallScore ?? 0}
                       />
                     </span>
                   </div>
@@ -144,7 +144,7 @@ export const UserInfoCard = (props: Props) => {
                 <div className="ml-auto">
                   <PreviousResultsRadialChart
                     data={
-                      interviewData![currentIndex!].overallScore.overallScore
+                      interviewData![currentIndex!].overallScore.overallScore ?? 0
                     }
                   />
                 </div>

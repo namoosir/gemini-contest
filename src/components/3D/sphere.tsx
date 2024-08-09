@@ -12,7 +12,7 @@ interface Props {
 
 const Sphere = (props: Props) => {
   const amplitude = useRef<number>(1)
-  const mesh = useRef<THREE.Mesh>();
+  const mesh = useRef<THREE.Mesh<THREE.IcosahedronGeometry, THREE.ShaderMaterial>>(null);
 
   const uniforms = useMemo(() => {
     const customColor = new THREE.Color(0.13, 0.77, 0.36);
@@ -50,11 +50,16 @@ const Sphere = (props: Props) => {
 
   return (
     <mesh ref={mesh}>
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <icosahedronGeometry args={[4, 30]} />
       <shaderMaterial
+        /* eslint-disable-next-line react/no-unknown-property */
         vertexShader={vertexShader}
+        /* eslint-disable-next-line react/no-unknown-property */
         fragmentShader={fragmentShader}
+        /* eslint-disable-next-line react/no-unknown-property */
         uniforms={uniforms}
+        /* eslint-disable-next-line react/no-unknown-property */
         wireframe
       />
     </mesh>

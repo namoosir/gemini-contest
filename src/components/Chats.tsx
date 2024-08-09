@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
+import { Card, CardContent, CardFooter } from "./ui/card";
 import { useWindowScroll } from "@uidotdev/usehooks";
 import { ChatMessage as OriginalChatMessage } from "@/services/voice/TTS";
 import { PreviousResultsRadialChart } from "./PreviousResultsRadialChart";

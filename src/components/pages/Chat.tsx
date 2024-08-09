@@ -337,8 +337,6 @@ function Chat() {
     return match ? (JSON.parse(match[1]) as Interview) : null;
   };
 
-  //TODO: In Chat.tsx Line 267-275, make sure you update the right score
-
   const prepareData = async () => {
     if (user) {
       const chatSession = geminiRef.current.chat as ChatSession;
@@ -434,8 +432,7 @@ function Chat() {
 
   const startInterview = async () => {
     setHasInterviewStarted(true);
-    // setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
-    setSeconds(30);
+    setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
