@@ -96,7 +96,7 @@ function Dashboard() {
         />
       </div>
       <div className="col-span-4 grid gap-8">
-        <RadialChart className="h-fit" size={295} />
+        <RadialChart className="h-fit" size={296} />
 
         <DonutChart className="h-fit" currMonthData={currMonthData} />
       </div>
