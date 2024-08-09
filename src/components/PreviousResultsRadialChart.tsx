@@ -38,10 +38,6 @@ export const PreviousResultsRadialChart: React.FC<Props> = ({ data }) => {
       className="flex rounded-full border-solid border-2 overflow-hidden relative items-center"
       style={{ width: RADIAL_GRAPH_WIDTH }}
     >
-      <div
-        className="bg-primary z-50 h-[3px] absolute"
-        style={{ width: START_LINE }}
-      ></div>
       <ChartContainer
         config={chartConfig}
         className="mx-auto aspect-square w-full bg-card"
