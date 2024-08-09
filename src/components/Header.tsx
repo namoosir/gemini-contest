@@ -4,7 +4,6 @@ import Icon from "@mdi/react";
 import {
   mdiHomeAnalytics,
   mdiAccountSupervisor,
-  mdiBookshelf,
   mdiLogout,
 } from "@mdi/js";
 import { useClickAway } from "@uidotdev/usehooks";
@@ -22,7 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import useAuthContext from "@/hooks/useAuthContext";
 
-type Page = "interview" | "dashboard";
+type Page = "interview" | "dashboard" | "";
+
 interface Menu {
   name: string;
   path: Page;

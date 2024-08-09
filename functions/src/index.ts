@@ -4,11 +4,16 @@ import { https, logger } from "firebase-functions/v2";
 import { resumeTrigger } from "./triggers";
 import { setGlobalOptions } from "firebase-functions/v2";
 import { getDeepgramKey, getTTS } from "./deepgram";
+import cors from 'cors'
 
 setGlobalOptions({ region: "northamerica-northeast1" });
 
 admin.initializeApp();
 const app = express();
+
+app.use(cors({
+  origin: true,
+}))
 
 app.post("/audio/stt/key", async (req, res) => {
   try {

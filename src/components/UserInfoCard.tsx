@@ -1,10 +1,5 @@
 import useAuthContext from "@/hooks/useAuthContext";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { PreviousResultsRadialChart } from "./PreviousResultsRadialChart";
 import { useEffect, useState } from "react";
 import {
@@ -21,10 +16,13 @@ import {
 } from "@/components/ui/dialog";
 
 import Chats from "./Chats";
-import { ChatMessage as OriginalChatMessage, cleanGeminiChat } from "@/services/voice/TTS";
+import {
+  ChatMessage as OriginalChatMessage,
+  cleanGeminiChat,
+} from "@/services/voice/TTS";
 
 interface Props {
-  className?: string
+  className?: string;
 }
 
 type ChatMessage = OriginalChatMessage & {
@@ -32,16 +30,14 @@ type ChatMessage = OriginalChatMessage & {
   feedback?: string;
 };
 
-export const UserInfoCard = (props:Props) => {
+export const UserInfoCard = (props: Props) => {
   const { user } = useAuthContext();
   const [interviewData, setInterviewData] = useState<Interview[] | null>([]);
   const [chatData, setChatData] = useState<ChatMessage[] | undefined>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
-  const {
-    className,
-  } = props
+  const { className } = props;
 
   useEffect(() => {
     const init = async () => {
@@ -53,29 +49,29 @@ export const UserInfoCard = (props:Props) => {
   }, []);
 
   const getConversation = (result: Interview) => {
-    const conversation: ChatMessage[] = []
+    const conversation: ChatMessage[] = [];
 
     for (let i = 0; i < result.chat.length; i++) {
-      const message = result.chat[i].content
-      if (result.chat[i].sender === 'gemini') {
+      const message = result.chat[i].content;
+      if (result.chat[i].sender === "gemini") {
         conversation.push({
-          sender: 'gemini',
-          content: cleanGeminiChat(message ?? 'No Question')
-        })
-      } else if(result.chat[i].sender === 'user')  {
-        const feedbackIndex = Math.floor(i / 2)
-        console.log(feedbackIndex)
+          sender: "gemini",
+          content: cleanGeminiChat(message ?? "No Question"),
+        });
+      } else if (result.chat[i].sender === "user") {
+        const feedbackIndex = Math.floor(i / 2);
+        console.log(feedbackIndex);
         conversation.push({
-          sender: 'user',
-          content: message ?? 'No Response',
+          sender: "user",
+          content: message ?? "No Response",
           score: result.feedback[feedbackIndex].score.overallScore,
-          feedback: result.feedback[feedbackIndex].text
-        })
+          feedback: result.feedback[feedbackIndex].text,
+        });
       }
     }
 
-    return conversation
-  }
+    return conversation;
+  };
 
   function goResultsPage(index: number) {
     if (interviewData) {
@@ -107,9 +103,7 @@ export const UserInfoCard = (props:Props) => {
                 className="flex items-center justify-center rounded-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 cursor-pointer"
                 onClick={() => goResultsPage(index)}
               >
-                <div
-                  className="w-full items-center justify-center"
-                >
+                <div className="w-full items-center justify-center">
                   <div className="flex flex-row justify-between items-center">
                     <span>Interview #{index + 1}</span>
                     <span className="text-muted-foreground text-sm">
@@ -117,7 +111,7 @@ export const UserInfoCard = (props:Props) => {
                     </span>
                     <span>
                       <PreviousResultsRadialChart
-                        data={previousInterviews.overallScore.overallScore}
+                        data={previousInterviews.overallScore.overallScore ?? 0}
                       />
                     </span>
                   </div>
@@ -125,7 +119,9 @@ export const UserInfoCard = (props:Props) => {
               </div>
             ))}
             {interviewData?.length === 0 && (
-              <p className="text-sm text-muted-foreground">You have no interview history to display</p>
+              <p className="text-sm text-muted-foreground">
+                You have no interview history to display
+              </p>
             )}
           </div>
         </CardContent>
@@ -135,7 +131,7 @@ export const UserInfoCard = (props:Props) => {
         <DialogContent className="p-0 max-h-[80vh] min-w-[40vw] overflow-hidden">
           <div className="overflow-y-scroll max-h-[80vh] min-w-[40vw]">
             {interviewData![currentIndex!] && (
-              <DialogHeader className="flex flex-row justify-between sticky top-[-1px] bg-background w-full p-6 pb-4 z-[100]">
+              <DialogHeader className="flex flex-row justify-between sticky top-[-1px] bg-background mx-6 py-4 z-[100]">
                 <div>
                   <DialogTitle>Interview #{currentIndex! + 1}</DialogTitle>
                   <DialogDescription className="whitespace-pre-wrap" asChild>
@@ -145,9 +141,11 @@ export const UserInfoCard = (props:Props) => {
                     </span>
                   </DialogDescription>
                 </div>
-                <div className="mr-10 absolute top-2 right-0">
+                <div className="ml-auto">
                   <PreviousResultsRadialChart
-                    data={interviewData![currentIndex!].overallScore.overallScore}
+                    data={
+                      interviewData![currentIndex!].overallScore.overallScore ?? 0
+                    }
                   />
                 </div>
               </DialogHeader>

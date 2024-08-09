@@ -14,7 +14,7 @@ export interface Score {
   technicalScore: number;
   behavioralScore: number;
   jobFitScore: number;
-  overallScore: number;
+  overallScore?: number;
 }
 
 export interface Interview {
@@ -23,22 +23,20 @@ export interface Interview {
   overallScore: Score;
   feedback: {
     score: Score;
-    text: string
+    text: string;
   }[];
   recommendation: string;
   duration: number;
-  dateCreated?: string;
+  dateCreated?: number | string;
 }
-
-//TODO: In Chat.tsx Line 267-275, make sure you update the right score
 
 export const addInterview = async (db: Firestore, data: Interview) => {
   try {
     await addDoc(collection(db, "interviews"), {
       ...data,
-      dateCreated: new Date().toLocaleDateString(),
+      dateCreated: Date.now(),
     });
-    console.log("Interview history added successfully");
+
     return true;
   } catch (error) {
     console.error("Error adding interview history:", error);
@@ -49,8 +47,8 @@ export const addInterview = async (db: Firestore, data: Interview) => {
 export const getUserInterviewHistory = async (
   db: Firestore,
   user: User,
-  currMonth?: String,
-  endMonth?: String
+  currMonth?: number,
+  endMonth?: number
 ) => {
   try {
     let q = query(collection(db, "interviews"), where("uid", "==", user.uid));
@@ -69,7 +67,9 @@ export const getUserInterviewHistory = async (
     const userInterviewHistory: Interview[] = [];
 
     docSnap.forEach((doc) => {
-      let data = doc.data();
+      const data = doc.data();
+      const tempDate = new Date(data.dateCreated).toLocaleDateString("en-US");
+      data.dateCreated = tempDate;
       userInterviewHistory.push(data as Interview);
     });
 
@@ -89,12 +89,14 @@ export const getUserInterviewHistoryWithinWeek = async (
 ) => {
   try {
     const currDate = new Date();
-    const weekStart = new Date(
-      currDate.getFullYear(),
-      currDate.getMonth() + 1,
-      currDate.getDay() - 7
-    ).toLocaleDateString();
-    const weekEnd = currDate.toLocaleDateString();
+    const weekStart = Number(
+      new Date(
+        currDate.getFullYear(),
+        currDate.getMonth(),
+        currDate.getDay() - 7
+      )
+    );
+    const weekEnd = Number(currDate);
 
     const q = query(
       collection(db, "interviews"),

@@ -30,6 +30,7 @@ const Scene = (props: Props) => {
           <Vignette eskil={false} offset={0.1} darkness={1.1} />
           <ChromaticAberration
             blendFunction={BlendFunction.NORMAL} // blend mode
+            /* @ts-expect-error: Suppress TypeScript error */
             offset={[0.0035, 0.0035]} // color offset
           />
         </EffectComposer>

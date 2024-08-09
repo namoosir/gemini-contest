@@ -14,7 +14,8 @@ export interface MessageData {
 }
 
 const BASE_URL =
-  "http://127.0.0.1:5001/gemini-contest/northamerica-northeast1/api";
+  // "http://127.0.0.1:5001/gemini-contest/northamerica-northeast1/api";
+  "https://api-kqzfukl35a-nn.a.run.app"
 
 export const fetchAudioBuffer = async (
   sentence: string,
