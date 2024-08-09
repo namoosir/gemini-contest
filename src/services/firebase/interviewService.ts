@@ -14,7 +14,7 @@ export interface Score {
   technicalScore: number;
   behavioralScore: number;
   jobFitScore: number;
-  overallScore: number;
+  overallScore?: number;
 }
 
 export interface Interview {
@@ -23,7 +23,7 @@ export interface Interview {
   overallScore: Score;
   feedback: {
     score: Score;
-    text: string
+    text: string;
   }[];
   recommendation: string;
   duration: number;
@@ -89,11 +89,13 @@ export const getUserInterviewHistoryWithinWeek = async (
 ) => {
   try {
     const currDate = new Date();
-    const weekStart = Number(new Date(
-      currDate.getFullYear(),
-      currDate.getMonth(),
-      currDate.getDay() - 7
-    ));
+    const weekStart = Number(
+      new Date(
+        currDate.getFullYear(),
+        currDate.getMonth(),
+        currDate.getDay() - 7
+      )
+    );
     const weekEnd = Number(currDate);
 
     const q = query(

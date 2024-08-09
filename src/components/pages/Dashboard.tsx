@@ -67,7 +67,7 @@ function Dashboard() {
 
     const data = interviews.reduce((accumulator, currentValue) => {
       accumulator.numberOfInterviews += 1;
-      accumulator.averageScore += currentValue.overallScore.overallScore;
+      accumulator.averageScore += currentValue.overallScore.overallScore!;
       accumulator.timeSpent += currentValue.duration;
 
       return accumulator;

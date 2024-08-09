@@ -32,20 +32,17 @@ export const DonutChart = ({
     console.log(currMonthData);
     let behaviourSum = 0;
     let jobFitSum = 0;
-    let overallSum = 0;
     let technicalSum = 0;
 
     for (let i = 0; i < currMonthData.length; i++) {
       behaviourSum += currMonthData[i].overallScore.behavioralScore;
       jobFitSum += currMonthData[i].overallScore.jobFitScore;
-      overallSum += currMonthData[i].overallScore.overallScore;
       technicalSum += currMonthData[i].overallScore.technicalScore;
     }
 
     setScores({
       behavioralScore: behaviourSum,
       jobFitScore: jobFitSum,
-      overallScore: overallSum,
       technicalScore: technicalSum,
     });
   }, [currMonthData]);
@@ -60,11 +57,6 @@ export const DonutChart = ({
       category: "Job Fit",
       score: scores?.jobFitScore,
       fill: "var(--color-jobFit)",
-    },
-    {
-      category: "Overall",
-      score: scores?.overallScore,
-      fill: "var(--color-overall)",
     },
     {
       category: "Technical",
@@ -83,10 +75,6 @@ export const DonutChart = ({
     jobFit: {
       label: "JobFit",
       color: "hsl(var(--chart-2))",
-    },
-    overall: {
-      label: "Overall",
-      color: "hsl(var(--chart-3))",
     },
     technical: {
       label: "Technical",

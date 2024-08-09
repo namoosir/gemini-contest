@@ -54,11 +54,6 @@ const Header = () => {
       path: "interview",
       icon: <Icon className="h-4 w-4 mr-2" path={mdiAccountSupervisor} />,
     },
-    {
-      name: "Learning",
-      path: "learning",
-      icon: <Icon className="h-4 w-4 mr-2" path={mdiBookshelf} />,
-    },
   ];
 
   useEffect(() => {
