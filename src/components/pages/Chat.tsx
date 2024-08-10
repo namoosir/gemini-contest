@@ -145,49 +145,6 @@ function Chat() {
     }
   }, []);
 
-  const cleanup = useCallback(async () => {
-    setIsRecording(false);
-
-    if (socketIntervalRef.current) {
-      clearInterval(socketIntervalRef.current);
-      socketIntervalRef.current = null;
-    }
-
-    if (socketRef.current?.readyState === 1) {
-      const closeMessage = JSON.stringify({ type: "CloseStream" });
-      socketRef.current.send(closeMessage);
-    }
-
-    socketRef.current?.close();
-    socketRef.current = null;
-
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current = null;
-
-    analyserRef.current?.disconnect();
-    analyserRef.current = null;
-
-    if (audioContextRef.current?.state !== "closed") {
-      await audioContextRef.current?.close();
-      audioContextRef.current = undefined;
-    }
-
-    if (micAudioContextRef.current?.state !== "closed") {
-      await micAudioContextRef.current?.close();
-      micAudioContextRef.current = undefined;
-    }
-
-    const tracks = streamRef.current?.getTracks();
-    tracks?.forEach((track) => {
-      track.stop();
-    });
-    streamRef.current = undefined;
-
-    sourceRef.current?.disconnect();
-    sourceRef.current = undefined;
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [interviewEnded]);
 
   useEffect(() => {
     async function fetchKey() {
@@ -225,10 +182,52 @@ function Chat() {
 
     void fetchKey();
 
+    const cleanup = async () => {
+      setIsRecording(false);
+
+      if (socketIntervalRef.current) {
+        clearInterval(socketIntervalRef.current);
+        socketIntervalRef.current = null;
+      }
+
+      if (socketRef.current?.readyState === 1) {
+        const closeMessage = JSON.stringify({ type: "CloseStream" });
+        socketRef.current.send(closeMessage);
+      }
+
+      socketRef.current?.close();
+      socketRef.current = null;
+
+      mediaRecorderRef.current?.stop();
+      mediaRecorderRef.current = null;
+
+      analyserRef.current?.disconnect();
+      analyserRef.current = null;
+
+      if (audioContextRef.current?.state !== "closed") {
+        await audioContextRef.current?.close();
+        audioContextRef.current = undefined;
+      }
+
+      if (micAudioContextRef.current?.state !== "closed") {
+        await micAudioContextRef.current?.close();
+        micAudioContextRef.current = undefined;
+      }
+
+      const tracks = streamRef.current?.getTracks();
+      tracks?.forEach((track) => {
+        track.stop();
+      });
+      streamRef.current = undefined;
+
+      sourceRef.current?.disconnect();
+      sourceRef.current = undefined;
+    };
+
     return () => {
       void cleanup();
     };
-  }, [cleanup]);
+  }, []);
 
   useEffect(() => {
     const fetchResume = async () => {
@@ -452,13 +451,6 @@ function Chat() {
   return (
     <div className="flex flex-col h-full">
       {isLoading && loader}
-      {hasInterviewStarted && (
-        <div className="mt-10 text-center">
-          <Badge className=" text-md cursor-default font-bold">
-            {formatTime(seconds)}
-          </Badge>
-        </div>
-      )}
       {!isLoading && !hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>
@@ -509,7 +501,13 @@ function Chat() {
       )}
 
       {hasInterviewStarted && (
-        <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
+        <div className="w-full bg-backgrund flex flex-row items-center justify-center sticky bottom-0 m-auto">
+          <div className="text-center mr-10">
+            <Badge className=" text-md cursor-default font-bold">
+              {formatTime(seconds)}
+            </Badge>
+          </div>
+
           <Button
             variant={"secondary"}
             className="items-center self-center h-16 w-16 rounded-full hover:bg-destructive hover:text-destructive-foreground"
