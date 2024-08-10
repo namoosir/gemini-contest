@@ -46,7 +46,7 @@ export const UserInfoCard = (props: Props) => {
     };
 
     void init();
-  }, []);
+  }, [user]);
 
   const getConversation = (result: Interview) => {
     const conversation: ChatMessage[] = [];
@@ -60,7 +60,6 @@ export const UserInfoCard = (props: Props) => {
         });
       } else if (result.chat[i].sender === "user") {
         const feedbackIndex = Math.floor(i / 2);
-        console.log(feedbackIndex);
         conversation.push({
           sender: "user",
           content: message ?? "No Response",

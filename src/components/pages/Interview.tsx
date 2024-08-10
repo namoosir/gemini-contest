@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePrevious } from "@uidotdev/usehooks";
 
 import {
-  getUserResumes,
+  getUserResume,
   getResumeObject,
   Resume,
   uploadResume,
@@ -57,11 +57,10 @@ const Interview: React.FC = () => {
     const getResume = async () => {
       if (!user) return;
 
-      const resumes = await getUserResumes(db, user?.uid);
+      const resume = await getUserResume(db, user?.uid);
+      if (!resume) return;
 
-      if (!resumes || resumes.length === 0) return;
-
-      return setResume(resumes[0]);
+      return setResume(resume);
     };
 
     // TODO: find better way to do this
@@ -124,7 +123,6 @@ const Interview: React.FC = () => {
   }
 
   const resumeNextPageHandler = () => {
-    console.log(selectedResume);
     if (selectedResume != undefined) {
       handleNextPage();
     } else {

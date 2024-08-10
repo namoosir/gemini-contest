@@ -47,7 +47,7 @@ export const RadialChart = (props: Props) => {
     };
 
     void init();
-  }, []);
+  }, [user]);
 
   const chartData = [{ averageScore: avgScore, improvability: 100 - avgScore }];
 

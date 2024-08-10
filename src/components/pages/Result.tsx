@@ -55,7 +55,6 @@ export default function Result() {
 
   const getConversation = (result: Interview) => {
     const conversation: ChatMessage[] = [];
-
     for (let i = 0; i < result.chat.length; i++) {
       const message = result.chat[i].content;
       if (result.chat[i].sender === "gemini") {
@@ -65,6 +64,7 @@ export default function Result() {
         });
       } else if (result.chat[i].sender === "user") {
         const feedbackIndex = Math.floor(i / 2);
+        if (result.feedback[feedbackIndex] === undefined) continue;  // Accessing outside boundaries sometimes
         conversation.push({
           sender: "user",
           content: message ?? "No Response",

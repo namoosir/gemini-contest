@@ -27,15 +27,14 @@ export const DonutChart = ({
   const [scores, setScores] = useState<Score>();
 
   useEffect(() => {
-    console.log(currMonthData);
     let behaviourSum = 0;
     let jobFitSum = 0;
     let technicalSum = 0;
 
-    for (let i = 0; i < currMonthData.length; i++) {
-      behaviourSum += currMonthData[i].overallScore.behavioralScore;
-      jobFitSum += currMonthData[i].overallScore.jobFitScore;
-      technicalSum += currMonthData[i].overallScore.technicalScore;
+    for (const currMonth of currMonthData) {
+      behaviourSum += currMonth.overallScore.behavioralScore;
+      jobFitSum += currMonth.overallScore.jobFitScore;
+      technicalSum += currMonth.overallScore.technicalScore;
     }
 
     setScores({
@@ -86,7 +85,7 @@ export const DonutChart = ({
         {currMonthData[0] && (
           <CardDescription>
             Your current scores for{" "}
-            {new Date(currMonthData[0]!.dateCreated!).toLocaleString(
+            {new Date(currMonthData[0].dateCreated!).toLocaleString(
               "default",
               { month: "long" }
             )}{" "}

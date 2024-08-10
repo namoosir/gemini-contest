@@ -4,6 +4,8 @@ import {
   query,
   where,
   Firestore,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import {
   FirebaseStorage,
@@ -14,25 +16,26 @@ import {
 
 export interface Resume {
   data: string;
-  dateCreated: string;
+  dateCreated: Date;
   filename: string;
   url: string;
   uid: string;
 }
 
-export const getUserResumes = async (
+export const getUserResume = async (
   db: Firestore,
   uid: string
-): Promise<Resume[] | false> => {
+): Promise<Resume | undefined> => {
   try {
-    const result: Resume[] = [];
-
-    const q = query(collection(db, "resumes"), where("uid", "==", uid));
+    const q = query(
+      collection(db, "resumes"),
+      where("uid", "==", uid),
+      orderBy("dateCreated", "desc"),
+      limit(1)
+    );
     const docSnap = await getDocs(q);
-
-    docSnap.forEach((doc) => result.push(doc.data() as Resume));
-
-    return result;
+    const [resume] = docSnap.docs
+    return resume.data() as Resume;
   } catch (error) {
     throw new Error(
       `Error trying to fetch user Resume. ${(error as Error).message}`
