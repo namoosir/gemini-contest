@@ -175,7 +175,6 @@ export default function Result() {
                   <div>
                     <DialogTitle>Chat History</DialogTitle>
                     <DialogDescription className="whitespace-pre-wrap" asChild>
-                      hi
                     </DialogDescription>
                   </div>
                   <div className="ml-auto">

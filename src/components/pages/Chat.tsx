@@ -41,15 +41,14 @@ import { getUserResume, Resume } from "@/services/firebase/resumeService";
 import {
   calculateAmplitudeFromAnalyser,
   FINAL_INTERVIEW_RESPONSE,
-  formatTime,
 } from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
-import { Badge } from "@/components/ui/badge";
 import Scene from "../3D/scene";
 import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
 import FocusedInterviewDemo from "@/assets/media/FocusedInterviewDemo.gif";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import TimerChart from "../TimerChart";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -491,7 +490,7 @@ function Chat() {
       )}
 
       {locationStateRef.current?.interviewMode === "normal" ? (
-        <div className="overflow-hidden flex-1">
+        <div className="overflow-hidden flex-1 mt-6">
           <Chats chats={chat} scroll />
         </div>
       ) : (
@@ -501,13 +500,7 @@ function Chat() {
       )}
 
       {hasInterviewStarted && (
-        <div className="w-full bg-backgrund flex flex-row items-center justify-center sticky bottom-0 m-auto">
-          <div className="text-center mr-10">
-            <Badge className=" text-md cursor-default font-bold">
-              {formatTime(seconds)}
-            </Badge>
-          </div>
-
+        <div className="w-full bg-background flex flex-row items-center justify-center sticky bottom-0 m-auto">
           <Button
             variant={"secondary"}
             className="items-center self-center h-16 w-16 rounded-full hover:bg-destructive hover:text-destructive-foreground"
@@ -527,12 +520,7 @@ function Chat() {
             />
           </div>
 
-          <Button
-            variant={"destructive"}
-            className="items-center self-center h-16 w-16 rounded-full invisible"
-          >
-            <Icon path={mdiClose} className="h-6 w-6" />
-          </Button>
+          <TimerChart seconds={seconds} total={Number(locationStateRef.current!.interviewDuration) * 60} />
         </div>
       )}
 
