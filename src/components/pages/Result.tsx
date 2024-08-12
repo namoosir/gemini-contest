@@ -2,11 +2,6 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isResultProps, ResultProps } from "./types";
 import Chats from "../Chats";
-import {
-  cleanGeminiChat,
-  ChatMessage as OriginalChatMessage,
-} from "@/services/voice/TTS";
-import { Interview } from "@/services/firebase/interviewService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import {
@@ -27,11 +22,8 @@ import {
 import { DialogHeader, DialogTrigger } from "../ui/dialog";
 import { PreviousResultsRadialChart } from "../PreviousResultsRadialChart";
 import { Button } from "../ui/button";
+import { getConversation } from "@/utils";
 
-type ChatMessage = OriginalChatMessage & {
-  score?: number;
-  feedback?: string;
-};
 
 const chartConfig: ChartConfig = {
   overallScore: {
@@ -52,30 +44,6 @@ export default function Result() {
       navigate("/404");
     }
   }, [location, navigate]);
-
-  const getConversation = (result: Interview) => {
-    const conversation: ChatMessage[] = [];
-
-    for (let i = 0; i < result.chat.length; i++) {
-      const message = result.chat[i].content;
-      if (result.chat[i].sender === "gemini") {
-        conversation.push({
-          sender: "gemini",
-          content: cleanGeminiChat(message ?? "No Question"),
-        });
-      } else if (result.chat[i].sender === "user") {
-        const feedbackIndex = Math.floor(i / 2);
-        conversation.push({
-          sender: "user",
-          content: message ?? "No Response",
-          score: result.feedback[feedbackIndex].score.overallScore,
-          feedback: result.feedback[feedbackIndex].text,
-        });
-      }
-    }
-
-    return conversation;
-  };
 
   const chartData = [
     {
@@ -175,7 +143,6 @@ export default function Result() {
                   <div>
                     <DialogTitle>Chat History</DialogTitle>
                     <DialogDescription className="whitespace-pre-wrap" asChild>
-                      hi
                     </DialogDescription>
                   </div>
                   <div className="ml-auto">

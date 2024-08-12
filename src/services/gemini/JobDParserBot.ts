@@ -49,6 +49,9 @@ const evalString = `
   Return your full feedback in Interview format based on the Interview interface below. YOU MUST NOT FORGET ANY ITEM FROM THE INTERFACE.
   Make sure you add a feedback object in the feedback array in interview for each question and answer pair.
 
+  Absolutely do not forget to return a feedback array element for a single interview question and answer pair. The length of the feedback array must match the number of \
+  questions and answers as pairs. DO NOT BE LAZY.
+
   interface Score {
     technicalScore: number;
     behavioralScore: number;

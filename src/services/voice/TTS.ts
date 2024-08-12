@@ -57,6 +57,7 @@ export const getAPIKey = async () => {
 
   if (response.ok) {
     const data = await response.text();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return JSON.parse(data).key as string;
   }
 };
@@ -73,7 +74,6 @@ export const initVoiceWebSocket = (
   );
 
   socket.onopen = () => {
-    console.log("WebSocket connected");
     const keepAliveMsg = JSON.stringify({ type: "KeepAlive" });
 
     interval.current = setInterval(() => {
@@ -95,10 +95,6 @@ export const initVoiceWebSocket = (
 
   socket.onerror = (error) => {
     console.error("WebSocket error:", error);
-  };
-
-  socket.onclose = () => {
-    console.log("WebSocket closed.", new Date());
   };
 
   return socket;

@@ -54,7 +54,6 @@ export function getDeepgramKey(uid: string) {
 
       res.on("end", function () {
         const body = Buffer.concat(chunks);
-        console.log(body.toString());
         resolve(body.toString());
       });
     });

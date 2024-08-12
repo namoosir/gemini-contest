@@ -52,7 +52,7 @@ function Dashboard() {
     };
 
     void init();
-  }, []);
+  }, [db, navigate, user]);
 
   const getInterviewMetrics = useCallback((): {
     numberOfInterviews: number;

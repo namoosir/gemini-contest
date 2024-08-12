@@ -37,19 +37,18 @@ import { addInterview, Interview } from "@/services/firebase/interviewService";
 
 import useFirebaseContext from "@/hooks/useFirebaseContext";
 import useAuthContext from "@/hooks/useAuthContext";
-import { getUserResumes, Resume } from "@/services/firebase/resumeService";
+import { getUserResume, Resume } from "@/services/firebase/resumeService";
 import {
   calculateAmplitudeFromAnalyser,
   FINAL_INTERVIEW_RESPONSE,
-  formatTime,
 } from "@/utils";
 import { isInterviewProps, InterviewProps } from "./types";
 import { ChatSession } from "firebase/vertexai-preview";
-import { Badge } from "@/components/ui/badge";
 import Scene from "../3D/scene";
 import UnfocusedInterviewDemo from "@/assets/media/UnfocusedInterviewDemo.gif";
 import FocusedInterviewDemo from "@/assets/media/FocusedInterviewDemo.gif";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import TimerChart from "../TimerChart";
 
 function Chat() {
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -145,6 +144,7 @@ function Chat() {
     }
   }, []);
 
+
   useEffect(() => {
     async function fetchKey() {
       const apiKey = await getAPIKey();
@@ -181,6 +181,48 @@ function Chat() {
 
     void fetchKey();
 
+    const cleanup = async () => {
+      setIsRecording(false);
+
+      if (socketIntervalRef.current) {
+        clearInterval(socketIntervalRef.current);
+        socketIntervalRef.current = null;
+      }
+
+      if (socketRef.current?.readyState === 1) {
+        const closeMessage = JSON.stringify({ type: "CloseStream" });
+        socketRef.current.send(closeMessage);
+      }
+
+      socketRef.current?.close();
+      socketRef.current = null;
+
+      mediaRecorderRef.current?.stop();
+      mediaRecorderRef.current = null;
+
+      analyserRef.current?.disconnect();
+      analyserRef.current = null;
+
+      if (audioContextRef.current?.state !== "closed") {
+        await audioContextRef.current?.close();
+        audioContextRef.current = undefined;
+      }
+
+      if (micAudioContextRef.current?.state !== "closed") {
+        await micAudioContextRef.current?.close();
+        micAudioContextRef.current = undefined;
+      }
+
+      const tracks = streamRef.current?.getTracks();
+      tracks?.forEach((track) => {
+        track.stop();
+      });
+      streamRef.current = undefined;
+
+      sourceRef.current?.disconnect();
+      sourceRef.current = undefined;
+    };
+
     return () => {
       void cleanup();
     };
@@ -189,11 +231,11 @@ function Chat() {
   useEffect(() => {
     const fetchResume = async () => {
       if (!user) return;
-      const resumes = await getUserResumes(db, user.uid);
+      const resume = await getUserResume(db, user.uid);
 
-      if (!resumes || resumes.length === 0) return;
+      if (!resume) return;
 
-      return setResume(resumes[0]);
+      return setResume(resume);
     };
 
     void fetchResume();
@@ -285,7 +327,6 @@ function Chat() {
       await handleAddChat();
       setResultsLoading(false);
     } else {
-      console.log(transcript || "no response");
       await handleResponse(
         await geminiRef.current.prompt(transcript || "no response")
       );
@@ -345,8 +386,6 @@ function Chat() {
         .map((f) => f.text)
         .join(" ");
 
-      console.log(feedback);
-
       const interviewData = getInterviewObject(feedback);
       if (!interviewData) return;
 
@@ -364,7 +403,6 @@ function Chat() {
 
   const handleAddChat = async () => {
     const data = await prepareData();
-    console.log("This is the data", data);
 
     if (!data) {
       console.error("Data is not set");
@@ -375,9 +413,7 @@ function Chat() {
 
     try {
       const result = await addInterview(db, data);
-      if (result) {
-        console.log("Interview history added successfully");
-      } else {
+      if (!result) {
         console.error("Failed to add interview history");
       }
     } catch (error) {
@@ -385,50 +421,7 @@ function Chat() {
     }
   };
 
-  const cleanup = async () => {
-    setIsRecording(false);
 
-    if (socketIntervalRef.current) {
-      clearInterval(socketIntervalRef.current);
-      socketIntervalRef.current = null;
-    }
-
-    if (socketRef.current?.readyState === 1) {
-      const closeMessage = JSON.stringify({ type: "CloseStream" });
-      socketRef.current.send(closeMessage);
-    }
-
-    socketRef.current?.close();
-    socketRef.current = null;
-
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current = null;
-
-    analyserRef.current?.disconnect();
-    analyserRef.current = null;
-
-    if (audioContextRef.current?.state !== "closed") {
-      await audioContextRef.current?.close();
-      audioContextRef.current = undefined;
-    }
-
-    if (micAudioContextRef.current?.state !== "closed") {
-      await micAudioContextRef.current?.close();
-      micAudioContextRef.current = undefined;
-    }
-
-    const tracks = streamRef.current?.getTracks();
-    tracks?.forEach((track) => {
-      track.stop();
-    });
-    streamRef.current = undefined;
-
-    sourceRef.current?.disconnect();
-    sourceRef.current = undefined;
-
-    console.log("This interview has concluded. Here is your chat history: ");
-    console.log(chat);
-  };
 
   const startInterview = async () => {
     setHasInterviewStarted(true);
@@ -436,7 +429,7 @@ function Chat() {
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
-          "No job description provided",
+        "No job description provided",
         locationStateRef.current!.interviewType,
         resume?.data ?? "No resume provided"
       )
@@ -457,13 +450,6 @@ function Chat() {
   return (
     <div className="flex flex-col h-full">
       {isLoading && loader}
-      {hasInterviewStarted && (
-        <div className="mt-10 text-center">
-          <Badge className=" text-md cursor-default font-bold">
-            {formatTime(seconds)}
-          </Badge>
-        </div>
-      )}
       {!isLoading && !hasInterviewStarted && (
         <div className="h-full flex flex-col items-center justify-center">
           <Card>
@@ -504,7 +490,7 @@ function Chat() {
       )}
 
       {locationStateRef.current?.interviewMode === "normal" ? (
-        <div className="overflow-hidden flex-1">
+        <div className="overflow-hidden flex-1 mt-6">
           <Chats chats={chat} scroll />
         </div>
       ) : (
@@ -534,12 +520,7 @@ function Chat() {
             />
           </div>
 
-          <Button
-            variant={"destructive"}
-            className="items-center self-center h-16 w-16 rounded-full invisible"
-          >
-            <Icon path={mdiClose} className="h-6 w-6" />
-          </Button>
+          <TimerChart seconds={seconds} total={Number(locationStateRef.current!.interviewDuration) * 60} />
         </div>
       )}
 

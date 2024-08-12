@@ -14,7 +14,7 @@ export const PreviousResultsRadialChart: React.FC<Props> = ({ data }: Props) => 
 
   useEffect(() => {
     setAvgScore(data);
-  }, []);
+  }, [data]);
 
   const chartData = [{ averageScore: avgScore, improvability: 100 - avgScore }];
 
@@ -55,7 +55,7 @@ export const PreviousResultsRadialChart: React.FC<Props> = ({ data }: Props) => 
                     <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
                       <tspan
                         x={viewBox.cx}
-                        y={(viewBox.cy || 0) + 4}
+                        y={(viewBox.cy ?? 0) + 4}
                         className="fill-foreground text-xs"
                       >
                         {totalScore.toLocaleString()}
