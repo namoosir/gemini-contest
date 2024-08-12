@@ -1,4 +1,44 @@
-## Getting Started
+# Team AI Amigos Presents - Interview Trainer AI
+[App Link](https://chimerical-liger-1f1422.netlify.app/ "App Link") 
+
+![thumbnail](readme-images/thumbnail.png)
+
+## Instructions
+- Sign up
+
+![sign up button](readme-images/signup.png) 
+<br>
+
+- Click on the Interview Tab 
+
+![sign up button](readme-images/interview-btn.png) 
+<br>
+
+- Enter job description, the more descriptive the better !
+
+![Job Description Entry](readme-images/job-description.png) 
+<br>
+
+- Upload Resume and pick the desirable settings.
+
+![Job Description Entry](readme-images/settings.png) 
+<br>
+
+- Finish the interview and select result to view results.
+<br>
+
+![Job Description Entry](readme-images/result.png) 
+<br>
+
+- Click the "View Detailed Chat Logs" button for feedback on each user response
+<br>
+
+![Job Description Entry](readme-images/response-feedback.png) 
+
+
+
+
+## For developers
 
 ### How to run Emulator:
 Inital Setup
