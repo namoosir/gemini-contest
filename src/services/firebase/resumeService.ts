@@ -34,7 +34,7 @@ export const getUserResume = async (
       limit(1)
     );
     const docSnap = await getDocs(q);
-    const [resume] = docSnap.docs
+    const [resume] = docSnap.docs;
     return resume.data() as Resume;
   } catch (error) {
     throw new Error(
