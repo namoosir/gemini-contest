@@ -12,7 +12,7 @@ admin.initializeApp();
 const app = express();
 
 app.use(cors({
-  origin: 'https://66b68d7dfdff587e8e3d4354--chimerical-liger-1f1422.netlify.app/',
+  origin: 'https://66b68d7dfdff587e8e3d4354--chimerical-liger-1f1422.netlify.app',
 }))
 
 app.post("/audio/stt/key", async (req, res) => {
