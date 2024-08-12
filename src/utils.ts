@@ -1,3 +1,11 @@
+import { Interview } from "./services/firebase/interviewService";
+import { ChatMessage as OriginalChatMessage, cleanGeminiChat } from "./services/voice/TTS";
+
+type ChatMessage = OriginalChatMessage & {
+  score?: number;
+  feedback?: string;
+};
+
 export const FINAL_INTERVIEW_RESPONSE = "The interview is now over. Thank you for your time and have a great day."
 
 export function formatTime(seconds: number): string {
@@ -33,4 +41,29 @@ export const calculateAverageFrequency = (analyser: AnalyserNode): number => {
 
   const total = frequencyData.reduce((sum, value) => sum + value, 0);
   return total / frequencyData.length;
+};
+
+
+export const getConversation = (result: Interview) => {
+  const conversation: ChatMessage[] = [];
+
+  for (let i = 0; i < result.chat.length; i++) {
+    const message = result.chat[i].content;
+    if (result.chat[i].sender === "gemini") {
+      conversation.push({
+        sender: "gemini",
+        content: cleanGeminiChat(message ?? "No Question"),
+      });
+    } else if (result.chat[i].sender === "user") {
+      const feedbackIndex = Math.floor(i / 2);
+      conversation.push({
+        sender: "user",
+        content: message ?? "No Response",
+        score: result.feedback[feedbackIndex]?.score?.overallScore ?? 0,
+        feedback: result.feedback[feedbackIndex]?.text ?? "No feedback",
+      });
+    }
+  }
+
+  return conversation;
 };
