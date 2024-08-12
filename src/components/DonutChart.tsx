@@ -52,15 +52,16 @@ export const DonutChart = ({
     },
     {
       category: "Job Fit",
-      score: scores?.jobFitScore,
+      score: scores?.jobFitScore ?? 0,
       fill: "var(--color-jobFit)",
     },
     {
       category: "Technical",
-      score: scores?.technicalScore,
+      score: scores?.technicalScore ?? 0,
       fill: "var(--color-technical)",
     },
   ];
+
   const chartConfig = {
     score: {
       label: "Scores",
@@ -85,31 +86,38 @@ export const DonutChart = ({
         {currMonthData[0] && (
           <CardDescription>
             Your current scores for{" "}
-            {new Date(currMonthData[0].dateCreated!).toLocaleString(
-              "default",
-              { month: "long" }
-            )}{" "}
+            {new Date(currMonthData[0].dateCreated!).toLocaleString("default", {
+              month: "long",
+            })}{" "}
           </CardDescription>
         )}
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[296px]"
-        >
-          <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="score"
-              nameKey="category"
-              innerRadius={80}
-            />
-          </PieChart>
-        </ChartContainer>
+        {scores?.behavioralScore !== 0 &&
+        scores?.technicalScore !== 0 &&
+        scores?.jobFitScore !== 0 ? (
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square max-h-[296px]"
+          >
+            <PieChart>
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel />}
+              />
+              <Pie
+                data={chartData}
+                dataKey="score"
+                nameKey="category"
+                innerRadius={80}
+              />
+            </PieChart>
+          </ChartContainer>
+        ) : (
+          <div className="h-[322px] flex flex-col justify-center items-center text-muted-foreground">
+            No Data Available
+          </div>
+        )}
       </CardContent>
     </Card>
   );

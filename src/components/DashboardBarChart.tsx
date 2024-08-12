@@ -113,80 +113,89 @@ export const DashboardBarChart = (props: Props) => {
           </span>
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer
-          config={{
-            score: {
-              label: "Score: ",
-              color: "hsl(var(--primary-foreground))",
-            },
-          }}
-        >
-          <BarChart
-            accessibilityLayer
-            margin={{
-              left: -4,
-              right: -4,
+      {currMonthData.length !== 0 ? (
+        <CardContent>
+          <ChartContainer
+            config={{
+              score: {
+                label: "Score: ",
+                color: "hsl(var(--primary-foreground))",
+              },
             }}
-            data={barChartData}
           >
-            <Bar
-              dataKey="score"
-              fill="hsl(var(--primary))"
-              radius={5}
-              fillOpacity={0.6}
-              activeBar={<Rectangle fillOpacity={0.8} />}
-            />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={4}
-              tickFormatter={(value) => {
-                return new Date(value as string).toLocaleDateString("en-US");
+            <BarChart
+              accessibilityLayer
+              margin={{
+                left: -4,
+                right: -4,
               }}
-            />
-            (
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  hideIndicator
-                  labelFormatter={(value) => {
-                    return new Date(value as string).toLocaleDateString("en-US", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    });
-                  }}
-                />
-              }
-              cursor={false}
-            />
-            )
-            <ReferenceLine
-              y={avgPerformance}
-              stroke="hsl(var(--muted-foreground))"
-              strokeDasharray="3 3"
-              strokeWidth={1}
+              data={barChartData}
             >
-              <Label
-                position="insideBottomLeft"
-                value="Average Performance"
-                offset={10}
-                fill="hsl(var(--foreground))"
+              <Bar
+                dataKey="score"
+                fill="hsl(var(--primary))"
+                radius={5}
+                fillOpacity={0.6}
+                activeBar={<Rectangle fillOpacity={0.8} />}
               />
-              <Label
-                position="insideTopLeft"
-                value={avgPerformance}
-                className="text-lg"
-                fill="hsl(var(--foreground))"
-                offset={10}
-                startOffset={100}
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={4}
+                tickFormatter={(value) => {
+                  return new Date(value as string).toLocaleDateString("en-US");
+                }}
               />
-            </ReferenceLine>
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
+              (
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    hideIndicator
+                    labelFormatter={(value) => {
+                      return new Date(value as string).toLocaleDateString(
+                        "en-US",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      );
+                    }}
+                  />
+                }
+                cursor={false}
+              />
+              )
+              <ReferenceLine
+                y={avgPerformance}
+                stroke="hsl(var(--muted-foreground))"
+                strokeDasharray="3 3"
+                strokeWidth={1}
+              >
+                <Label
+                  position="insideBottomLeft"
+                  value="Average Performance"
+                  offset={10}
+                  fill="hsl(var(--foreground))"
+                />
+                <Label
+                  position="insideTopLeft"
+                  value={avgPerformance}
+                  className="text-lg"
+                  fill="hsl(var(--foreground))"
+                  offset={10}
+                  startOffset={100}
+                />
+              </ReferenceLine>
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      ) : (
+        <div className="h-[410px] flex flex-col justify-center items-center text-muted-foreground">
+          No Data Available
+        </div>
+      )}
     </Card>
   );
 };

@@ -144,7 +144,6 @@ function Chat() {
     }
   }, []);
 
-
   useEffect(() => {
     async function fetchKey() {
       const apiKey = await getAPIKey();
@@ -231,11 +230,12 @@ function Chat() {
   useEffect(() => {
     const fetchResume = async () => {
       if (!user) return;
-      const resume = await getUserResume(db, user.uid);
+      setTimeout(async () => {
+        const resume = await getUserResume(db, user.uid);
+        if (!resume) return;
 
-      if (!resume) return;
-
-      return setResume(resume);
+        setResume(resume);
+      }, 500);
     };
 
     void fetchResume();
@@ -421,15 +421,13 @@ function Chat() {
     }
   };
 
-
-
   const startInterview = async () => {
     setHasInterviewStarted(true);
     setSeconds(Number(locationStateRef.current!.interviewDuration) * 60);
     await handleResponse(
       await geminiRef.current.initInterviewForJobD(
         locationStateRef.current!.jobDescription ??
-        "No job description provided",
+          "No job description provided",
         locationStateRef.current!.interviewType,
         resume?.data ?? "No resume provided"
       )
@@ -520,7 +518,10 @@ function Chat() {
             />
           </div>
 
-          <TimerChart seconds={seconds} total={Number(locationStateRef.current!.interviewDuration) * 60} />
+          <TimerChart
+            seconds={seconds}
+            total={Number(locationStateRef.current!.interviewDuration) * 60}
+          />
         </div>
       )}
 
