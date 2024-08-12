@@ -113,7 +113,6 @@ export const DashboardBarChart = (props: Props) => {
           </span>
         </CardDescription>
       </CardHeader>
-      git add .{" "}
       {currMonthData.length !== 0 ? (
         <CardContent>
           <ChartContainer
